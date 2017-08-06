@@ -49,8 +49,8 @@ def make_active(Layers, layer):
 
 
 def transpose_cell(Layers, cellpolygons, origin):
-    for key, polygons in cellpolygons.items():
-        for layer, lay_data in Layers.items():
+    for key, polygons in cellpolygons.iteritems():
+        for layer, lay_data in Layers.iteritems():
             if lay_data['gds'] == key[0]:
                 for poly in polygons:
                     for coord in poly:
@@ -69,7 +69,7 @@ def polygon_result(Layers, element):
         Add the polygon to the 'result' key in the 'Layers' object
     """
 
-    for layer, lay_data in Layers.items():
+    for layer, lay_data in Layers.iteritems():
         if lay_data['gds'] == element.layer:
             Layers[layer]['result'].append(element.points.tolist())
 
@@ -81,13 +81,13 @@ def polygon_jj(Layers, element):
 
     name = element.ref_cell.name
     if name[:2] == 'JJ':
-        print('\n---Add junction: ' + name + ' ----------')
+        print '\n---Add junction: ' + name + ' ----------'
         cellpolygons = gdsii.extract(name).get_polygons(True)
         transpose_cell(Layers, cellpolygons, element.origin)
 
 
 def union_polygons(Layers):
-    for layer, lay_data in Layers.items():
+    for layer, lay_data in Layers.iteritems():
         if (layer == 'JJ') or (layer == 'JP') or (layer == 'JC'):
             tools.union_wire(Layers, layer, 'result')
         else:
@@ -143,7 +143,7 @@ class Process:
 
         for atom in Atom:
             if is_layer_active(Layers, atom):
-                print('\n---Running Atom: ' + atom['id'] + ' ----------')
+                print '\n---Running Atom: ' + atom['id'] + ' ----------'
                 self.calculate_atom(atom)
 
         return self.config_data
@@ -162,7 +162,7 @@ class Process:
 
         gdsii.read_gds(self.gds_file, unit=1.0e-12)
 
-        print('\n---Adding components----------')
+        print '\n---Adding components----------'
         Elements = gdsii.top_level()[0].elements
         Layers = self.config_data['Layers']
 
@@ -177,7 +177,7 @@ class Process:
     def calculate_atom(self, atom):
         for subatom in atom['Subatom']:
             if not json.loads(atom['skip']):
-                print('Subatom: ' + str(subatom['id']))
+                print 'Subatom: ' + str(subatom['id'])
                 self.calculate_sub_atom(atom, subatom)
 
     def calculate_sub_atom(self, atom, subatom):

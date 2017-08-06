@@ -1,47 +1,56 @@
-import pyclipper
+# th3d0n
+
+
 import os
 import sys
+
 from collections import defaultdict
 
+import pyclipper
 
-def number_of_processors():
-    """
-        Return number of processors on multiple platoforms.
-    """
 
-    if os.name == 'nt':
-        return int(os.getenv('NUMBER_OF_PROCESSORS'))
-    elif sys.platform == 'linux2':
-        retv = 0
-        with open('/proc/cpuinfo', 'rt') as cpuinfo:
-            for line in cpuinfo:
-                if line[:9] == 'processor':
-                    retv += 1
-        return retv
-    else:
-        raise RuntimeError('unknown platform')
+# def number_of_processors():
+#     """
+#         Return number of processors on multiple platoforms.
+#     """
+#
+#     if os.name == 'nt':
+#         return int(os.getenv('NUMBER_OF_PROCESSORS'))
+#     elif sys.platform == 'linux2':
+#         retv = 0
+#         with open('/proc/cpuinfo', 'rt') as cpuinfo:
+#             for line in cpuinfo:
+#                 if line[:9] == 'processor':
+#                     retv += 1
+#         return retv
+#     else:
+#         raise RuntimeError('unknown platform')
 
 
 def angusj(clip, subj, clip_type):
+    """
+        qwuihwqdiu
+    """
+
     pc = pyclipper.Pyclipper()
 
     pc.AddPaths(clip, pyclipper.PT_CLIP, True)
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
 
-    if (clip_type == "difference"):
+    if clip_type == "difference":
         subj = pc.Execute(pyclipper.CT_DIFFERENCE,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
-    elif (clip_type == "union"):
+    elif clip_type == "union":
         subj = pc.Execute(pyclipper.CT_UNION,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
-    elif (clip_type == "intersection"):
+    elif clip_type == "intersection":
         subj = pc.Execute(pyclipper.CT_INTERSECTION,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
 
-    if (len(subj) > 0):
+    if len(subj) > 0:
         return subj
     else:
         return []

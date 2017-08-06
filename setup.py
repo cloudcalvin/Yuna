@@ -25,8 +25,15 @@ setup(
     packages=['yuna', 'tests'],
     package_dir={'yuna': 'yuna'},
     install_requires=['gdspy', 'pyclipper'],
+    # entry_points={
+        # 'console_scripts': [
+            # 'yuna = yuna.__main__:main'
+        # ]
+    # },
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3",
+        "Development Status :: 2 - Alpha",
         "Topic :: Utilities",
         "License :: OSI Approved :: BSD License",
     ],

@@ -41,19 +41,19 @@ class Write:
         cell = gdspy.Cell('SOLUTION')
 
         for poly in config['Layers']['CC']['result']:
-            cell.add(gdspy.Polygon(poly, 81))
+            cell.add(gdspy.Polygon(poly, 11))
         for poly in config['Layers']['COU']['result']:
-            cell.add(gdspy.Polygon(poly, 91))
+            cell.add(gdspy.Polygon(poly, 8))
         for poly in config['Layers']['CTL']['result']:
-            cell.add(gdspy.Polygon(poly, 92))
+            cell.add(gdspy.Polygon(poly, 12))
         for poly in config['Layers']['JJ']['result']:
-            cell.add(gdspy.Polygon(poly, 93))
+            cell.add(gdspy.Polygon(poly, 6))
         for poly in config['Layers']['COU']['jj']:
-            cell.add(gdspy.Polygon(poly, 94))
+            cell.add(gdspy.Polygon(poly, 108))
         for poly in config['Layers']['TERM']['result']:
-            cell.add(gdspy.Polygon(poly, 95))
+            cell.add(gdspy.Polygon(poly, 15))
 
-        if (self.view):
+        if self.view:
             gdspy.LayoutViewer()
 
         self.solution = cell.get_polygons(True)

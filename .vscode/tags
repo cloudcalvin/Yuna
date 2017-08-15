@@ -71,6 +71,7 @@ _identify_path	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def _ident
 _make_executable	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/pandoc_download.py	/^def _make_executable(path):$/;"	kind:function	line:66
 _validate_formats	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def _validate_formats(format, to, outputfile):$/;"	kind:function	line:199
 angusj	../yuna/utils/tools.py	/^def angusj(clip, subj, clip_type):$/;"	kind:function	line:30
+author	../docs/source/conf.py	/^author = 'ruben'$/;"	kind:variable	line:53
 author	../setup.py	/^    author="Ruben van Staden",$/;"	kind:variable	line:17
 author_email	../setup.py	/^    author_email="rubenvanstaden@gmail.com",$/;"	kind:variable	line:18
 calculate_atom	../yuna/process.py	/^    def calculate_atom(self, atom):$/;"	kind:member	line:177
@@ -81,16 +82,20 @@ classifiers	../setup.py	/^    classifiers=[$/;"	kind:variable	line:33
 clean_pandocpath_cache	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def clean_pandocpath_cache():$/;"	kind:function	line:557
 clean_version_cache	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def clean_version_cache():$/;"	kind:function	line:552
 clipper	../yuna/process.py	/^    def clipper(self, atom, subatom):$/;"	kind:member	line:244
+conf.py	../docs/source/conf.py	1;"	kind:file	line:1
 config	../yuna/utils/read.py	/^def config(config_file):$/;"	kind:function	line:13
 config_layers	../yuna/process.py	/^    def config_layers(self):$/;"	kind:member	line:116
 convert	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def convert(source, to, format=None, extra_args=(), encoding='utf-8',$/;"	kind:function	line:24
 convert_file	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def convert_file(source_file, to, format=None, extra_args=(), encoding='utf-8',$/;"	kind:function	line:106
 convert_text	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def convert_text(source, to, format, extra_args=(), encoding='utf-8',$/;"	kind:function	line:72
+copyright	../docs/source/conf.py	/^copyright = '2017, ruben'$/;"	kind:variable	line:52
 current	../yuna/utils/docopt.py	/^    def current(self):$/;"	kind:member	line:297
 description	../setup.py	/^    description="Processes the layers from a GDS file.",$/;"	kind:variable	line:19
 docopt	../yuna/utils/docopt.py	/^def docopt(doc, argv=None, help=True, version=None, options_first=False):$/;"	kind:function	line:490
 docopt.py	../yuna/utils/docopt.py	1;"	kind:file	line:1
 download_pandoc	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/pandoc_download.py	/^def download_pandoc(url=None, targetfolder=None, version="latest"):$/;"	kind:function	line:152
+exclude_patterns	../docs/source/conf.py	/^exclude_patterns = []$/;"	kind:variable	line:74
+extensions	../docs/source/conf.py	/^extensions = ['sphinx.ext.autodoc',$/;"	kind:variable	line:34
 extras	../yuna/utils/docopt.py	/^def extras(help, version, options, doc):$/;"	kind:function	line:476
 fix	../yuna/utils/docopt.py	/^    def fix(self):$/;"	kind:member	line:40
 fix_identities	../yuna/utils/docopt.py	/^    def fix_identities(self, uniq=None):$/;"	kind:member	line:45
@@ -105,11 +110,18 @@ get_pandoc_formats	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def ge
 get_pandoc_formats_pre_1_18	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def get_pandoc_formats_pre_1_18():$/;"	kind:function	line:372
 get_pandoc_path	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def get_pandoc_path():$/;"	kind:function	line:440
 get_pandoc_version	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/__init__.py	/^def get_pandoc_version():$/;"	kind:function	line:422
+html_sidebars	../docs/source/conf.py	/^html_sidebars = {$/;"	kind:variable	line:106
+html_static_path	../docs/source/conf.py	/^html_static_path = ['_static']$/;"	kind:variable	line:99
+html_theme	../docs/source/conf.py	/^html_theme = 'alabaster'$/;"	kind:variable	line:88
+htmlhelp_basename	../docs/source/conf.py	/^htmlhelp_basename = 'yunadoc'$/;"	kind:variable	line:120
 imode	../yuna/utils/system.py	/^imode = {$/;"	kind:variable	line:25
 init_layers	../yuna/process.py	/^    def init_layers(self):$/;"	kind:member	line:151
 install_requires	../setup.py	/^    install_requires=['gdspy', 'pyclipper'],$/;"	kind:variable	line:27
 is_layer_active	../yuna/process.py	/^def is_layer_active(Layers, atom):$/;"	kind:function	line:32
 keywords	../setup.py	/^    keywords="yuna",$/;"	kind:variable	line:23
+language	../docs/source/conf.py	/^language = None$/;"	kind:variable	line:69
+latex_documents	../docs/source/conf.py	/^latex_documents = [$/;"	kind:variable	line:146
+latex_elements	../docs/source/conf.py	/^latex_elements = {$/;"	kind:variable	line:125
 ldf	../yuna/utils/read.py	/^def ldf(process):$/;"	kind:function	line:28
 license	../setup.py	/^    license="BSD",$/;"	kind:variable	line:22
 logger	../.eggs/setuptools_markdown-0.2-py3.5.egg/setuptools_markdown.py	/^logger = logging.getLogger(__name__)$/;"	kind:variable	line:9
@@ -117,6 +129,8 @@ long_description_markdown_filename	../.eggs/setuptools_markdown-0.2-py3.5.egg/se
 long_description_markdown_filename	../setup.py	/^    long_description_markdown_filename='README.md',$/;"	kind:variable	line:21
 machina	../yuna/__init__.py	/^def machina(gds, config, ldf):$/;"	kind:function	line:7
 make_active	../yuna/process.py	/^def make_active(Layers, layer):$/;"	kind:function	line:40
+man_pages	../docs/source/conf.py	/^man_pages = [$/;"	kind:variable	line:156
+master_doc	../docs/source/conf.py	/^master_doc = 'index'$/;"	kind:variable	line:48
 match	../yuna/utils/docopt.py	/^    def match(self, left, collected=None):$/;"	kind:member	line:112
 match	../yuna/utils/docopt.py	/^    def match(self, left, collected=None):$/;"	kind:member	line:221
 match	../yuna/utils/docopt.py	/^    def match(self, left, collected=None):$/;"	kind:member	line:234
@@ -146,8 +160,11 @@ polygon_jj	../yuna/process.py	/^def polygon_jj(Layers, element):$/;"	kind:functi
 polygon_result	../yuna/process.py	/^def polygon_result(Layers, element):$/;"	kind:function	line:67
 pretty	../yuna/utils/tools.py	/^def pretty(value, htchar='\\t', lfchar='\\n', indent=0):$/;"	kind:function	line:93
 process.py	../yuna/process.py	1;"	kind:file	line:1
+project	../docs/source/conf.py	/^project = 'yuna'$/;"	kind:variable	line:51
 py3compat.py	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/py3compat.py	1;"	kind:file	line:1
+pygments_style	../docs/source/conf.py	/^pygments_style = 'sphinx'$/;"	kind:variable	line:77
 read.py	../yuna/utils/read.py	1;"	kind:file	line:1
+release	../docs/source/conf.py	/^release = '0.0.1'$/;"	kind:variable	line:62
 runall.py	../tests/runall.py	1;"	kind:file	line:1
 setup.py	../setup.py	1;"	kind:file	line:1
 setup_requires	../setup.py	/^    setup_requires=['setuptools-markdown'],$/;"	kind:variable	line:20
@@ -155,10 +172,14 @@ setuptools_markdown.py	../.eggs/setuptools_markdown-0.2-py3.5.egg/setuptools_mar
 single_match	../yuna/utils/docopt.py	/^    def single_match(self, left):$/;"	kind:member	line:152
 single_match	../yuna/utils/docopt.py	/^    def single_match(self, left):$/;"	kind:member	line:170
 single_match	../yuna/utils/docopt.py	/^    def single_match(self, left):$/;"	kind:member	line:204
+source_suffix	../docs/source/conf.py	/^source_suffix = '.rst'$/;"	kind:variable	line:45
 string_types	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/py3compat.py	/^    string_types = (str, unicode)  # noqa: F821$/;"	kind:variable	line:62
 subject	../yuna/process.py	/^    def subject(self, atom, subatom):$/;"	kind:member	line:223
 system.py	../yuna/utils/system.py	1;"	kind:file	line:1
+templates_path	../docs/source/conf.py	/^templates_path = ['_templates']$/;"	kind:variable	line:39
 test0.py	../tests/test0.py	1;"	kind:file	line:1
+texinfo_documents	../docs/source/conf.py	/^texinfo_documents = [$/;"	kind:variable	line:167
+todo_include_todos	../docs/source/conf.py	/^todo_include_todos = True$/;"	kind:variable	line:80
 tools.py	../yuna/utils/tools.py	1;"	kind:file	line:1
 transform	../yuna/utils/docopt.py	/^def transform(pattern):$/;"	kind:function	line:72
 transpose_cell	../yuna/process.py	/^def transpose_cell(Layers, cellpolygons, origin):$/;"	kind:function	line:51
@@ -171,6 +192,7 @@ url2path	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/py3compat.py	/^    def url2pat
 url2path	../.eggs/pypandoc-1.4-py3.5.egg/pypandoc/py3compat.py	/^    def url2path(url):$/;"	kind:function	line:71
 usage	../yuna/utils/docopt.py	/^    usage = ''$/;"	kind:variable	line:26
 verbose	../yuna/utils/system.py	/^verbose = False$/;"	kind:variable	line:23
+version	../docs/source/conf.py	/^version = '0.0.1'$/;"	kind:variable	line:60
 version	../setup.py	/^    version=version,$/;"	kind:variable	line:16
 version	../setup.py	/^version = '0.0.1'$/;"	kind:variable	line:11
 write.py	../yuna/utils/write.py	1;"	kind:file	line:1

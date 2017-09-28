@@ -5,7 +5,6 @@ import yuna.process
 
 
 def machina(gds, config, ldf):
-    # os.chdir('..')
     viewgds = True
 
     layers = yuna.utils.read.ldf(ldf)
@@ -20,10 +19,6 @@ def generate_gds(write, gds_file, layers, config_file, ldf):
         do clipping and send polygons to
         GMSH to generate the Mesh.
     """
-
-    # cwd = os.getcwd()
-    # gds_file = cwd + '/tests/gds/' + file_name + '.gds'
-    # config_file = cwd + '/yuna/' + 'config.json'
 
     if (ldf == 'adp') or (ldf == 'stp'):
         config_data = yuna.utils.read.config(config_file)

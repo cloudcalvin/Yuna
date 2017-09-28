@@ -6,6 +6,7 @@ Home-page: https://github.com/rubenvanstaden/yuna
 Author: Ruben van Staden
 Author-email: rubenvanstaden@gmail.com
 License: BSD
+Description-Content-Type: UNKNOWN
 Description: yuna
         ====
         
@@ -14,7 +15,7 @@ Description: yuna
         
         ::
         
-            pip install .
+            pip3 install .
         
         We can also install the package in development mode with a symlink, so
         that changes to the source files will be immediately available to other
@@ -22,7 +23,7 @@ Description: yuna
         
         ::
         
-            pip install -e .
+            pip3 install -e .
         
         Puslishing to PyPI
         ------------------

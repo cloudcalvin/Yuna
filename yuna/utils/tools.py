@@ -1,31 +1,9 @@
-# th3d0n
-
-
 import os
 import sys
 
 from collections import defaultdict
 
 import pyclipper
-
-
-# def number_of_processors():
-#     """
-#         Return number of processors on multiple platoforms.
-#     """
-#
-#     if os.name == 'nt':
-#         return int(os.getenv('NUMBER_OF_PROCESSORS'))
-#     elif sys.platform == 'linux2':
-#         retv = 0
-#         with open('/proc/cpuinfo', 'rt') as cpuinfo:
-#             for line in cpuinfo:
-#                 if line[:9] == 'processor':
-#                     retv += 1
-#         return retv
-#     else:
-#         raise RuntimeError('unknown platform')
-
 
 def angusj(clip, subj, clip_type):
     """

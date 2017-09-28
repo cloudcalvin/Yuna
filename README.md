@@ -4,7 +4,7 @@ In order to use *import yuna*, we have to install the package **locally**,
 with:
 
 ```
-pip install .
+pip3 install .
 ```
 
 We can also install the package in development mode with a symlink, so that
@@ -12,7 +12,7 @@ changes to the source files will be immediately available to other users of the
 package on your system.
 
 ```
-pip install -e .
+pip3 install -e .
 ```
 
 ## Puslishing to PyPI

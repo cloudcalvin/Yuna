@@ -16,12 +16,10 @@ def config(config_file):
         JSON. This file contains the logic of how
         the different layers will interact.
     """
-
+s
     data = None
-
     with open(config_file) as data_file:
         data = json.load(data_file)
-
     return data
 
 

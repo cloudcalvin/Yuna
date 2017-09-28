@@ -2,7 +2,6 @@ import gdspy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
-from graph_tool.all import *
 
 
 class Write:

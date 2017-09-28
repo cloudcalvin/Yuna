@@ -47,7 +47,13 @@ def make_active(Layers, layer):
         Layers[layer]['active'] = True
 
 
-def transpose_cell(Layers, cellpolygons, origin):
+def transpose_cell(Layers, cellpolygons, origin, name):
+    """
+        The cells are centered in the middle of the gds 
+        file canvas. To include this cell into the main 
+        cell, we have to transpose it to the required position.
+    """
+    
     for key, polygons in cellpolygons.items():
         for layer, lay_data in Layers.items():
             if lay_data['gds'] == key[0]:
@@ -57,16 +63,22 @@ def transpose_cell(Layers, cellpolygons, origin):
                         coord[1] = coord[1] + origin[1]
 
                     # Save tranposed coordinates in 'Layers' object.
-                    if (layer == 'JJ') or (layer == 'JP') or (layer == 'JC'):
+                    # Maybe we should automate this later by making
+                    # 'result' a {} and not a [].
+                    if (layer == 'JJ'):
+                        # print("JJJJJJ")
+                        # print(poly.tolist())
+                        lay_data['result'].append(poly.tolist())
+                        # lay_data['name'].append(name)
+                        # lay_data['result'][name] = poly.tolist()
+                    elif (layer == 'JP') or (layer == 'JC'):
                         lay_data['result'].append(poly.tolist())
                     else:
                         lay_data['jj'].append(poly)
 
 
 def polygon_result(Layers, element):
-    """
-        Add the polygon to the 'result' key in the 'Layers' object
-    """
+    """ Add the polygon to the 'result' key in the 'Layers' object """
 
     for layer, lay_data in Layers.items():
         if lay_data['gds'] == element.layer:
@@ -74,15 +86,14 @@ def polygon_result(Layers, element):
 
 
 def polygon_jj(Layers, element):
-    """
-        Add the polygon to the 'jj' key in the 'Layers' object
-    """
+    """ Add the polygon to the 'jj' key in the 'Layers' object """
 
     name = element.ref_cell.name
     if name[:2] == 'JJ':
         print('\n---Add junction: ' + name + ' ----------')
+        Layers['JJ']['name'].append(name)
         cellpolygons = gdsii.extract(name).get_polygons(True)
-        transpose_cell(Layers, cellpolygons, element.origin)
+        transpose_cell(Layers, cellpolygons, element.origin, name)
 
 
 def union_polygons(Layers):

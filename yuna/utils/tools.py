@@ -91,3 +91,15 @@ def pretty(value, htchar='\t', lfchar='\n', indent=0):
         return '(%s)' % (','.join(items) + lfchar + htchar * indent)
     else:
         return repr(value)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

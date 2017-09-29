@@ -65,12 +65,9 @@ def transpose_cell(Layers, cellpolygons, origin, name):
                     # Save tranposed coordinates in 'Layers' object.
                     # Maybe we should automate this later by making
                     # 'result' a {} and not a [].
+                    # print(type(polygons))
                     if (layer == 'JJ'):
-                        # print("JJJJJJ")
-                        # print(poly.tolist())
                         lay_data['result'].append(poly.tolist())
-                        # lay_data['name'].append(name)
-                        # lay_data['result'][name] = poly.tolist()
                     elif (layer == 'JP') or (layer == 'JC'):
                         lay_data['result'].append(poly.tolist())
                     else:
@@ -103,6 +100,16 @@ def union_polygons(Layers):
         else:
             tools.union_wire(Layers, layer, 'jj')
             tools.union_wire(Layers, layer, 'result')
+            
+            
+def junction_area(Elements):
+    for element in Elements:
+        if isinstance(element, gdspy.CellReference):
+            name = element.ref_cell.name
+            if name[:2] == 'JJ':
+                for key, value in element.area(True).items():
+                    if key[0] == 6:
+                        print(name + ' --> ' + str(value * 1e-12) + 'um')
 
 
 class Process:
@@ -175,7 +182,9 @@ class Process:
         print('\n---Adding components----------')
         Elements = gdsii.top_level()[0].elements
         Layers = self.config_data['Layers']
-
+        
+        junction_area(Elements)
+        
         for element in Elements:
             if isinstance(element, gdspy.Polygon):
                 polygon_result(Layers, element)
@@ -275,3 +284,14 @@ class Process:
         elif clip_class == 'Subatom':
             clip = atom['Subatom'][subatom['clip']['layer']]['result']
         return clip
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        

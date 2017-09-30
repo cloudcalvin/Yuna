@@ -83,7 +83,7 @@ def polygon_result(Layers, element):
 
 
 def polygon_jj(Layers, element):
-    """ Add the polygon to the 'jj' key in the 'Layers' object """
+    """ Add the polygon to the 'jj' key in the 'Layers' object. """
 
     name = element.ref_cell.name
     if name[:2] == 'JJ':
@@ -94,15 +94,18 @@ def polygon_jj(Layers, element):
 
 
 def union_polygons(Layers):
+    Layers['RES']['active'] = True
+    
     for layer, lay_data in Layers.items():
         if (layer == 'JJ') or (layer == 'JP') or (layer == 'JC'):
             tools.union_wire(Layers, layer, 'result')
-        else:
-            tools.union_wire(Layers, layer, 'jj')
+        elif (layer != 'RES'):
             tools.union_wire(Layers, layer, 'result')
-            
+            tools.union_wire(Layers, layer, 'jj')
+
             
 def junction_area(Elements):
+    print('\n[*] Junction areas:')
     for element in Elements:
         if isinstance(element, gdspy.CellReference):
             name = element.ref_cell.name
@@ -110,6 +113,25 @@ def junction_area(Elements):
                 for key, value in element.area(True).items():
                     if key[0] == 6:
                         print(name + ' --> ' + str(value * 1e-12) + 'um')
+
+
+def resistance_area(config):
+    """
+        * We have to get the center of each resistance 
+          polygon.
+        * Test if the center of each polygon is inside
+          layer 9. If so, then remove that polygon. 
+        * Finally, we should be left with just the 
+          resistance branch polygon.
+    """
+    
+    # NB: We have to save the JJ name with the corresponding area value.
+    
+    print('\n[*] Parasitic resistance areas:')
+    for poly in config['Layers']['RES']['jj']:
+        poly_element = gdspy.Polygon(poly, 21)
+        value = poly_element.area(True).values()[0]
+        print('RES' + ' --> ' + str(value * 1e-12) + 'um')
 
 
 class Process:
@@ -163,6 +185,8 @@ class Process:
                 print('\n---Running Atom: ' + atom['id'] + ' ----------')
                 self.calculate_atom(atom)
 
+        resistance_area(self.config_data)
+
         return self.config_data
 
     def init_layers(self):
@@ -183,14 +207,14 @@ class Process:
         Elements = gdsii.top_level()[0].elements
         Layers = self.config_data['Layers']
         
-        junction_area(Elements)
-        
         for element in Elements:
             if isinstance(element, gdspy.Polygon):
                 polygon_result(Layers, element)
             elif isinstance(element, gdspy.CellReference):
                 polygon_jj(Layers, element)
 
+        junction_area(Elements)
+        
         union_polygons(Layers)
 
     def calculate_atom(self, atom):
@@ -201,30 +225,34 @@ class Process:
 
     def calculate_sub_atom(self, atom, subatom):
         """
-            1. Calculate the Subject polygon list
-            2. Calculate the Clippers polygon list
+            1. Calculate the Subject polygon list.
+            2. Calculate the Clippers polygon list.
             3. Clip and 1. and 2. using the proposed
                method and save the result.
         """
-
-        result_list = []
-
-        subj = self.subject(atom, subatom)
-        clip = self.clipper(atom, subatom)
-
-        if subj and clip:
-            result_list = tools.angusj(clip, subj, subatom['method'])
-            if result_list:
-                self.update_layer(atom, subatom, result_list)
+                
+        if subatom['method'] == 'offset':
+            self.execute_offset(atom, subatom)
+        elif subatom['method'] == 'intersection':
+            if subatom['type'] == 'boolean':
+                self.execute_bool(atom, subatom)
             else:
-                atom['skip'] = 'true'
+                self.execute_method(atom, subatom)
+        elif subatom['method'] == 'difference':
+            self.execute_method(atom, subatom)
+        elif subatom['method'] == 'union':
+            self.execute_method(atom, subatom)
         else:
-            atom['skip'] = 'true'
+            raise Exception('Please specify a valid Clippers method')
+                
+    def save_intersected_poly(self, atom, subatom, res_list):
+        Layers = self.config_data['Layers']
+        layer = subatom['savein']['layer']
+        poly = subatom['savein']['poly']
+        Layers[layer][poly] = res_list
 
     def update_layer(self, atom, subatom, result):
-        """
-            Saves the result back into the global Layers dict.
-        """
+        """ Saves the result back into the global Layers dict. """
 
         Layers = self.config_data['Layers']
         layer = subatom['savein']['layer']
@@ -232,10 +260,6 @@ class Process:
 
         if subatom['type'] == 'result':
             subatom['result'] = result
-        elif subatom['type'] == 'boolean':
-            # Save the previous subatom's result
-            sublayer = subatom['clip']['layer']
-            Layers[layer][poly] = atom['Subatom'][sublayer]['result']
         else:
             Layers[layer][poly] = result
 
@@ -270,6 +294,11 @@ class Process:
                 clip_class : Can only be "Layers" or "Atom".
 
                 clip_poly : For now it can either be "jj" or "result".
+                
+            Note
+            ----
+            
+                * Subatom classes must be in Clip Object.
         """
 
         Layers = self.config_data['Layers']
@@ -282,8 +311,78 @@ class Process:
         elif clip_class == 'Atom':
             clip = atom[clip_layer]['result']
         elif clip_class == 'Subatom':
-            clip = atom['Subatom'][subatom['clip']['layer']]['result']
+            subatom_num = subatom['clip']['layer']
+            clip = atom['Subatom'][subatom_num]['result']
+            
         return clip
+        
+    def execute_offset(self, atom, subatom):
+        """ """
+        
+        result_list = []
+        subj = self.subject(atom, subatom)
+
+        if subj:
+            result_list = tools.angusj_offset(subj)
+            if result_list:
+                self.update_layer(atom, subatom, result_list)
+                
+    def execute_method(self, atom, subatom):
+        """ """
+
+        subj = self.subject(atom, subatom)
+        clip = self.clipper(atom, subatom)
+
+        result_list = []
+        if subj and clip:
+            result_list = tools.angusj(clip, subj, subatom['method'])
+            if result_list:
+                self.update_layer(atom, subatom, result_list)
+            else:
+                atom['skip'] = 'true'
+        else:
+            atom['skip'] = 'true'
+            
+    def execute_bool(self, atom, subatom):
+        """ """
+        
+        subj = self.subject(atom, subatom)
+        clip = self.clipper(atom, subatom)
+        
+        result_list = []
+        inter_list = []
+        for poly in clip:
+            result_list = tools.angusj([poly], subj, subatom['method'])
+            if subatom['delete'] == 'True':
+                if not result_list:
+                    inter_list.append(poly)
+            else:
+                if result_list:
+                    inter_list.append(poly)
+
+        self.save_intersected_poly(atom, subatom, inter_list)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
         
         

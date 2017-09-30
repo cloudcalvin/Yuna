@@ -60,15 +60,18 @@ class Write:
         cell = gdspy.Cell('SOLUTION')
         
         add_jj_cell(cell, config)
-
+        
+        # for poly in config['Layers']['RC']['jj']:
+        #     cell.add(gdspy.Polygon(poly, 20))
+        for poly in config['Layers']['RES']['jj']:
+            cell.add(gdspy.Polygon(poly, 21))
+            
         for poly in config['Layers']['CC']['result']:
             cell.add(gdspy.Polygon(poly, 11))
         for poly in config['Layers']['COU']['result']:
             cell.add(gdspy.Polygon(poly, 8))
         for poly in config['Layers']['CTL']['result']:
             cell.add(gdspy.Polygon(poly, 12))
-        # for poly in config['Layers']['JJ']['result']:
-        #     cell.add(gdspy.Polygon(poly, 6))
         for poly in config['Layers']['COU']['jj']:
             cell.add(gdspy.Polygon(poly, 108))
         for poly in config['Layers']['TERM']['result']:

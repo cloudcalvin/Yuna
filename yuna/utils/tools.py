@@ -6,9 +6,7 @@ from collections import defaultdict
 import pyclipper
 
 def angusj(clip, subj, clip_type):
-    """
-        qwuihwqdiu
-    """
+    """ Angusj clipping library """
 
     pc = pyclipper.Pyclipper()
 
@@ -32,6 +30,19 @@ def angusj(clip, subj, clip_type):
         return subj
     else:
         return []
+        
+        
+def angusj_offset(subj):
+    """ Angusj offset function using Clippers """
+
+    solution = []
+    
+    for poly in subj:
+        pco = pyclipper.PyclipperOffset()
+        pco.AddPath(poly, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
+        solution.append(pco.Execute(-10e4)[0])
+        
+    return solution
 
 
 def union_wire(Layers, layer, config_save):

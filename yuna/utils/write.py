@@ -1,3 +1,6 @@
+from __future__ import print_function # lace this in setup.
+from termcolor import colored
+
 import gdspy
 import numpy as np
 import matplotlib.pyplot as plt
@@ -60,23 +63,41 @@ class Write:
         # if self.view:
         #     gdspy.LayoutViewer()
 
+        print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+        print('Cell: SOLUTION')
         cell = gdspy.Cell('SOLUTION')
         
         # add_jj_cell(cell, config)
         
         # for poly in config['Layers']['RC']['jj']:
         #     cell.add(gdspy.Polygon(poly, 20))
+        print ('      ' + '-> ', end='')
+        print('RES JJ')
         for poly in config['Layers']['RES']['jj']:
             cell.add(gdspy.Polygon(poly, 21))
-            
+        
+        print ('      ' + '-> ', end='')
+        print('CC')
         for poly in config['Layers']['CC']['result']:
             cell.add(gdspy.Polygon(poly, 11))
+            
+        print ('      ' + '-> ', end='')
+        print('COU')
         for poly in config['Layers']['COU']['result']:
             cell.add(gdspy.Polygon(poly, 8))
+            
+        print ('      ' + '-> ', end='')
+        print('CTL')
         for poly in config['Layers']['CTL']['result']:
             cell.add(gdspy.Polygon(poly, 12))
+            
+        print ('      ' + '-> ', end='')
+        print('COU JJ')
         for poly in config['Layers']['COU']['jj']:
             cell.add(gdspy.Polygon(poly, 108))
+            
+        print ('      ' + '-> ', end='')
+        print('TERM')
         for poly in config['Layers']['TERM']['result']:
             cell.add(gdspy.Polygon(poly, 15))
 

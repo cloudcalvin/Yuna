@@ -87,9 +87,11 @@ def polygon_result(Layers, element):
 def polygon_jj(Layers, element):
     """ Add the polygon to the 'jj' key in the 'Layers' object. """
 
+    print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Add junction: ')
     name = element.ref_cell.name
     if name[:2] == 'JJ':
-        print('\n---Add junction: ' + name + ' ----------')
+        print('    Name: ' + name)
         Layers['JJ']['name'].append(name)
         cellpolygons = gdsii.extract(name).get_polygons(True)
         transpose_cell(Layers, cellpolygons, element.origin, name)
@@ -105,9 +107,24 @@ def union_polygons(Layers):
             tools.union_wire(Layers, layer, 'result')
             tools.union_wire(Layers, layer, 'jj')
 
+
+def does_contain_junctions(Elements):
+    """ Check if the layout contains any Junctions. """
+    
+    hasjj = False
+    
+    for element in Elements:
+        if isinstance(element, gdspy.CellReference):
+            name = element.ref_cell.name
+            if name[:2] == 'JJ':
+                hasjj = True
+                
+    return hasjj 
+
             
 def junction_area(Elements):
-    print('\n[*] Junction areas:')
+    print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Junction areas:')
     for element in Elements:
         if isinstance(element, gdspy.CellReference):
             name = element.ref_cell.name
@@ -154,7 +171,7 @@ class Process:
         self.gds_file = gds_file
         self.config_data = config_data
 
-    def config_layers(self):
+    def config_layers(self, cellref):
         """
             This function is process specific.
             It looks at each layer and dicides
@@ -177,21 +194,26 @@ class Process:
                 layers, not just the wiring layers.
         """
 
-        self.init_layers()
+        self.init_layers(cellref)
 
+        Elements = gdsii.top_level()[0].elements
         Layers = self.config_data['Layers']
         Atom = self.config_data['Atom']
 
+        print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+        print('Running Atom:')
         for atom in Atom:
             if is_layer_active(Layers, atom):
-                print('\n---Running Atom: ' + atom['id'] + ' ----------')
+                print('      Num: ' + atom['id'])
                 self.calculate_atom(atom)
 
-        resistance_area(self.config_data)
+        if does_contain_junctions(Elements):
+            junction_area(Elements)
+            resistance_area(self.config_data)
 
         return self.config_data
 
-    def init_layers(self):
+    def init_layers(self, cellref):
         """
             Fills the 'result' and 'jj' lists inside each
             layer in 'Layers' object.
@@ -204,33 +226,36 @@ class Process:
         """
 
         gdsii.read_gds(self.gds_file, unit=1.0e-12)
-        gdsii.extract('aj03_p2j00sb')
+        
+        if cellref:
+            gdsii.extract(cellref)
+        else:
+            top_cell = gdsii.top_level()[0]
+            gdsii.extract(top_cell)
+        
         gdspy.LayoutViewer()
         
-        print('\n---Adding components----------')
         Elements = gdsii.top_level()[0].elements
         Layers = self.config_data['Layers']
         
-        print ('[' + colored('*', 'green') + '] ', end='')
+        print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
         print('Elements:')
         for element in Elements:
             if isinstance(element, gdspy.Polygon):
-                print('Polygons: ', end='')
+                print('      Polygons: ', end='')
                 print(element)
                 polygon_result(Layers, element)
             elif isinstance(element, gdspy.CellReference):
-                print('CellReference: ', end='')
+                print('      CellReference: ', end='')
                 print(element)
                 polygon_jj(Layers, element)
-
-        junction_area(Elements)
         
         union_polygons(Layers)
 
     def calculate_atom(self, atom):
         for subatom in atom['Subatom']:
             if not json.loads(atom['skip']):
-                print('Subatom: ' + str(subatom['id']))
+                print('        Subatom: ' + str(subatom['id']))
                 self.calculate_sub_atom(atom, subatom)
 
     def calculate_sub_atom(self, atom, subatom):

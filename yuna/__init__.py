@@ -6,18 +6,43 @@ import yuna.utils.read
 import yuna.utils.write
 import yuna.process
 import json
+import gdspy
 
 
-def machina(gds, config, ldf):
+def list_layout_cells(gds):
+    """ List the Cells in the GDS layout. """
+    
+    gdsii = gdspy.GdsLibrary()
+    gdsii.read_gds(gds, unit=1.0e-12)
+        
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Cell List:')        
+    for key, value in gdsii.cell_dict.items():
+        print('      -> ' + key)
+
+
+def machina(gds, config, ldf, cellref):
+    print ('\n' + '[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
+    print ('Running Yuna...')
+        
     viewgds = True
 
     layers = yuna.utils.read.ldf(ldf)
     write = yuna.utils.write.Write(viewgds)
+    
+    gdssetup = None
+    if cellref == 'list':
+        list_layout_cells(gds)
+    else:
+        gdssetup = generate_gds(write, gds, layers, config, ldf, cellref)
+    
+    print ('\n[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
+    print ('Finished Yuna...')
 
-    return generate_gds(write, gds, layers, config, ldf)
+    return gdssetup
 
 
-def generate_gds(write, gds_file, layers, config_file, ldf):
+def generate_gds(write, gds_file, layers, config_file, ldf, cellref):
     """
         Read in the layers from the GDS file,
         do clipping and send polygons to
@@ -25,25 +50,48 @@ def generate_gds(write, gds_file, layers, config_file, ldf):
     """
 
     if (ldf == 'adp') or (ldf == 'stp'):
-        print ('[' + colored('*', 'green') + '] ', end='')
         config_data = yuna.utils.read.config(config_file)
 
-        # Process object
+        print ('[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+        print ('--- Process Layers ----------')
         process = yuna.process.Process(gds_file, config_data)
-        config = process.config_layers()
+        config = process.config_layers(cellref)
 
         # Write object
+        print ('[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+        print ('--- Write Layers ----------')
         write = yuna.utils.write.Write(True)
         write.write_gds(config)
 
         return write.solution
     elif ldf == 'stem64':
-        print ('[' + colored('*', 'green') + '] ', end='')
+        print ('\n' + '[' + colored('*', 'green') + '] ', end='')
         print ('Using stem64 ldf file:')
         config_data = yuna.utils.read.config(config_file)
-
     else:
         raise Exception('Please specify the fabrication process')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

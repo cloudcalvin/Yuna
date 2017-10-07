@@ -20,7 +20,7 @@ def config(config_file):
     data = None
     with open(config_file) as data_file:
         data = json.load(data_file)
-        print(json.dumps(data, indent=4, sort_keys=True))
+        # print(json.dumps(data, indent=4, sort_keys=True))
     return data
 
 

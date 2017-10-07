@@ -20,6 +20,7 @@ def config(config_file):
     data = None
     with open(config_file) as data_file:
         data = json.load(data_file)
+        print(json.dumps(data, indent=4, sort_keys=True))
     return data
 
 
@@ -29,12 +30,18 @@ def ldf(process):
 
             Layer    GDS    Description
             -----    ---    -----------
-            M0       30     Ground
             M1       1      Wire layer 1
+            I1BU     3      Via M2 to M1
+            I1C      4
+            A1       5
             M2       6      Wire layer 2
-            M3       10     Wire layer 3
-            I1       3      Via M2 to M1
             I2       8      Via M2 to M3
+            R2       9 
+            M3       10     Wire layer 3
+            R3       11
+            M0       30     Ground
+            I0       31   
+            I1BL     59
 
         2)  AIST design rules.
 

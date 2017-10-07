@@ -5,6 +5,8 @@
 
 import os
 from setuptools import setup, find_packages
+from __future__ import print_function
+from termcolor import colored
 
 
 # preserve format, this is read from __init__.py

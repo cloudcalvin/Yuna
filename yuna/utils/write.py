@@ -56,10 +56,13 @@ class Write:
                 71 : JJ polygons
                 70 : Holes
         """
+        
+        # if self.view:
+        #     gdspy.LayoutViewer()
 
         cell = gdspy.Cell('SOLUTION')
         
-        add_jj_cell(cell, config)
+        # add_jj_cell(cell, config)
         
         # for poly in config['Layers']['RC']['jj']:
         #     cell.add(gdspy.Polygon(poly, 20))
@@ -77,8 +80,8 @@ class Write:
         for poly in config['Layers']['TERM']['result']:
             cell.add(gdspy.Polygon(poly, 15))
 
-        if self.view:
-            gdspy.LayoutViewer()
+        # if self.view:
+        #     gdspy.LayoutViewer()
 
         self.solution = cell.get_polygons(True)
 

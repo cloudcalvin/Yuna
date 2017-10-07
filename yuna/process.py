@@ -1,4 +1,6 @@
-# thedon
+from __future__ import print_function # lace this in setup.
+from termcolor import colored
+
 import json
 import gdspy
 import yuna.utils.tools as tools
@@ -202,15 +204,23 @@ class Process:
         """
 
         gdsii.read_gds(self.gds_file, unit=1.0e-12)
-
+        gdsii.extract('aj03_p2j00sb')
+        gdspy.LayoutViewer()
+        
         print('\n---Adding components----------')
         Elements = gdsii.top_level()[0].elements
         Layers = self.config_data['Layers']
         
+        print ('[' + colored('*', 'green') + '] ', end='')
+        print('Elements:')
         for element in Elements:
             if isinstance(element, gdspy.Polygon):
+                print('Polygons: ', end='')
+                print(element)
                 polygon_result(Layers, element)
             elif isinstance(element, gdspy.CellReference):
+                print('CellReference: ', end='')
+                print(element)
                 polygon_jj(Layers, element)
 
         junction_area(Elements)
@@ -294,7 +304,7 @@ class Process:
                 clip_class : Can only be "Layers" or "Atom".
 
                 clip_poly : For now it can either be "jj" or "result".
-                
+
             Note
             ----
             

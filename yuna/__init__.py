@@ -11,10 +11,10 @@ import gdspy
 
 def list_layout_cells(gds):
     """ List the Cells in the GDS layout. """
-    
+
     gdsii = gdspy.GdsLibrary()
     gdsii.read_gds(gds, unit=1.0e-12)
-        
+
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell List:')        
     for key, value in gdsii.cell_dict.items():
@@ -24,18 +24,18 @@ def list_layout_cells(gds):
 def machina(gds, config, ldf, cellref):
     print ('\n' + '[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
     print ('Running Yuna...')
-        
+
     viewgds = True
+    gdssetup = None
 
     layers = yuna.utils.read.ldf(ldf)
     write = yuna.utils.write.Write(viewgds)
-    
-    gdssetup = None
+
     if cellref == 'list':
         list_layout_cells(gds)
     else:
         gdssetup = generate_gds(write, gds, layers, config, ldf, cellref)
-    
+
     print ('\n[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
     print ('Finished Yuna...')
 
@@ -52,13 +52,12 @@ def generate_gds(write, gds_file, layers, config_file, ldf, cellref):
     if (ldf == 'adp') or (ldf == 'stp'):
         config_data = yuna.utils.read.config(config_file)
 
-        print ('[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+        print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
         print ('--- Process Layers ----------')
         process = yuna.process.Process(gds_file, config_data)
         config = process.config_layers(cellref)
 
-        # Write object
-        print ('[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+        print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
         print ('--- Write Layers ----------')
         write = yuna.utils.write.Write(True)
         write.write_gds(config)

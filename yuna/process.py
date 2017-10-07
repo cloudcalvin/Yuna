@@ -87,25 +87,32 @@ def polygon_result(Layers, element):
 def polygon_jj(Layers, element):
     """ Add the polygon to the 'jj' key in the 'Layers' object. """
 
-    print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Add junction: ')
+    # print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    # print('Add junction: ')
     name = element.ref_cell.name
     if name[:2] == 'JJ':
-        print('    Name: ' + name)
         Layers['JJ']['name'].append(name)
         cellpolygons = gdsii.extract(name).get_polygons(True)
         transpose_cell(Layers, cellpolygons, element.origin, name)
+        # print('    Name: ' + name)
 
 
 def union_polygons(Layers):
+    # Change this by making layers active.
     Layers['RES']['active'] = True
     
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Union Layer:')
     for layer, lay_data in Layers.items():
-        if (layer == 'JJ') or (layer == 'JP') or (layer == 'JC'):
+        if json.loads(lay_data['union']):
             tools.union_wire(Layers, layer, 'result')
-        elif (layer != 'RES'):
-            tools.union_wire(Layers, layer, 'result')
-            tools.union_wire(Layers, layer, 'jj')
+
+        # if (layer == 'JJ') or (layer == 'JP') or (layer == 'JC'):
+        #     tools.union_wire(Layers, layer, 'result')
+        # elif (layer != 'RES'):
+        #     tools.union_wire(Layers, layer, 'result')
+        #     # Make sure we can actually do this.
+        #     # tools.union_wire(Layers, layer, 'jj')
 
 
 def does_contain_junctions(Elements):
@@ -118,12 +125,12 @@ def does_contain_junctions(Elements):
             name = element.ref_cell.name
             if name[:2] == 'JJ':
                 hasjj = True
-                
-    return hasjj 
 
-            
+    return hasjj
+
+
 def junction_area(Elements):
-    print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Junction areas:')
     for element in Elements:
         if isinstance(element, gdspy.CellReference):
@@ -131,13 +138,12 @@ def junction_area(Elements):
             if name[:2] == 'JJ':
                 for key, value in element.area(True).items():
                     if key[0] == 6:
-                        print(name + ' --> ' + str(value * 1e-12) + 'um')
+                        print('      ' + name + ' --> ' + str(value * 1e-12) + 'um')
 
 
-def resistance_area(config):
+def resistance_area(Layers):
     """
-        * We have to get the center of each resistance 
-          polygon.
+        * We have to get the center of each resistance polygon.
         * Test if the center of each polygon is inside
           layer 9. If so, then remove that polygon. 
         * Finally, we should be left with just the 
@@ -146,11 +152,31 @@ def resistance_area(config):
     
     # NB: We have to save the JJ name with the corresponding area value.
     
-    print('\n[*] Parasitic resistance areas:')
-    for poly in config['Layers']['RES']['jj']:
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Parasitic resistance areas:')
+    for poly in Layers['RES']['jj']:
         poly_element = gdspy.Polygon(poly, 21)
         value = poly_element.area(True).values()[0]
-        print('RES' + ' --> ' + str(value * 1e-12) + 'um')
+        print('      RES' + ' --> ' + str(value * 1e-12) + 'um')
+
+
+def add_elements(Layers, Elements):
+    """ 
+        Add the elements read from GDSPY to the 
+        corresponding Layers in the JSON object.
+    """
+    
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Elements:')
+    for element in Elements:
+        if isinstance(element, gdspy.Polygon):
+            print('      Polygons: ', end='')
+            print(element)
+            polygon_result(Layers, element)
+        elif isinstance(element, gdspy.CellReference):
+            print('      CellReference: ', end='')
+            print(element)
+            polygon_jj(Layers, element)
 
 
 class Process:
@@ -204,12 +230,11 @@ class Process:
         print('Running Atom:')
         for atom in Atom:
             if is_layer_active(Layers, atom):
-                print('      Num: ' + atom['id'])
                 self.calculate_atom(atom)
 
         if does_contain_junctions(Elements):
             junction_area(Elements)
-            resistance_area(self.config_data)
+            resistance_area(Layers)
 
         return self.config_data
 
@@ -227,35 +252,23 @@ class Process:
 
         gdsii.read_gds(self.gds_file, unit=1.0e-12)
         
+        Elements = gdsii.top_level()[0].elements
+        Layers = self.config_data['Layers']
+        
         if cellref:
             gdsii.extract(cellref)
         else:
             top_cell = gdsii.top_level()[0]
             gdsii.extract(top_cell)
         
-        gdspy.LayoutViewer()
-        
-        Elements = gdsii.top_level()[0].elements
-        Layers = self.config_data['Layers']
-        
-        print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-        print('Elements:')
-        for element in Elements:
-            if isinstance(element, gdspy.Polygon):
-                print('      Polygons: ', end='')
-                print(element)
-                polygon_result(Layers, element)
-            elif isinstance(element, gdspy.CellReference):
-                print('      CellReference: ', end='')
-                print(element)
-                polygon_jj(Layers, element)
-        
+        # gdspy.LayoutViewer()
+        add_elements(Layers, Elements)
         union_polygons(Layers)
 
     def calculate_atom(self, atom):
+        print('      Num: ' + atom['id'])
         for subatom in atom['Subatom']:
             if not json.loads(atom['skip']):
-                print('        Subatom: ' + str(subatom['id']))
                 self.calculate_sub_atom(atom, subatom)
 
     def calculate_sub_atom(self, atom, subatom):
@@ -265,7 +278,8 @@ class Process:
             3. Clip and 1. and 2. using the proposed
                method and save the result.
         """
-                
+
+        print('        Subatom: ' + str(subatom['id']))
         if subatom['method'] == 'offset':
             self.execute_offset(atom, subatom)
         elif subatom['method'] == 'intersection':
@@ -279,7 +293,7 @@ class Process:
             self.execute_method(atom, subatom)
         else:
             raise Exception('Please specify a valid Clippers method')
-                
+
     def save_intersected_poly(self, atom, subatom, res_list):
         Layers = self.config_data['Layers']
         layer = subatom['savein']['layer']

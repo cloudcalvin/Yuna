@@ -54,6 +54,8 @@ def union_wire(Layers, layer, config_save):
         layer.
     """
 
+    print('      -> ' + layer)
+
     count = [0]
     union_poly = defaultdict(list)
 

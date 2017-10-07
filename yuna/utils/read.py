@@ -42,6 +42,7 @@ def ldf(process):
             M0       30     Ground
             I0       31   
             I1BL     59
+            J2       21
 
         2)  AIST design rules.
 

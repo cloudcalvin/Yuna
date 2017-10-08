@@ -1,5 +1,9 @@
+from __future__ import print_function # lace this in setup.
+from termcolor import colored
+
 import os
 import sys
+import gdspy
 
 from collections import defaultdict
 
@@ -80,8 +84,37 @@ def union_wire(Layers, layer, config_save):
     Layers[layer][config_save] = union_poly[layer]
     print(union_poly[layer])
     Layers[layer]['active'] = True
+
         
+def flatten_cell(cell):
+    """
+        This function does a depp copy of the current 
+        working cell, with out the JJs. It then flattens
+        this cell the afterwards add the JJs.
+    """
+    
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Deep copying cell:')
+    
+    indices = []
+    jj_list = []
+    flatcell = cell.copy('flatcell', deep_copy=True)
+            
+    for i, element in enumerate(flatcell.elements):
+        if isinstance(element, gdspy.CellReference):
+            name = element.ref_cell.name
+            if name == 'aj03_p2j00sb':
+                indices.append(i)
+                jj_list.append(element)
+                    
+    for i in sorted(indices, reverse=True):
+        del flatcell.elements[i]
         
+    flatcell.flatten()
+    for element in jj_list:
+        flatcell.add(element)
+    
+    return flatcell
         
         
         

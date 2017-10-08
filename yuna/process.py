@@ -236,6 +236,7 @@ class Process:
 
         print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
         print('Running Atom:')
+        
         for atom in Atom:
             if is_layer_active(Layers, atom):
                 self.calculate_atom(atom)
@@ -264,6 +265,8 @@ class Process:
             cell = gdsii.extract(cellref)
             Elements = cell.elements
             Layers = self.config_data['Layers']
+            
+            flatcell = tools.flatten_cell(cell)
             
             add_elements(Layers, Elements)
             union_polygons(Layers)

@@ -31,7 +31,7 @@ def ldf(process):
             Layer    GDS    Description
             -----    ---    -----------
             M1       1      Wire layer 1
-            I1BU     3      Via M2 to M1
+            I1BU     3      Contact (via) between M2 and (J1/J2, R2, or M1)
             I1C      4
             A1       5
             M2       6      Wire layer 2

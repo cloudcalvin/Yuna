@@ -67,7 +67,6 @@ def transpose_cell(Layers, cellpolygons, origin, name):
                     # Save tranposed coordinates in 'Layers' object.
                     # Maybe we should automate this later by making
                     # 'result' a {} and not a [].
-                    # print(type(polygons))
                     if (layer == 'JJ'):
                         lay_data['result'].append(poly.tolist())
                     elif (layer == 'JP') or (layer == 'JC'):
@@ -79,6 +78,20 @@ def transpose_cell(Layers, cellpolygons, origin, name):
 def polygon_result(Layers, element):
     """ Add the polygon to the 'result' key in the 'Layers' object """
 
+    print('      Polygons: ', end='')
+    print(element)
+
+    for layer, lay_data in Layers.items():
+        if lay_data['gds'] == element.layer:
+            Layers[layer]['result'].append(element.points.tolist())
+            
+
+def path_result(Layers, element):
+    """ Add the path to the 'result' key in the 'Layers' object """
+
+    print('      Paths: ', end='')
+    print(element)
+
     for layer, lay_data in Layers.items():
         if lay_data['gds'] == element.layer:
             Layers[layer]['result'].append(element.points.tolist())
@@ -86,9 +99,10 @@ def polygon_result(Layers, element):
 
 def polygon_jj(Layers, element):
     """ Add the polygon to the 'jj' key in the 'Layers' object. """
+    
+    print('      CellReference: ', end='')
+    print(element)
 
-    # print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    # print('Add junction: ')
     name = element.ref_cell.name
     if name[:2] == 'JJ':
         Layers['JJ']['name'].append(name)
@@ -97,34 +111,26 @@ def polygon_jj(Layers, element):
 
 
 def union_polygons(Layers):
-    # Change this by making layers active.
-    # Layers['RES']['active'] = True
+    """ Union the polygons. """
     
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Union Layer:')
-    for layer, lay_data in Layers.items():
-        if json.loads(lay_data['union']):
-            tools.union_wire(Layers, layer, 'result')
-
-        # if (layer == 'JJ') or (layer == 'JP') or (layer == 'JC'):
-        #     tools.union_wire(Layers, layer, 'result')
-        # elif (layer != 'RES'):
-        #     tools.union_wire(Layers, layer, 'result')
-        #     # Make sure we can actually do this.
-        #     # tools.union_wire(Layers, layer, 'jj')
+    
+    for key, layer in Layers.items():
+        if json.loads(layer['union']):
+            tools.union_wire(Layers, key, 'result')
 
 
 def does_contain_junctions(Elements):
     """ Check if the layout contains any Junctions. """
     
     hasjj = False
-    
     for element in Elements:
         if isinstance(element, gdspy.CellReference):
             name = element.ref_cell.name
             if name[:2] == 'JJ':
                 hasjj = True
-
+                
     return hasjj
 
 
@@ -170,14 +176,14 @@ def add_elements(Layers, Elements):
     
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Elements:')
+    
     for element in Elements:
         if isinstance(element, gdspy.Polygon):
-            print('      Polygons: ', end='')
-            print(element)
             polygon_result(Layers, element)
+        elif isinstance(element, gdspy.PolyPath):
+            print('Paths not yet supported')
+            # path_result(Layers, element)
         elif isinstance(element, gdspy.CellReference):
-            print('      CellReference: ', end='')
-            print(element)
             polygon_jj(Layers, element)
 
 
@@ -254,18 +260,29 @@ class Process:
 
         gdsii.read_gds(self.gds_file, unit=1.0e-12)
         
-        Elements = gdsii.top_level()[0].elements
-        Layers = self.config_data['Layers']
-        
         if cellref:
-            gdsii.extract(cellref)
+            cell = gdsii.extract(cellref)
+            Elements = cell.elements
+            Layers = self.config_data['Layers']
+            
+            add_elements(Layers, Elements)
+            union_polygons(Layers)
         else:
             top_cell = gdsii.top_level()[0]
             gdsii.extract(top_cell)
-        
-        # gdspy.LayoutViewer()
-        add_elements(Layers, Elements)
-        union_polygons(Layers)
+            
+            Elements = gdsii.top_level()[0].elements
+            Layers = self.config_data['Layers']
+            
+            add_elements(Layers, Elements)
+            union_polygons(Layers)
+
+            
+        # Elements = gdsii.top_level()[0].elements
+        # Layers = self.config_data['Layers']
+        # 
+        # add_elements(Layers, Elements)
+        # union_polygons(Layers)
 
     def calculate_atom(self, atom):
         print('      Num: ' + atom['id'])

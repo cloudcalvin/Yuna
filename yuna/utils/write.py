@@ -2,6 +2,7 @@ from __future__ import print_function # lace this in setup.
 from termcolor import colored
 
 import gdspy
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
@@ -73,11 +74,13 @@ def stem_process(Layers):
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: STEM')
     cell = gdspy.Cell('STEM')
-
-    print ('      ' + '-> ', end='')
-    print('M2')
-    for poly in Layers['M2']['result']:
-        cell.add(gdspy.Polygon(poly, 6))
+    
+    for key, layer in Layers.items():
+        if json.loads(layer['debug']):
+            print ('      ' + '-> ', end='')
+            print(key)
+            for poly in layer['result']:
+                cell.add(gdspy.Polygon(poly, 6))
     
     # print ('      ' + '-> ', end='')
     # print('CC')

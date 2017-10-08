@@ -85,6 +85,21 @@ def polygon_result(Layers, element):
         if lay_data['gds'] == element.layer:
             Layers[layer]['result'].append(element.points.tolist())
             
+            
+def polygon_set_result(Layers, element):
+    """ 
+        Add the polygons from the PolygonSet to 
+        the 'result' key in the 'Layers' object.
+    """
+
+    print('      PolygonSet: ', end='')
+    print(element)
+
+    for layer, lay_data in Layers.items():
+        if lay_data['gds'] == element.layers[0]:
+            for poly in element.polygons:
+                Layers[layer]['result'].append(poly.tolist())
+            
 
 def path_result(Layers, element):
     """ Add the path to the 'result' key in the 'Layers' object """
@@ -178,8 +193,11 @@ def add_elements(Layers, Elements):
     print('Elements:')
     
     for element in Elements:
+        # print(element)
         if isinstance(element, gdspy.Polygon):
             polygon_result(Layers, element)
+        elif isinstance(element, gdspy.PolygonSet):
+            polygon_set_result(Layers, element)
         elif isinstance(element, gdspy.PolyPath):
             print('Paths not yet supported')
             # path_result(Layers, element)

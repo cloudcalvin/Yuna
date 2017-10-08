@@ -36,13 +36,15 @@ def ldf(process):
             A1       5
             M2       6      Wire layer 2
             I2       8      Via M2 to M3
-            R2       9 
+            R2       9
             M3       10     Wire layer 3
             R3       11
             M0       30     Ground
-            I0       31   
+            I0       31
             I1BL     59
             J2       21
+            MN1      34     Wire layer
+            MN3      42     Wire layer
 
         2)  AIST design rules.
 

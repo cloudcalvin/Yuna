@@ -85,6 +85,16 @@ def union_wire(Layers, layer, config_save):
     print(union_poly[layer])
     Layers[layer]['active'] = True
 
+
+def remove_jjs(flatcell, indices):
+    for i in sorted(indices, reverse=True):
+        del flatcell.elements[i]
+
+
+def add_jjs_cells(flatcell, jj_list):
+    for element in jj_list:
+        flatcell.add(element)
+
         
 def flatten_cell(cell):
     """
@@ -98,6 +108,7 @@ def flatten_cell(cell):
     
     indices = []
     jj_list = []
+    
     flatcell = cell.copy('flatcell', deep_copy=True)
             
     for i, element in enumerate(flatcell.elements):
@@ -107,12 +118,9 @@ def flatten_cell(cell):
                 indices.append(i)
                 jj_list.append(element)
                     
-    for i in sorted(indices, reverse=True):
-        del flatcell.elements[i]
-        
+    remove_jjs(flatcell, indices)
     flatcell.flatten()
-    for element in jj_list:
-        flatcell.add(element)
+    add_jjs_cells(flatcell, jj_list)
     
     return flatcell
         

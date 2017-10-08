@@ -262,11 +262,11 @@ class Process:
         gdsii.read_gds(self.gds_file, unit=1.0e-12)
         
         if cellref:
-            cell = gdsii.extract(cellref)
-            Elements = cell.elements
-            Layers = self.config_data['Layers']
-            
+            cell = gdsii.extract(cellref)            
             flatcell = tools.flatten_cell(cell)
+            
+            Elements = flatcell.elements
+            Layers = self.config_data['Layers']
             
             add_elements(Layers, Elements)
             union_polygons(Layers)

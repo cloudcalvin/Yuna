@@ -247,10 +247,6 @@ class Process:
 
         Elements, Layers, Atom = self.init_layers(cellref)
 
-        # Elements = gdsii.top_level()[0].elements
-        # Layers = self.config_data['Layers']
-        # Atom = self.config_data['Atom']
-
         print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
         print('Running Atom:')
         
@@ -301,13 +297,6 @@ class Process:
             
         return Elements, Layers, Atom
 
-            
-        # Elements = gdsii.top_level()[0].elements
-        # Layers = self.config_data['Layers']
-        # 
-        # add_elements(Layers, Elements)
-        # union_polygons(Layers)
-
     def calculate_atom(self, atom):
         print('      Num: ' + atom['id'])
         for subatom in atom['Subatom']:
@@ -335,15 +324,6 @@ class Process:
             self.execute_method(atom, subatom)
         else:
             raise Exception('Please specify a valid Clippers method')
-
-    # def save_intersected_poly(self, atom, subatom, res_list):
-    #     if subatom['type'] == 'subatom':
-    #         subatom['result'] = res_list
-    #     else:
-    #         Layers = self.config_data['Layers']
-    #         layer = subatom['savein']['layer']
-    #         poly = subatom['savein']['poly']
-    #         Layers[layer][poly] = res_list
 
     def update_layer(self, atom, subatom, result):
         """ Saves the result back into the global Layers dict. """

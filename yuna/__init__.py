@@ -48,27 +48,39 @@ def generate_gds(write, gds_file, layers, config_file, ldf, cellref):
         do clipping and send polygons to
         GMSH to generate the Mesh.
     """
+    
+    config_data = yuna.utils.read.config(config_file)
 
-    if (ldf == 'adp') or (ldf == 'stp'):
-        config_data = yuna.utils.read.config(config_file)
+    print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+    print ('--- Process Layers ----------')
+    process = yuna.process.Process(gds_file, config_data)
+    config = process.config_layers(cellref)
 
-        print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
-        print ('--- Process Layers ----------')
-        process = yuna.process.Process(gds_file, config_data)
-        config = process.config_layers(cellref)
+    print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+    print ('--- Write Layers ----------')
+    write = yuna.utils.write.Write(True)
+    write.write_gds(config, ldf)
 
-        print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
-        print ('--- Write Layers ----------')
-        write = yuna.utils.write.Write(True)
-        write.write_gds(config)
-
-        return write.solution
-    elif ldf == 'stem64':
-        print ('\n' + '[' + colored('*', 'green') + '] ', end='')
-        print ('Using stem64 ldf file:')
-        config_data = yuna.utils.read.config(config_file)
-    else:
-        raise Exception('Please specify the fabrication process')
+    # if (ldf == 'adp') or (ldf == 'stp'):
+    #     config_data = yuna.utils.read.config(config_file)
+    # 
+    #     print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+    #     print ('--- Process Layers ----------')
+    #     process = yuna.process.Process(gds_file, config_data)
+    #     config = process.config_layers(cellref)
+    # 
+    #     print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+    #     print ('--- Write Layers ----------')
+    #     write = yuna.utils.write.Write(True)
+    #     write.write_gds(config, ldf)
+    # 
+    #     return write.solution
+    # elif ldf == 'stem64':
+    #     print ('\n' + '[' + colored('*', 'green') + '] ', end='')
+    #     print ('Using stem64 ldf file:')
+    #     config_data = yuna.utils.read.config(config_file)
+    # else:
+    #     raise Exception('Please specify the fabrication process')
 
 
 

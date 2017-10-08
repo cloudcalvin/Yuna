@@ -25,6 +25,86 @@ def add_jj_cell(cell, config):
         cell_jj.add(label)
 
         cell.add(cell_jj)
+        
+        
+def adp_process(Layers):
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Cell: ADP')
+    cell = gdspy.Cell('ADP')
+    
+    # add_jj_cell(cell, config)
+    
+    # for poly in config['Layers']['RC']['jj']:
+    #     cell.add(gdspy.Polygon(poly, 20))
+    print ('      ' + '-> ', end='')
+    print('RES JJ')
+    for poly in Layers['RES']['jj']:
+        cell.add(gdspy.Polygon(poly, 21))
+    
+    print ('      ' + '-> ', end='')
+    print('CC')
+    for poly in Layers['CC']['result']:
+        cell.add(gdspy.Polygon(poly, 11))
+        
+    print ('      ' + '-> ', end='')
+    print('COU')
+    for poly in Layers['COU']['result']:
+        cell.add(gdspy.Polygon(poly, 8))
+        
+    print ('      ' + '-> ', end='')
+    print('CTL')
+    for poly in Layers['CTL']['result']:
+        cell.add(gdspy.Polygon(poly, 12))
+        
+    print ('      ' + '-> ', end='')
+    print('COU JJ')
+    for poly in Layers['COU']['jj']:
+        cell.add(gdspy.Polygon(poly, 108))
+        
+    print ('      ' + '-> ', end='')
+    print('TERM')
+    for poly in Layers['TERM']['result']:
+        cell.add(gdspy.Polygon(poly, 15))
+        
+    return cell
+    
+    
+def stem_process(Layers):
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Cell: STEM')
+    cell = gdspy.Cell('STEM')
+
+    print ('      ' + '-> ', end='')
+    print('M2')
+    for poly in Layers['M2']['result']:
+        cell.add(gdspy.Polygon(poly, 6))
+    
+    # print ('      ' + '-> ', end='')
+    # print('CC')
+    # for poly in Layers['CC']['result']:
+    #     cell.add(gdspy.Polygon(poly, 11))
+    #     
+    # print ('      ' + '-> ', end='')
+    # print('COU')
+    # for poly in Layers['COU']['result']:
+    #     cell.add(gdspy.Polygon(poly, 8))
+    #     
+    # print ('      ' + '-> ', end='')
+    # print('CTL')
+    # for poly in Layers['CTL']['result']:
+    #     cell.add(gdspy.Polygon(poly, 12))
+    #     
+    # print ('      ' + '-> ', end='')
+    # print('COU JJ')
+    # for poly in Layers['COU']['jj']:
+    #     cell.add(gdspy.Polygon(poly, 108))
+    #     
+    # print ('      ' + '-> ', end='')
+    # print('TERM')
+    # for poly in Layers['TERM']['result']:
+    #     cell.add(gdspy.Polygon(poly, 15))
+    #     
+    return cell
 
 
 class Write:
@@ -33,7 +113,7 @@ class Write:
         self.solution = None
         self.holes = None
 
-    def write_gds(self, config):
+    def write_gds(self, config, ldf):
         """
             Write the GDS file that contains the difference
             of the moat layer with the wiring layer and the
@@ -59,49 +139,19 @@ class Write:
                 71 : JJ polygons
                 70 : Holes
         """
-
-        print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-        print('Cell: SOLUTION')
-        cell = gdspy.Cell('SOLUTION')
         
-        # add_jj_cell(cell, config)
+        auronlayout = None
+        Layers = config['Layers']
         
-        # for poly in config['Layers']['RC']['jj']:
-        #     cell.add(gdspy.Polygon(poly, 20))
-        print ('      ' + '-> ', end='')
-        print('RES JJ')
-        for poly in config['Layers']['RES']['jj']:
-            cell.add(gdspy.Polygon(poly, 21))
-        
-        print ('      ' + '-> ', end='')
-        print('CC')
-        for poly in config['Layers']['CC']['result']:
-            cell.add(gdspy.Polygon(poly, 11))
-            
-        print ('      ' + '-> ', end='')
-        print('COU')
-        for poly in config['Layers']['COU']['result']:
-            cell.add(gdspy.Polygon(poly, 8))
-            
-        print ('      ' + '-> ', end='')
-        print('CTL')
-        for poly in config['Layers']['CTL']['result']:
-            cell.add(gdspy.Polygon(poly, 12))
-            
-        print ('      ' + '-> ', end='')
-        print('COU JJ')
-        for poly in config['Layers']['COU']['jj']:
-            cell.add(gdspy.Polygon(poly, 108))
-            
-        print ('      ' + '-> ', end='')
-        print('TERM')
-        for poly in config['Layers']['TERM']['result']:
-            cell.add(gdspy.Polygon(poly, 15))
+        if ldf == 'adp':
+            auronlayout = adp_process(Layers)
+        elif ldf == 'stem64':
+            auronlayout = stem_process(Layers)
 
         if self.view:
             gdspy.LayoutViewer()
 
-        self.solution = cell.get_polygons(True)
+        self.solution = auronlayout.get_polygons(True)
 
 
 

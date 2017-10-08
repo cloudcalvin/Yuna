@@ -94,12 +94,11 @@ def polygon_jj(Layers, element):
         Layers['JJ']['name'].append(name)
         cellpolygons = gdsii.extract(name).get_polygons(True)
         transpose_cell(Layers, cellpolygons, element.origin, name)
-        # print('    Name: ' + name)
 
 
 def union_polygons(Layers):
     # Change this by making layers active.
-    Layers['RES']['active'] = True
+    # Layers['RES']['active'] = True
     
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Union Layer:')
@@ -154,10 +153,13 @@ def resistance_area(Layers):
     
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Parasitic resistance areas:')
-    for poly in Layers['RES']['jj']:
-        poly_element = gdspy.Polygon(poly, 21)
-        value = poly_element.area(True).values()[0]
-        print('      RES' + ' --> ' + str(value * 1e-12) + 'um')
+    
+    for key, value in Layers.items():
+        if value['type'] == 'resistance':
+            for poly in value['jj']:
+                poly_element = gdspy.Polygon(poly, 21)
+                value = poly_element.area(True).values()[0]
+                print('      ' + key + ' --> ' + str(value * 1e-12) + 'um')
 
 
 def add_elements(Layers, Elements):

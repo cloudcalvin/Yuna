@@ -193,7 +193,6 @@ def add_elements(Layers, Elements):
     print('Elements:')
     
     for element in Elements:
-        # print(element)
         if isinstance(element, gdspy.Polygon):
             polygon_result(Layers, element)
         elif isinstance(element, gdspy.PolygonSet):
@@ -246,11 +245,11 @@ class Process:
                 layers, not just the wiring layers.
         """
 
-        self.init_layers(cellref)
+        Elements, Layers, Atom = self.init_layers(cellref)
 
-        Elements = gdsii.top_level()[0].elements
-        Layers = self.config_data['Layers']
-        Atom = self.config_data['Atom']
+        # Elements = gdsii.top_level()[0].elements
+        # Layers = self.config_data['Layers']
+        # Atom = self.config_data['Atom']
 
         print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
         print('Running Atom:')
@@ -285,6 +284,7 @@ class Process:
             
             Elements = flatcell.elements
             Layers = self.config_data['Layers']
+            Atom = self.config_data['Atom']
             
             add_elements(Layers, Elements)
             union_polygons(Layers)
@@ -292,11 +292,14 @@ class Process:
             top_cell = gdsii.top_level()[0]
             gdsii.extract(top_cell)
             
-            Elements = gdsii.top_level()[0].elements
+            Elements = gdsii.top_lesvel()[0].elements
             Layers = self.config_data['Layers']
+            Atom = self.config_data['Atom']
             
             add_elements(Layers, Elements)
             union_polygons(Layers)
+            
+        return Elements, Layers, Atom
 
             
         # Elements = gdsii.top_level()[0].elements
@@ -322,11 +325,10 @@ class Process:
         print('        Subatom: ' + str(subatom['id']))
         if subatom['method'] == 'offset':
             self.execute_offset(atom, subatom)
+        elif subatom['method'] == 'boolean':
+            self.execute_bool(atom, subatom)
         elif subatom['method'] == 'intersection':
-            if subatom['type'] == 'boolean':
-                self.execute_bool(atom, subatom)
-            else:
-                self.execute_method(atom, subatom)
+            self.execute_method(atom, subatom)
         elif subatom['method'] == 'difference':
             self.execute_method(atom, subatom)
         elif subatom['method'] == 'union':
@@ -334,22 +336,24 @@ class Process:
         else:
             raise Exception('Please specify a valid Clippers method')
 
-    def save_intersected_poly(self, atom, subatom, res_list):
-        Layers = self.config_data['Layers']
-        layer = subatom['savein']['layer']
-        poly = subatom['savein']['poly']
-        Layers[layer][poly] = res_list
+    # def save_intersected_poly(self, atom, subatom, res_list):
+    #     if subatom['type'] == 'subatom':
+    #         subatom['result'] = res_list
+    #     else:
+    #         Layers = self.config_data['Layers']
+    #         layer = subatom['savein']['layer']
+    #         poly = subatom['savein']['poly']
+    #         Layers[layer][poly] = res_list
 
     def update_layer(self, atom, subatom, result):
         """ Saves the result back into the global Layers dict. """
 
-        Layers = self.config_data['Layers']
-        layer = subatom['savein']['layer']
-        poly = subatom['savein']['poly']
-
-        if subatom['type'] == 'result':
+        if subatom['type'] == 'subatom':
             subatom['result'] = result
         else:
+            Layers = self.config_data['Layers']
+            layer = subatom['savein']['layer']
+            poly = subatom['savein']['poly']
             Layers[layer][poly] = result
 
     def subject(self, atom, subatom):
@@ -400,8 +404,8 @@ class Process:
         elif clip_class == 'Atom':
             clip = atom[clip_layer]['result']
         elif clip_class == 'Subatom':
-            subatom_num = subatom['clip']['layer']
-            clip = atom['Subatom'][subatom_num]['result']
+            subnum = subatom['clip']['layer']
+            clip = atom['Subatom'][subnum]['result']
             
         return clip
         
@@ -433,7 +437,11 @@ class Process:
             atom['skip'] = 'true'
             
     def execute_bool(self, atom, subatom):
-        """ """
+        """ 
+            We assume that doing a boolean test on 
+            whether two layers are overlapping, will always
+            use the 'intersection' polygon method. 
+        """
         
         subj = self.subject(atom, subatom)
         clip = self.clipper(atom, subatom)
@@ -441,15 +449,15 @@ class Process:
         result_list = []
         inter_list = []
         for poly in clip:
-            result_list = tools.angusj([poly], subj, subatom['method'])
-            if subatom['delete'] == 'True':
+            result_list = tools.angusj([poly], subj, "intersection")
+            if json.loads(subatom['delete']):
                 if not result_list:
                     inter_list.append(poly)
             else:
                 if result_list:
                     inter_list.append(poly)
 
-        self.save_intersected_poly(atom, subatom, inter_list)
+        self.update_layer(atom, subatom, inter_list)
         
         
         

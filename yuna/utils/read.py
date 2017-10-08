@@ -40,7 +40,8 @@ def ldf(process):
             M3       10     Wire layer 3
             R3       11
             M0       30     Ground
-            I0       31
+            I0       31     Contact (via) between M1 and M0
+            IN1      32     Contact (via) between MN1 and M0
             I1BL     59
             J2       21
             MN1      34     Wire layer

@@ -28,7 +28,7 @@ def add_jj_cell(cell, config):
         cell.add(cell_jj)
         
         
-def adp_process(Layers):
+def adp_process(Layers, Atoms):
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: ADP')
     cell = gdspy.Cell('ADP')
@@ -70,43 +70,29 @@ def adp_process(Layers):
     return cell
     
     
-def stem_process(Layers):
+def stem_process(Layers, Atoms):
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: STEM')
     cell = gdspy.Cell('STEM')
     
+    # Plot polygons inside Layer Object.
     for key, layer in Layers.items():
         if json.loads(layer['debug']):
             print ('      ' + '-> ', end='')
             print(key)
             for poly in layer['result']:
-                cell.add(gdspy.Polygon(poly, 6))
-    
-    # print ('      ' + '-> ', end='')
-    # print('CC')
-    # for poly in Layers['CC']['result']:
-    #     cell.add(gdspy.Polygon(poly, 11))
-    #     
-    # print ('      ' + '-> ', end='')
-    # print('COU')
-    # for poly in Layers['COU']['result']:
-    #     cell.add(gdspy.Polygon(poly, 8))
-    #     
-    # print ('      ' + '-> ', end='')
-    # print('CTL')
-    # for poly in Layers['CTL']['result']:
-    #     cell.add(gdspy.Polygon(poly, 12))
-    #     
-    # print ('      ' + '-> ', end='')
-    # print('COU JJ')
-    # for poly in Layers['COU']['jj']:
-    #     cell.add(gdspy.Polygon(poly, 108))
-    #     
-    # print ('      ' + '-> ', end='')
-    # print('TERM')
-    # for poly in Layers['TERM']['result']:
-    #     cell.add(gdspy.Polygon(poly, 15))
-    #     
+                cell.add(gdspy.Polygon(poly, layer['gds']))
+                
+    # Plot polygons inside Atom/Subatom Object.
+    for atom in Atoms:
+        print ('      ' + '-> ', end='')
+        print('Atom: ' + atom['id'])
+        for subatom in atom['Subatom']:
+            if json.loads(subatom['debug']):
+                print('         * Subatom: ' + subatom['id'])
+                for poly in subatom['result']:
+                    cell.add(gdspy.Polygon(poly, 99))
+               
     return cell
 
 
@@ -145,11 +131,12 @@ class Write:
         
         auronlayout = None
         Layers = config['Layers']
+        Atoms = config['Atom']
         
         if ldf == 'adp':
-            auronlayout = adp_process(Layers)
+            auronlayout = adp_process(Layers, Atoms)
         elif ldf == 'stem64':
-            auronlayout = stem_process(Layers)
+            auronlayout = stem_process(Layers, Atoms)
 
         if self.view:
             gdspy.LayoutViewer()

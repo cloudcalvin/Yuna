@@ -9,7 +9,7 @@ from collections import defaultdict
 
 import pyclipper
 
-def angusj(clip, subj, clip_type):
+def angusj(clip, subj, method):
     """ Angusj clipping library """
 
     pc = pyclipper.Pyclipper()
@@ -17,15 +17,15 @@ def angusj(clip, subj, clip_type):
     pc.AddPaths(clip, pyclipper.PT_CLIP, True)
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
 
-    if clip_type == "difference":
+    if method == "difference":
         subj = pc.Execute(pyclipper.CT_DIFFERENCE,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
-    elif clip_type == "union":
+    elif method == "union":
         subj = pc.Execute(pyclipper.CT_UNION,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
-    elif clip_type == "intersection":
+    elif method == "intersection":
         subj = pc.Execute(pyclipper.CT_INTERSECTION,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
@@ -82,7 +82,7 @@ def union_wire(Layers, layer, config_save):
         count[0] += 1
 
     Layers[layer][config_save] = union_poly[layer]
-    print(union_poly[layer])
+    # print(union_poly[layer])
     Layers[layer]['active'] = True
 
 
@@ -98,7 +98,7 @@ def add_jjs_cells(flatcell, jj_list):
         
 def flatten_cell(cell):
     """
-        This function does a depp copy of the current 
+        This function does a deep copy of the current
         working cell, with out the JJs. It then flattens
         this cell the afterwards add the JJs.
     """

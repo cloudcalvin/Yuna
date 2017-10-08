@@ -37,7 +37,7 @@ def machina(gds, config, ldf, cellref):
         gdssetup = generate_gds(write, gds, layers, config, ldf, cellref)
 
     print ('\n[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
-    print ('Finished Yuna...')
+    print ('Yuna. Done.')
 
     return gdssetup
 

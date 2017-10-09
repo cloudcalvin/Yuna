@@ -288,7 +288,7 @@ class Process:
             top_cell = gdsii.top_level()[0]
             gdsii.extract(top_cell)
             
-            Elements = gdsii.top_lesvel()[0].elements
+            Elements = gdsii.top_level()[0].elements
             Layers = self.config_data['Layers']
             Atom = self.config_data['Atom']
             
@@ -348,13 +348,20 @@ class Process:
                 subj_poly : For now it can either be "jj" or "result".
         """
 
+        Atom = self.config_data['Atom']
         Layers = self.config_data['Layers']
+        
         subj_class = subatom['subj']['class']
         subj_layer = subatom['subj']['layer']
         subj_poly = subatom['subj']['poly']
 
         if subj_class == 'Layers':
             subj = Layers[subj_layer][subj_poly]
+        elif subj_class == 'Atom':
+            # Access the last element in the Subatom.
+            Subatom = Atom[subj_layer]['Subatom'][-1]
+            subj = Subatom['result']
+            
         return subj
 
     def clipper(self, atom, subatom):
@@ -385,7 +392,7 @@ class Process:
             clip = atom[clip_layer]['result']
         elif clip_class == 'Subatom':
             subnum = subatom['clip']['layer']
-            clip = atom['Subatom'][subnum]['result']
+            clip = atom[clip_class][subnum]['result']
             
         return clip
         

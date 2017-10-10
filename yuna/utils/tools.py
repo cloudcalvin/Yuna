@@ -131,7 +131,6 @@ def union_wire(Layers, layer, config_save):
         count[0] += 1
 
     Layers[layer][config_save] = union_poly[layer]
-    # print(union_poly[layer])
     Layers[layer]['active'] = True
 
 

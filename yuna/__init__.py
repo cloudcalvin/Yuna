@@ -21,7 +21,7 @@ def list_layout_cells(gds):
         print('      -> ' + key)
 
 
-def machina(gds, config, ldf, cellref):
+def machina(basedir, gds, config_file, ldf, cellref):
     print ('\n' + '[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
     print ('Running Yuna...')
 
@@ -34,7 +34,7 @@ def machina(gds, config, ldf, cellref):
     if cellref == 'list':
         list_layout_cells(gds)
     else:
-        gdssetup = generate_gds(write, gds, layers, config, ldf, cellref)
+        gdssetup = generate_gds(basedir, write, gds, layers, config_file, ldf, cellref)
 
     print ('\n[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
     print ('Yuna. Done.')
@@ -42,7 +42,7 @@ def machina(gds, config, ldf, cellref):
     return gdssetup
 
 
-def generate_gds(write, gds_file, layers, config_file, ldf, cellref):
+def generate_gds(basedir, write, gds_file, layers, config_file, ldf, cellref):
     """
         Read in the layers from the GDS file,
         do clipping and send polygons to
@@ -54,12 +54,12 @@ def generate_gds(write, gds_file, layers, config_file, ldf, cellref):
     print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
     print ('--- Process Layers ----------')
     process = yuna.process.Process(gds_file, config_data)
-    config = process.config_layers(cellref)
+    config = process.config_layers(basedir, cellref)
 
     print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
     print ('--- Write Layers ----------')
     write = yuna.utils.write.Write(True)
-    write.write_gds(config, ldf)
+    write.write_gds(basedir, config, ldf)
 
     # if (ldf == 'adp') or (ldf == 'stp'):
     #     config_data = yuna.utils.read.config(config_file)

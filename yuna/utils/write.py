@@ -28,7 +28,7 @@ def add_jj_cell(cell, config):
         cell.add(cell_jj)
         
         
-def adp_process(Layers, Atoms):
+def adp_process(basedir, Layers, Atoms):
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: ADP')
     cell = gdspy.Cell('ADP')
@@ -70,7 +70,7 @@ def adp_process(Layers, Atoms):
     return cell
     
     
-def stem_process(Layers, Atoms):
+def stem_process(basedir, Layers, Atoms):
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: STEM')
     cell = gdspy.Cell('STEM')
@@ -89,9 +89,10 @@ def stem_process(Layers, Atoms):
         print('Atom: ' + atom['id'])
         for subatom in atom['Subatom']:
             if json.loads(subatom['debug']):
-                print('         * Subatom: ' + subatom['id'])
+                print('         * Subatom: ' + str(subatom['id']))
+                print(subatom['result'])
                 for poly in subatom['result']:
-                    cell.add(gdspy.Polygon(poly, 99))
+                    cell.add(gdspy.Polygon(poly, subatom['gds']))
                
     return cell
 
@@ -102,7 +103,7 @@ class Write:
         self.solution = None
         self.holes = None
 
-    def write_gds(self, config, ldf):
+    def write_gds(self, basedir, config, ldf):
         """
             Write the GDS file that contains the difference
             of the moat layer with the wiring layer and the
@@ -134,9 +135,11 @@ class Write:
         Atoms = config['Atom']
         
         if ldf == 'adp':
-            auronlayout = adp_process(Layers, Atoms)
+            auronlayout = adp_process(basedir, Layers, Atoms)
         elif ldf == 'stem64':
-            auronlayout = stem_process(Layers, Atoms)
+            auronlayout = stem_process(basedir, Layers, Atoms)
+        else:
+            auronlayout = stem_process(basedir, Layers, Atoms)
 
         if self.view:
             gdspy.LayoutViewer()

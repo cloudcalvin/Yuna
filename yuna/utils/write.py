@@ -71,6 +71,8 @@ def adp_process(basedir, Layers, Atoms):
     
     
 def stem_process(basedir, Layers, Atoms):
+    """ """
+    
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: STEM')
     cell = gdspy.Cell('STEM')
@@ -145,6 +147,30 @@ class Write:
             gdspy.LayoutViewer()
 
         self.solution = auronlayout.get_polygons(True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

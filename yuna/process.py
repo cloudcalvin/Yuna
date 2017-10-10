@@ -3,6 +3,8 @@ from termcolor import colored
 
 import json
 import gdspy
+import yuna.layers as layers
+import yuna.params as params
 import yuna.utils.tools as tools
 
 
@@ -28,25 +30,6 @@ import yuna.utils.tools as tools
 
 
 gdsii = gdspy.GdsLibrary()
-
-
-def is_layer_active(Layers, atom):
-    all_layers = True
-    for layer in atom['check']:
-        if Layers[layer]['active'] == 'False':
-            all_layers = False
-    return all_layers
-
-
-def make_active(Layers, layer):
-    """
-        This function changes the 'active' state of
-        the layer in the 'Layers' object in the
-        config.json file.
-    """
-
-    if layer in Layers:
-        Layers[layer]['active'] = True
 
 
 def transpose_cell(Layers, cellpolygons, origin, name):
@@ -75,133 +58,60 @@ def transpose_cell(Layers, cellpolygons, origin, name):
                         lay_data['jj'].append(poly)
 
 
-def polygon_result(Layers, element):
-    """ Add the polygon to the 'result' key in the 'Layers' object """
-
-    print('      Polygons: ', end='')
-    print(element)
-
-    for layer, lay_data in Layers.items():
-        if lay_data['gds'] == element.layer:
-            Layers[layer]['result'].append(element.points.tolist())
-            
-            
-def polygon_set_result(Layers, element):
-    """ 
-        Add the polygons from the PolygonSet to 
-        the 'result' key in the 'Layers' object.
-    """
-
-    print('      PolygonSet: ', end='')
-    print(element)
-
-    for layer, lay_data in Layers.items():
-        if lay_data['gds'] == element.layers[0]:
-            for poly in element.polygons:
-                Layers[layer]['result'].append(poly.tolist())
-            
-
-def path_result(Layers, element):
-    """ Add the path to the 'result' key in the 'Layers' object """
-
-    print('      Paths: ', end='')
-    print(element)
-
-    for layer, lay_data in Layers.items():
-        if lay_data['gds'] == element.layer:
-            Layers[layer]['result'].append(element.points.tolist())
-
-
-def polygon_jj(Layers, element):
-    """ Add the polygon to the 'jj' key in the 'Layers' object. """
-    
-    print('      CellReference: ', end='')
-    print(element)
-
-    name = element.ref_cell.name
-    if name[:2] == 'JJ':
-        Layers['JJ']['name'].append(name)
-        cellpolygons = gdsii.extract(name).get_polygons(True)
-        transpose_cell(Layers, cellpolygons, element.origin, name)
-
-
 def union_polygons(Layers):
     """ Union the polygons. """
     
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Union Layer:')
-    
+    tools.green_print('Union Layer:')
     for key, layer in Layers.items():
         if json.loads(layer['union']):
             tools.union_wire(Layers, key, 'result')
 
 
-def does_contain_junctions(Elements):
-    """ Check if the layout contains any Junctions. """
-    
-    hasjj = False
-    for element in Elements:
-        if isinstance(element, gdspy.CellReference):
-            name = element.ref_cell.name
-            if name[:2] == 'JJ':
-                hasjj = True
-                
-    return hasjj
-
-
-def junction_area(Elements):
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Junction areas:')
-    for element in Elements:
-        if isinstance(element, gdspy.CellReference):
-            name = element.ref_cell.name
-            if name[:2] == 'JJ':
-                for key, value in element.area(True).items():
-                    if key[0] == 6:
-                        print('      ' + name + ' --> ' + str(value * 1e-12) + 'um')
-
-
-def resistance_area(Layers):
-    """
-        * We have to get the center of each resistance polygon.
-        * Test if the center of each polygon is inside
-          layer 9. If so, then remove that polygon. 
-        * Finally, we should be left with just the 
-          resistance branch polygon.
-    """
-    
-    # NB: We have to save the JJ name with the corresponding area value.
-    
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Parasitic resistance areas:')
-    
-    for key, value in Layers.items():
-        if value['type'] == 'resistance':
-            for poly in value['jj']:
-                poly_element = gdspy.Polygon(poly, 21)
-                value = poly_element.area(True).values()[0]
-                print('      ' + key + ' --> ' + str(value * 1e-12) + 'um')
-
-
-def add_elements(Layers, Elements):
-    """ 
-        Add the elements read from GDSPY to the 
-        corresponding Layers in the JSON object.
-    """
-    
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Elements:')
-    
-    for element in Elements:
-        if isinstance(element, gdspy.Polygon):
-            polygon_result(Layers, element)
-        elif isinstance(element, gdspy.PolygonSet):
-            polygon_set_result(Layers, element)
-        elif isinstance(element, gdspy.PolyPath):
-            print('Paths not yet supported')
-            # path_result(Layers, element)
-        elif isinstance(element, gdspy.CellReference):
-            polygon_jj(Layers, element)
+# def does_contain_junctions(Elements):
+#     """ Check if the layout contains any Junctions. """
+#     
+#     hasjj = False
+#     for element in Elements:
+#         if isinstance(element, gdspy.CellReference):
+#             name = element.ref_cell.name
+#             if name[:2] == 'JJ':
+#                 hasjj = True
+#                 
+#     return hasjj
+# 
+# 
+# def junction_area(Elements):
+#     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+#     print('Junction areas:')
+#     for element in Elements:
+#         if isinstance(element, gdspy.CellReference):
+#             name = element.ref_cell.name
+#             if name[:2] == 'JJ':
+#                 for key, value in element.area(True).items():
+#                     if key[0] == 6:
+#                         print('      ' + name + ' --> ' + str(value * 1e-12) + 'um')
+# 
+# 
+# def resistance_area(Layers):
+#     """
+#         * We have to get the center of each resistance polygon.
+#         * Test if the center of each polygon is inside
+#           layer 9. If so, then remove that polygon. 
+#         * Finally, we should be left with just the 
+#           resistance branch polygon.
+#     """
+#     
+#     # NB: We have to save the JJ name with the corresponding area value.
+#     
+#     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+#     print('Parasitic resistance areas:')
+#     
+#     for key, value in Layers.items():
+#         if value['type'] == 'resistance':
+#             for poly in value['jj']:
+#                 poly_element = gdspy.Polygon(poly, 21)
+#                 value = poly_element.area(True).values()[0]
+#                 print('      ' + key + ' --> ' + str(value * 1e-12) + 'um')
 
 
 def read_module(basedir, subatom):
@@ -255,17 +165,14 @@ class Process:
         """
 
         Elements, Layers, Atom = self.init_layers(cellref)
-
-        print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-        print('Running Atom:')
         
+        tools.green_print('Running Atom:')
         for atom in Atom:
-            if is_layer_active(Layers, atom):
+            if tools.is_layer_active(Layers, atom):
                 self.calculate_atom(atom)
 
-        if does_contain_junctions(Elements):
-            junction_area(Elements)
-            resistance_area(Layers)
+        cParams = params.Params()
+        cParams.calculate_area(Elements, Layers)
 
         return self.config_data
 
@@ -291,7 +198,7 @@ class Process:
             Layers = self.config_data['Layers']
             Atom = self.config_data['Atom']
             
-            add_elements(Layers, Elements)
+            layers.add_elements(Layers, Elements)
             union_polygons(Layers)
         else:
             top_cell = gdsii.top_level()[0]
@@ -301,7 +208,7 @@ class Process:
             Layers = self.config_data['Layers']
             Atom = self.config_data['Atom']
             
-            add_elements(Layers, Elements)
+            layers.add_elements(Layers, Elements)
             union_polygons(Layers)
             
         return Elements, Layers, Atom
@@ -310,7 +217,6 @@ class Process:
         print('      Num: ' + atom['id'])
         for subatom in atom['Subatom']:            
             read_module(self.basedir, subatom)
-            
             if not json.loads(atom['skip']):
                 for module in subatom['moduledata']['Module']:
                     self.calculate_module(atom, subatom, module)
@@ -341,27 +247,31 @@ class Process:
         """ Saves the result back into the global Layers dict. """
 
         if module['type'] == 'subatom':
-            print(result)
             subatom['result'] = result
         elif module['type'] == 'module':
-            print(result)
             module['result'] = result
-        else:
+        elif module['type'] == 'layer':
             Layers = self.config_data['Layers']
             layer = module['savein']['layer']
             poly = module['savein']['poly']
             Layers[layer][poly] = result
+        else:
+            raise Exception('Please specify a \'type\' of the sub-module.')
 
     def subject(self, atom, subatom, module):
         """
             Parameters
             ----------
-
                 subj_layer : The layer in use.
 
                 subj_class : Can only be "Layers" or "Atom".
 
                 subj_poly : For now it can either be "jj" or "result".
+                
+            Atom
+            ----
+            
+                * Access the last element in the Subatom.
         """
 
         Atom = self.config_data['Atom']
@@ -374,7 +284,6 @@ class Process:
         if subj_class == 'Layers':
             subj = Layers[subj_layer][subj_poly]
         elif subj_class == 'Atom':
-            # Access the last element in the Subatom.
             Subatom = Atom[subj_layer]['Subatom'][-1]
             subj = Subatom['result']
             
@@ -414,10 +323,10 @@ class Process:
             clip = Module[modnum]['result']
             
         return clip
-        
+
     def execute_offset(self, atom, subatom, module):
         """ """
-        
+
         result_list = []
         subj = self.subject(atom, subatom, module)
 
@@ -463,7 +372,6 @@ class Process:
                 if result_list:
                     inter_list.append(poly)
 
-        # print(inter_list)
         self.update_layer(atom, subatom, module, inter_list)
         
         

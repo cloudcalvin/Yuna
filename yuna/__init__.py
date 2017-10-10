@@ -53,8 +53,8 @@ def generate_gds(basedir, write, gds_file, layers, config_file, ldf, cellref):
 
     print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
     print ('--- Process Layers ----------')
-    process = yuna.process.Process(gds_file, config_data)
-    config = process.config_layers(basedir, cellref)
+    process = yuna.process.Process(basedir, gds_file, config_data)
+    config = process.config_layers(cellref)
 
     print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
     print ('--- Write Layers ----------')

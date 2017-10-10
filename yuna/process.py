@@ -204,6 +204,14 @@ def add_elements(Layers, Elements):
             polygon_jj(Layers, element)
 
 
+def read_module(basedir, subatom):
+    config_file = basedir + 'json/' + subatom['name'] + '.json'
+    print('        Subatom: ' + subatom['name'])
+
+    with open(config_file) as data_file:
+        subatom['moduledata'] = json.load(data_file)
+
+
 class Process:
     """
         Variables
@@ -218,11 +226,12 @@ class Process:
                 Intersection result of two or more polygons.
     """
 
-    def __init__(self, gds_file, config_data):
+    def __init__(self, basedir, gds_file, config_data):
+        self.basedir = basedir
         self.gds_file = gds_file
         self.config_data = config_data
 
-    def config_layers(self, basdir, cellref):
+    def config_layers(self, cellref):
         """
             This function is process specific.
             It looks at each layer and dicides
@@ -252,7 +261,7 @@ class Process:
         
         for atom in Atom:
             if is_layer_active(Layers, atom):
-                self.calculate_atom(basdir, atom)
+                self.calculate_atom(atom)
 
         if does_contain_junctions(Elements):
             junction_area(Elements)
@@ -297,18 +306,13 @@ class Process:
             
         return Elements, Layers, Atom
 
-    def calculate_atom(self, basdir, atom):
+    def calculate_atom(self, atom):
         print('      Num: ' + atom['id'])
         for subatom in atom['Subatom']:            
-            data = None
-            config_file = basdir + 'json/' + subatom['module'] + '.json'
-            print('        Subatom: ' + config_file)
-        
-            with open(config_file) as data_file:
-                data = json.load(data_file)
+            read_module(self.basedir, subatom)
             
             if not json.loads(atom['skip']):
-                for module in data['Module']:
+                for module in subatom['moduledata']['Module']:
                     self.calculate_module(atom, subatom, module)
 
     def calculate_module(self, atom, subatom, module):
@@ -337,8 +341,10 @@ class Process:
         """ Saves the result back into the global Layers dict. """
 
         if module['type'] == 'subatom':
+            print(result)
             subatom['result'] = result
         elif module['type'] == 'module':
+            print(result)
             module['result'] = result
         else:
             Layers = self.config_data['Layers']
@@ -346,7 +352,7 @@ class Process:
             poly = module['savein']['poly']
             Layers[layer][poly] = result
 
-    def subject(self, atom, module):
+    def subject(self, atom, subatom, module):
         """
             Parameters
             ----------
@@ -374,7 +380,7 @@ class Process:
             
         return subj
 
-    def clipper(self, atom, module):
+    def clipper(self, atom, subatom, module):
         """
             Parameters
             ----------
@@ -392,6 +398,8 @@ class Process:
         """
 
         Layers = self.config_data['Layers']
+        Module = subatom['moduledata']['Module']
+
         clip_class = module['clip']['class']
         clip_layer = module['clip']['layer']
         clip_poly = module['clip']['poly']
@@ -400,9 +408,10 @@ class Process:
             clip = Layers[clip_layer][clip_poly]
         elif clip_class == 'Atom':
             clip = atom[clip_layer]['result']
-        elif clip_class == 'Subatom':
-            subnum = module['clip']['layer']
-            clip = atom[clip_class][subnum]['result']
+        elif clip_class == 'Module':
+            modnum = module['clip']['layer']
+            print(Module[modnum]['desc'])
+            clip = Module[modnum]['result']
             
         return clip
         
@@ -410,18 +419,18 @@ class Process:
         """ """
         
         result_list = []
-        subj = self.subject(atom, module)
+        subj = self.subject(atom, subatom, module)
 
         if subj:
             result_list = tools.angusj_offset(subj)
             if result_list:
-                self.update_layer(atom, module, result_list)
+                self.update_layer(atom, subatom, module, result_list)
                 
     def execute_method(self, atom, subatom, module):
         """ """
 
-        subj = self.subject(atom, module)
-        clip = self.clipper(atom, module)
+        subj = self.subject(atom, subatom, module)
+        clip = self.clipper(atom, subatom, module)
 
         result_list = []
         if subj and clip:
@@ -440,8 +449,8 @@ class Process:
             use the 'intersection' polygon method. 
         """
         
-        subj = self.subject(atom, module)
-        clip = self.clipper(atom, module)
+        subj = self.subject(atom, subatom, module)
+        clip = self.clipper(atom, subatom, module)
         
         result_list = []
         inter_list = []
@@ -454,7 +463,8 @@ class Process:
                 if result_list:
                     inter_list.append(poly)
 
-        self.update_layer(atom, module, inter_list)
+        # print(inter_list)
+        self.update_layer(atom, subatom, module, inter_list)
         
         
         

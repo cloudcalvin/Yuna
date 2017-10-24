@@ -1,5 +1,6 @@
-from __future__ import print_function # lace this in setup.
+from __future__ import print_function
 from termcolor import colored
+
 
 import gdspy
 import json
@@ -10,73 +11,73 @@ import matplotlib.tri as tri
 
 def add_jj_cell(cell, config):
     """
-        Add the JJ polygons to the main cell using a 
-        subcell. This is to label the JJ value with 
-        it's required values. The name of the JJ cell 
-        has to be different than the original, hence 
+        Add the JJ polygons to the main cell using a
+        subcell. This is to label the JJ value with
+        it's required values. The name of the JJ cell
+        has to be different than the original, hence
         the 'yuna_' addition string.
     """
-    
+
     for num, jj in enumerate(config['Layers']['JJ']['result']):
         jjname = 'yuna_' + config['Layers']['JJ']['name'][num]
         label = gdspy.Label(jjname, (0, 0), 'sw')
-        
+
         cell_jj = gdspy.Cell(jjname)
         cell_jj.add(gdspy.Polygon(jj, 6))
         cell_jj.add(label)
 
         cell.add(cell_jj)
-        
-        
+
+
 def adp_process(basedir, Layers, Atoms):
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: ADP')
     cell = gdspy.Cell('ADP')
-    
+
     # add_jj_cell(cell, config)
-    
+
     # for poly in config['Layers']['RC']['jj']:
     #     cell.add(gdspy.Polygon(poly, 20))
     print ('      ' + '-> ', end='')
     print('RES JJ')
     for poly in Layers['RES']['jj']:
         cell.add(gdspy.Polygon(poly, 21))
-    
+
     print ('      ' + '-> ', end='')
     print('CC')
     for poly in Layers['CC']['result']:
         cell.add(gdspy.Polygon(poly, 11))
-        
+
     print ('      ' + '-> ', end='')
     print('COU')
     for poly in Layers['COU']['result']:
         cell.add(gdspy.Polygon(poly, 8))
-        
+
     print ('      ' + '-> ', end='')
     print('CTL')
     for poly in Layers['CTL']['result']:
         cell.add(gdspy.Polygon(poly, 12))
-        
+
     print ('      ' + '-> ', end='')
     print('COU JJ')
     for poly in Layers['COU']['jj']:
         cell.add(gdspy.Polygon(poly, 108))
-        
+
     print ('      ' + '-> ', end='')
     print('TERM')
     for poly in Layers['TERM']['result']:
         cell.add(gdspy.Polygon(poly, 15))
-        
+
     return cell
-    
-    
+
+
 def stem_process(basedir, Layers, Atoms):
     """ """
-    
+
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell: STEM')
     cell = gdspy.Cell('STEM')
-    
+
     # Plot polygons inside Layer Object.
     for key, layer in Layers.items():
         if json.loads(layer['debug']):
@@ -84,7 +85,7 @@ def stem_process(basedir, Layers, Atoms):
             print(key)
             for poly in layer['result']:
                 cell.add(gdspy.Polygon(poly, layer['gds']))
-                
+
     # Plot polygons inside Atom/Subatom Object.
     for atom in Atoms:
         print ('      ' + '-> ', end='')
@@ -95,7 +96,7 @@ def stem_process(basedir, Layers, Atoms):
                 print(subatom['result'])
                 for poly in subatom['result']:
                     cell.add(gdspy.Polygon(poly, subatom['gds']))
-               
+
     return cell
 
 
@@ -131,55 +132,19 @@ class Write:
                 71 : JJ polygons
                 70 : Holes
         """
-        
+
         auronlayout = None
         Layers = config['Layers']
         Atoms = config['Atom']
-        
+
         if ldf == 'adp':
             auronlayout = adp_process(basedir, Layers, Atoms)
         elif ldf == 'stem64':
             auronlayout = stem_process(basedir, Layers, Atoms)
         else:
-            auronlayout = stem_process(basedir, Layers, Atoms)
+            print ('write.py -> Please specify a LDF file.')
 
         if self.view:
             gdspy.LayoutViewer()
 
         self.solution = auronlayout.get_polygons(True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

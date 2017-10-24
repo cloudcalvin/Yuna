@@ -31,7 +31,6 @@ import utils.tools as tools
 
 # To run seperately:
 # $ python yuna/yuna.py.
-#
 # Before distributing we have to comment __main__.
 
 
@@ -65,8 +64,7 @@ def main():
     else:
         cellref = ""
 
-    # machina(process, testname, ldf, cellref)
-    machina('hypres', 'bbn_basic_cell', 'stem64', cellref)
+    machina(process, testname, ldf, cellref)
 
     tools.red_print('Auron. Done.')
 
@@ -122,4 +120,3 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
 
 if __name__ == '__main__':
     main()
-    # machina('hypres', 'bbn_basic_cell', 'stem64', '')

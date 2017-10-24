@@ -15,6 +15,7 @@ Yuna package descriptions:
 `pyclipper` Python wrapper for Angusj Clipper library.
 `termcolor` Package for color outputs in the terminal.
 `gdspy` Python library for GDS file handeling.
+`docopt` Library for user arguments in the terminal.
 
 Make sure Python is installed on your system:
 

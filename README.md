@@ -77,13 +77,13 @@ Then install Yuna on your system:
 sudo python setup.py install
 ```
 
-# Installing Yuna from PyPy
+# Installing Yuna from PIP
 
 In order to use *import yuna*, we have to install the package **locally**,
 with:
 
 ```
-pip3 install .
+sudo pip install .
 ```
 
 We can also install the package in development mode with a symlink, so that
@@ -91,7 +91,7 @@ changes to the source files will be immediately available to other users of the
 package on your system.
 
 ```
-pip3 install -e .
+sudo pip install -e .
 ```
 
 ## Publishing to PyPI

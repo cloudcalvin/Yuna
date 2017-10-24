@@ -17,7 +17,6 @@ Options:
 
 from __future__ import print_function
 from termcolor import colored
-from docopt import docopt
 
 import os
 import json
@@ -33,13 +32,6 @@ import utils.tools as tools
 # $ python yuna/yuna.py.
 #
 # Before distributing we have to comment __main__.
-
-
-def print_parameters(arguments):
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print ('Parameters:')
-    for key, value in arguments.items():
-        print('      ' + str(key) + ' : ' + str(value))
 
 
 def main():

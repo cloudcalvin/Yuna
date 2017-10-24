@@ -115,3 +115,11 @@ Install iPython for debugging:
 ```
 sudo dnf install ipython
 ```
+
+# GIT Tips
+
+To disregard small changes use:
+
+```
+git checkout .
+```

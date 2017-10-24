@@ -6,7 +6,10 @@ tests/__init__.py
 tests/runall.py
 tests/test0.py
 yuna/__init__.py
+yuna/layers.py
+yuna/params.py
 yuna/process.py
+yuna/yuna.py
 yuna.egg-info/PKG-INFO
 yuna.egg-info/SOURCES.txt
 yuna.egg-info/dependency_links.txt

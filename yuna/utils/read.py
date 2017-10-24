@@ -3,8 +3,8 @@ import os
 import operator
 import json
 
-import yuna.utils.tools
-import yuna.utils.system
+import utils.tools
+import utils.system
 
 from pprint import pprint
 from itertools import chain
@@ -81,59 +81,46 @@ def ldf(process):
     """
 
     # layers_dict = dict()
-    # 
+    #
     # bool_parameters = False
     # bool_layer = False
-    # 
+    #
     # cwd = os.getcwd()
     # ldf_file = cwd + '/tests/ldf/' + process + '.ldf'
-    # 
+    #
     # with open(ldf_file, 'r') as fil:
     #     data = fil.readlines()
-    # 
+    #
     # temp_dict = dict()
-    # 
+    #
     # for line in data:
     #     words = line.split()
-    # 
+    #
     #     if len(words[0]) > 0:
     #         if words[0] == '$Parameters':
     #             bool_parameters = True
     #         if words[0] == '$EndParameters':
     #             bool_parameters = False
-    # 
+    #
     #         if words[0] == '$Layer':
     #             bool_layer = True
     #         if words[0] == '$EndLayer':
-    # 
+    #
     #             layers_dict[int(temp_dict['Number'])] = temp_dict
     #             temp_dict = {}
-    # 
+    #
     #             bool_layer = False
-    # 
+    #
     #         if bool_layer:
     #             if (words[0][0] != '*') and (words[0][0] != '$'):
     #                 temp_dict[words[0]] = words[2]
-    # 
+    #
     #         # if (bool_parameters):
-    # 
+    #
     # # sorted_key = sorted(layers_dict.items(), key=operator.itemgetter(0))
     # # layers_dict = dict(sorted_key)
-    # 
+    #
     # # if auron.utils.system.verbose:
     #     # print(auron.utils.tools.pretty(layers_dict))
-    # 
+    #
     # return layers_dict
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

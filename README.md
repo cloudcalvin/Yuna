@@ -1,4 +1,83 @@
-# yuna
+# Yuna
+
+Compiling Yuna from source is done as follow:
+
+First clone the git repo:
+
+```
+git clone https://rubenvanstaden@bitbucket.org/coldflux/yuna.git
+```
+
+# Dependencies
+
+Yuna package descriptions:
+
+`pyclipper` Python wrapper for Angusj Clipper library.
+`termcolor` Package for color outputs in the terminal.
+`gdspy` Python library for GDS file handeling.
+
+Make sure Python is installed on your system:
+
+## Fedora
+
+```
+sudo dnf install python2-devel
+sudo dnf install python3-devel
+```
+
+## CentOS
+
+```
+sudo yum install python-devel
+```
+
+## Ubuntu
+
+```
+sudo apt-get install python-dev
+sudo apt-get install python3-dev
+```
+
+Install the necessary C++ compilers:
+
+## Fedora
+
+```
+sudo dnf install gcc-c++
+```
+
+## CentOS
+
+```
+sudo yum install gcc-c++
+```
+
+## Ubuntu
+
+```
+sudo apt-get update
+sudo apt-get install --reinstall build-essential
+```
+
+Install TKinter which is needed by Matplotlib:
+
+```
+sudo dnf install tkinter
+```
+
+Next install the dependencies for Yuna:
+
+```
+sudo pip install -r requirements.txt
+```
+
+Then install Yuna on your system:
+
+```
+sudo python setup.py install
+```
+
+# Installing Yuna from PyPy
 
 In order to use *import yuna*, we have to install the package **locally**,
 with:
@@ -15,10 +94,10 @@ package on your system.
 pip3 install -e .
 ```
 
-## Puslishing to PyPI
+## Publishing to PyPI
 
-The *setup.py* script is our main entrypoint to register the package name op
-PyPI and upload source distrinutions.
+The *setup.py* script is our main entry-point to register the package name op
+PyPI and upload source distributions.
 
 ## Packaging
 
@@ -28,16 +107,10 @@ features.
 **Setuptools** was developed to overcome *distutils'* limitations and is
 included in the setup.py file using *import setuptools*.
 
-## Dependencies
+# Debugging tools
 
-To install graph-tool:
-
-```
-sudo apt-get build-dep python3-graph-tool
-```
-
-then download the source code, run the *autogen.sh* and then to configure for Python 3:
+Install iPython for debugging:
 
 ```
-./configure PYTHON=python3
+sudo dnf install ipython
 ```

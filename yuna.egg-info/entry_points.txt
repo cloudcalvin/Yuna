@@ -1,0 +1,3 @@
+[console_scripts]
+yuna = yuna:main
+

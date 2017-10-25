@@ -23,6 +23,7 @@ Description: # Yuna
         `pyclipper` Python wrapper for Angusj Clipper library.
         `termcolor` Package for color outputs in the terminal.
         `gdspy` Python library for GDS file handeling.
+        `docopt` Library for user arguments in the terminal.
         
         Make sure Python is installed on your system:
         
@@ -85,13 +86,13 @@ Description: # Yuna
         sudo python setup.py install
         ```
         
-        # Installing Yuna from PyPy
+        # Installing Yuna from PIP
         
         In order to use *import yuna*, we have to install the package **locally**,
         with:
         
         ```
-        pip3 install .
+        sudo pip install .
         ```
         
         We can also install the package in development mode with a symlink, so that
@@ -99,7 +100,7 @@ Description: # Yuna
         package on your system.
         
         ```
-        pip3 install -e .
+        sudo pip install -e .
         ```
         
         ## Publishing to PyPI
@@ -121,6 +122,14 @@ Description: # Yuna
         
         ```
         sudo dnf install ipython
+        ```
+        
+        # GIT Tips
+        
+        To disregard small changes use:
+        
+        ```
+        git checkout .
         ```
         
 Keywords: yuna

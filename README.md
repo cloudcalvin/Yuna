@@ -17,7 +17,7 @@ Yuna package descriptions:
 `gdspy` Python library for GDS file handeling.
 `docopt` Library for user arguments in the terminal.
 
-Make sure Python is installed on your system:
+* Make sure Python is installed on your system:
 
 ## Fedora
 
@@ -39,7 +39,7 @@ sudo apt-get install python-dev
 sudo apt-get install python3-dev
 ```
 
-Install the necessary C++ compilers:
+* Install the necessary C++ compilers:
 
 ## Fedora
 
@@ -60,19 +60,27 @@ sudo apt-get update
 sudo apt-get install --reinstall build-essential
 ```
 
-Install TKinter which is needed by Matplotlib:
+* Install TKinter which is needed by Matplotlib:
+
+## Fedora
 
 ```
 sudo dnf install tkinter
 ```
 
-Next install the dependencies for Yuna:
+## Ubuntu
+
+```
+sudo apt-get install python-tk
+```
+
+* Next install the dependencies for Yuna:
 
 ```
 sudo pip install -r requirements.txt
 ```
 
-Then install Yuna on your system:
+* Then install Yuna on your system:
 
 ```
 sudo python setup.py install

@@ -1,2 +1,8 @@
+docopt
+future
 gdspy
+matplotlib
+numpy
 pyclipper
+setuptools
+termcolor

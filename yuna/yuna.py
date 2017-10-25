@@ -22,12 +22,16 @@ from docopt import docopt
 import os
 import json
 import gdspy
+import process
+import read
 
-import utils.read as read
-import utils.write as write
-import process as process
-import utils.tools as tools
-
+# from . import utils
+# or:
+from utils import write
+from utils import tools
+# or:
+# import utils.write
+# import utils.tools
 
 # To run seperately:
 # $ python yuna/yuna.py.
@@ -120,9 +124,3 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-

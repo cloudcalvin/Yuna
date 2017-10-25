@@ -1,13 +1,62 @@
 from __future__ import print_function # lace this in setup.
 from termcolor import colored
+from collections import defaultdict
+
 
 import os
 import sys
 import gdspy
-
-from collections import defaultdict
-
 import pyclipper
+
+
+def red_print(header):
+    """ Main program header (Red) """
+    print ('\n' + '[' + colored('*', 'red', attrs=['bold']) + '] ', end='')
+    print(header)
+
+
+def magenta_print(header):
+    """ Python package header (Purple) """
+    print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
+    print ('--- ' + header + ' ----------')
+
+
+def green_print(header):
+    """ Function header (Green) """
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print(header)
+
+
+def list_layout_cells(gds):
+    """ List the Cells in the GDS layout. """
+
+    gdsii = gdspy.GdsLibrary()
+    gdsii.read_gds(gds, unit=1.0e-12)
+
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Cell List:')        
+    for key, value in gdsii.cell_dict.items():
+        print('      -> ' + key)
+
+
+def is_layer_active(Layers, atom):
+    all_layers = True
+    for layer in atom['check']:
+        if Layers[layer]['active'] == 'False':
+            all_layers = False
+    return all_layers
+
+
+def make_active(Layers, layer):
+    """
+        This function changes the 'active' state of
+        the layer in the 'Layers' object in the
+        config.json file.
+    """
+
+    if layer in Layers:
+        Layers[layer]['active'] = True
+
 
 def angusj(clip, subj, method):
     """ Angusj clipping library """
@@ -82,7 +131,6 @@ def union_wire(Layers, layer, config_save):
         count[0] += 1
 
     Layers[layer][config_save] = union_poly[layer]
-    # print(union_poly[layer])
     Layers[layer]['active'] = True
 
 

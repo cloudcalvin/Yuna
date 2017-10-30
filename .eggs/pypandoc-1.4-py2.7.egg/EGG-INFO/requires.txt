@@ -1,3 +1,0 @@
-pip>=8.1.0
-setuptools
-wheel>=0.25.0

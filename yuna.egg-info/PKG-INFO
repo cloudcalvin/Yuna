@@ -6,55 +6,139 @@ Home-page: https://github.com/rubenvanstaden/yuna
 Author: Ruben van Staden
 Author-email: rubenvanstaden@gmail.com
 License: BSD
-Description-Content-Type: UNKNOWN
-Description: yuna
-        ====
+Description: # Yuna
         
-        In order to use *import yuna*, we have to install the package
-        **locally**, with:
+        Compiling Yuna from source is done as follow:
         
-        ::
+        First clone the git repo:
         
-            pip3 install .
+        ```
+        git clone https://rubenvanstaden@bitbucket.org/coldflux/yuna.git
+        ```
         
-        We can also install the package in development mode with a symlink, so
-        that changes to the source files will be immediately available to other
-        users of the package on your system.
+        # Dependencies
         
-        ::
+        Yuna package descriptions:
         
-            pip3 install -e .
+        `pyclipper` Python wrapper for Angusj Clipper library.
+        `termcolor` Package for color outputs in the terminal.
+        `gdspy` Python library for GDS file handeling.
+        `docopt` Library for user arguments in the terminal.
         
-        Puslishing to PyPI
-        ------------------
+        * Make sure Python is installed on your system:
         
-        The *setup.py* script is our main entrypoint to register the package
-        name op PyPI and upload source distrinutions.
+        ## Fedora
         
-        Packaging
-        ---------
+        ```
+        sudo dnf install python2-devel
+        sudo dnf install python3-devel
+        ```
         
-        **Distutils** is still the standard tool for packaging in Python, but
-        lacks features.
+        ## CentOS
+        
+        ```
+        sudo yum install python-devel
+        ```
+        
+        ## Ubuntu
+        
+        ```
+        sudo apt-get install python-dev
+        sudo apt-get install python3-dev
+        ```
+        
+        * Install the necessary C++ compilers:
+        
+        ## Fedora
+        
+        ```
+        sudo dnf install gcc-c++
+        ```
+        
+        ## CentOS
+        
+        ```
+        sudo yum install gcc-c++
+        ```
+        
+        ## Ubuntu
+        
+        ```
+        sudo apt-get update
+        sudo apt-get install --reinstall build-essential
+        ```
+        
+        * Install TKinter which is needed by Matplotlib:
+        
+        ## Fedora
+        
+        ```
+        sudo dnf install tkinter
+        ```
+        
+        ## Ubuntu
+        
+        ```
+        sudo apt-get install python-tk
+        ```
+        
+        * Next install the dependencies for Yuna:
+        
+        ```
+        sudo pip install -r requirements.txt
+        ```
+        
+        * Then install Yuna on your system:
+        
+        ```
+        sudo python setup.py install
+        ```
+        
+        # Installing Yuna from PIP
+        
+        In order to use *import yuna*, we have to install the package **locally**,
+        with:
+        
+        ```
+        sudo pip install .
+        ```
+        
+        We can also install the package in development mode with a symlink, so that
+        changes to the source files will be immediately available to other users of the
+        package on your system.
+        
+        ```
+        sudo pip install -e .
+        ```
+        
+        ## Publishing to PyPI
+        
+        The *setup.py* script is our main entry-point to register the package name op
+        PyPI and upload source distributions.
+        
+        ## Packaging
+        
+        **Distutils** is still the standard tool for packaging in Python, but lacks
+        features.
         
         **Setuptools** was developed to overcome *distutils'* limitations and is
         included in the setup.py file using *import setuptools*.
         
-        Dependencies
-        ------------
+        # Debugging tools
         
-        To install graph-tool:
+        Install iPython for debugging:
         
-        ::
+        ```
+        sudo dnf install ipython
+        ```
         
-            sudo apt-get build-dep python3-graph-tool
+        # GIT Tips
         
-        then download the source code, run the *autogen.sh* and then to
-        configure for Python 3:
+        To disregard small changes use:
         
-        ::
-        
-            ./configure PYTHON=python3
+        ```
+        git checkout .
+        ```
         
 Keywords: yuna
 Platform: UNKNOWN

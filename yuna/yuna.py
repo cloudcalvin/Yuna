@@ -54,7 +54,6 @@ def main():
 
     arguments = docopt(__doc__, version='Yuna 0.1.0')
     tools.red_print('Summoning Yuna...')
-
     print_parameters(arguments)
 
     process = arguments['<process>']
@@ -68,16 +67,18 @@ def main():
     else:
         cellref = ""
 
-    machina(process, testname, ldf, cellref)
+    machina(process, testname, ldf, cellref, '')
 
     tools.red_print('Auron. Done.')
 
 
-def machina(process, testname, ldf, cellref):
+def machina(process, testname, ldf, cellref, cwd):
     print ('\n' + '[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
     print ('Running Yuna...')
 
-    cwd = os.getcwd()
+    if cwd == '':
+        cwd = os.getcwd()
+
     basedir = cwd + '/tests/' + process
     examdir = basedir + '/' + testname
 
@@ -124,3 +125,9 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
+

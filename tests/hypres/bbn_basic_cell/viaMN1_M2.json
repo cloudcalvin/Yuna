@@ -147,7 +147,7 @@
             "method": "boolean",
             "type": "module",
             "delete": "false",
-            "debug": "false",
+            "debug": "true",
             
             "subj": {
                 "class": "Layers",
@@ -175,7 +175,7 @@
             "method": "boolean",
             "type": "subatom",
             "delete": "true",
-            "debug": "false",
+            "debug": "true",
             
             "subj": {
                 "class": "Layers",

@@ -1,6 +1,7 @@
 from __future__ import print_function # lace this in setup.
 from termcolor import colored
 
+
 import json
 import gdspy
 import utils.tools as tools

@@ -25,13 +25,8 @@ import gdspy
 import process
 import read
 
-# from . import utils
-# or:
 from utils import write
 from utils import tools
-# or:
-# import utils.write
-# import utils.tools
 
 # To run seperately:
 # $ python yuna/yuna.py.

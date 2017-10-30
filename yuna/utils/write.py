@@ -86,6 +86,19 @@ def stem_process(basedir, Layers, Atoms):
             for poly in layer['result']:
                 cell.add(gdspy.Polygon(poly, layer['gds']))
 
+#     # Plot polygons inside Module Object.
+#     for atom in Atoms:
+#         print ('      ' + '-> ', end='')
+#         print('Atom: ' + atom['id'])
+#         for subatom in atom['Subatom']:
+#             if json.loads(subatom['debug']):
+#                 print('         * Subatom: ' + str(subatom['id']))
+#                 print(subatom['result'])
+#                 for mod in 
+# 
+#                 for poly in subatom['result']:
+#                     cell.add(gdspy.Polygon(poly, subatom['gds']))
+
     # Plot polygons inside Atom/Subatom Object.
     for atom in Atoms:
         print ('      ' + '-> ', end='')
@@ -148,3 +161,17 @@ class Write:
             gdspy.LayoutViewer()
 
         self.solution = auronlayout.get_polygons(True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+

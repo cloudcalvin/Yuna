@@ -71,7 +71,7 @@ def adp_process(basedir, Layers, Atoms):
     return cell
 
 
-def stem_process(basedir, Layers, Atoms):
+def stem_process(basedir, Layers, Atom):
     """ """
 
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
@@ -86,21 +86,15 @@ def stem_process(basedir, Layers, Atoms):
             for poly in layer['result']:
                 cell.add(gdspy.Polygon(poly, layer['gds']))
 
-#     # Plot polygons inside Module Object.
-#     for atom in Atoms:
-#         print ('      ' + '-> ', end='')
-#         print('Atom: ' + atom['id'])
-#         for subatom in atom['Subatom']:
-#             if json.loads(subatom['debug']):
-#                 print('         * Subatom: ' + str(subatom['id']))
-#                 print(subatom['result'])
-#                 for mod in 
-# 
-#                 for poly in subatom['result']:
-#                     cell.add(gdspy.Polygon(poly, subatom['gds']))
+    # Plot polygons inside the Modules Object.
+    for atom in Atom:
+        for subatom in atom['Subatom']:
+            for module in subatom['Module']:
+                print(module['id'])
+                print(module['result'])
 
     # Plot polygons inside Atom/Subatom Object.
-    for atom in Atoms:
+    for atom in Atom:
         print ('      ' + '-> ', end='')
         print('Atom: ' + atom['id'])
         for subatom in atom['Subatom']:
@@ -119,7 +113,7 @@ class Write:
         self.solution = None
         self.holes = None
 
-    def write_gds(self, basedir, config, ldf):
+    def write_gds(self, basedir, Layers, Atom, ldf):
         """
             Write the GDS file that contains the difference
             of the moat layer with the wiring layer and the
@@ -147,13 +141,11 @@ class Write:
         """
 
         auronlayout = None
-        Layers = config['Layers']
-        Atoms = config['Atom']
 
         if ldf == 'adp':
-            auronlayout = adp_process(basedir, Layers, Atoms)
+            auronlayout = adp_process(basedir, Layers, Atom)
         elif ldf == 'stem64':
-            auronlayout = stem_process(basedir, Layers, Atoms)
+            auronlayout = stem_process(basedir, Layers, Atom)
         else:
             print ('write.py -> Please specify a LDF file.')
 
@@ -161,17 +153,3 @@ class Write:
             gdspy.LayoutViewer()
 
         self.solution = auronlayout.get_polygons(True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-

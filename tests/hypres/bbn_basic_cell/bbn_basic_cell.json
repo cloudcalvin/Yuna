@@ -4,106 +4,106 @@
         "M1": {
             "type": "wire",
             "active": "False",
-            "union": "true",   
-            "debug": "false",         
+            "union": "true",
+            "debug": "false",
             "gds": 1,
             "jj": [],
             "result": []
         },
         "I1BU": {
-            "type": "via",            
+            "type": "via",
             "active": "False",
-            "union": "true",  
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 3,
             "jj": [],
             "result": []
         },
         "I1C": {
-            "type": "via",            
+            "type": "via",
             "active": "False",
-            "union": "true",    
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 4,
             "jj": [],
             "result": []
         },
         "A1": {
-            "type": "via",            
+            "type": "via",
             "active": "False",
-            "union": "true",   
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 5,
             "result": []
         },
         "M2": {
-            "type": "wire",            
+            "type": "wire",
             "active": "False",
-            "union": "true",  
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 6,
             "name": [],
             "result": []
         },
         "I2": {
-            "type": "via",            
+            "type": "via",
             "active": "False",
-            "union": "true",          
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 7,
             "jj": [],
             "result": []
         },
         "R2": {
-            "type": "resistance",            
+            "type": "resistance",
             "active": "False",
-            "union": "true",     
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 8,
             "jj": [],
             "result": []
         },
         "M3": {
-            "type": "wire",            
+            "type": "wire",
             "active": "False",
-            "union": "true",   
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 9,
             "jj": [],
             "result": []
         },
         "R3": {
-            "type": "resistance",            
+            "type": "resistance",
             "active": "False",
-            "union": "true",    
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 10,
-            "jj": [],            
+            "jj": [],
             "result": []
         },
         "M0": {
-            "type": "wire",            
+            "type": "wire",
             "active": "False",
-            "union": "true", 
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 30,
             "jj": [],
             "result": []
         },
         "I0": {
-            "type": "via",            
+            "type": "via",
             "active": "False",
-            "union": "true",    
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 31,
             "jj": [],
             "result": []
         },
         "I1BL": {
-            "type": "via",            
+            "type": "via",
             "active": "False",
-            "union": "true",    
-            "debug": "false",                     
+            "union": "true",
+            "debug": "false",
             "gds": 15,
             "jj": [],
             "result": []
@@ -180,15 +180,14 @@
             "desc": "Connect MN1 to M2, through via MN1-M2.",
             "check": ["I1BU", "M2", "I0", "IN1", "M1", "M0", "MN1", "MN2", "IN2"],
             "skip": "false",
-            
-            "Subatom": 
+
+            "Subatom":
             [
                 {
                     "id": 0,
                     "gds": 0,
-                    "name": "viaMN1_M2",
+                    "module": "viaMN1_M2",
                     "debug": "true",
-                    "moduledata": [],
                     "result": []
                 }
             ]

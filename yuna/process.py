@@ -171,6 +171,25 @@ class Process:
           method and save the result.
         """
 
+        Layers = self.config_data['Layers']
+
+        if module['type'] == 'connect':
+            subj_layer = module['clip']['layer'][0]
+            subj_poly = module['clip']['poly']
+
+            clip_layer = module['clip']['layer'][1]
+            clip_poly = module['clip']['poly']
+
+            subj = Layers[subj_layer][subj_poly]
+            clip = Layers[clip_layer][clip_poly]
+
+            result_list = []
+
+            if subj and clip:
+                result_list = tools.angusj(clip, subj, 'intersection')
+                self.my_method(atom, subatom, module, result_list)
+
+
         print('          Module: ' + str(module['id']))
         print('          ' + str(module['desc']))
         if module['method'] == 'offset':
@@ -199,6 +218,22 @@ class Process:
             result_list = tools.angusj_offset(subj)
             if result_list:
                 self.update_layer(atom, subatom, module, result_list)
+
+    def my_method(self, atom, subatom, module, clip):
+        """ Apply polygon method, either union,
+        intersection or difference. """
+
+        subj = self.subject(atom, subatom, module)
+
+        result_list = []
+        if subj and clip:
+            result_list = tools.angusj(clip, subj, module['method'])
+            if result_list:
+                self.update_layer(atom, subatom, module, result_list)
+            else:
+                atom['skip'] = 'true'
+        else:
+            atom['skip'] = 'true'
 
     def execute_method(self, atom, subatom, module):
         """ Apply polygon method, either union,
@@ -247,15 +282,15 @@ class Process:
             3. The current Module struct.
         """
 
-        if module['type'] == 'subatom':
+        if module['savein'] == 'subatom':
             subatom['result'] = result
-        elif module['type'] == 'module':
+        elif module['savein'] == 'module':
             module['result'] = result
-        elif module['type'] == 'layer':
-            Layers = self.config_data['Layers']
-            layer = module['savein']['layer']
-            poly = module['savein']['poly']
-            Layers[layer][poly] = result
+#         elif module['savein'] == 'layer':
+#             Layers = self.config_data['Layers']
+#             layer = module['savein']['layer']
+#             poly = module['savein']['poly']
+#             Layers[layer][poly] = result
         else:
             raise Exception('Please specify a \'type\' of the sub-module.')
 
@@ -320,7 +355,11 @@ class Process:
             clip = atom[clip_layer]['result']
         elif clip_class == 'Module':
             modnum = module['clip']['layer']
-            clip = Module[modnum]['result']
+
+            if len(modnum) == 1:
+                clip = Module[modnum]['result']
+            else:
+                clip = module['clip']['result']
 
         return clip
 

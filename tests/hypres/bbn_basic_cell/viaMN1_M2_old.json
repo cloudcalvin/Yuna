@@ -5,7 +5,7 @@
             "id": "0",
             "desc": "Get the intersection between M2 and M1.",
             "method": "intersection",
-            "type": "module",
+            "savein": "module",
             "delete": "false",
             "debug": "false",
 
@@ -21,11 +21,6 @@
                 "poly": "result"
             },
 
-            "savein": {
-                "layer": "",
-                "poly": ""
-            },
-
             "result": []
         },
 
@@ -33,7 +28,8 @@
             "id": "1",
             "desc": "Connect M2 to M1 with via I1BU",
             "method": "boolean",
-            "type": "module",
+            "savein": "module",
+            "type": "connect",
             "delete": "false",
             "debug": "false",
 
@@ -49,11 +45,6 @@
                 "poly": "result"
             },
 
-            "savein": {
-                "layer": "",
-                "poly": ""
-            },
-
             "result": []
         },
 
@@ -61,7 +52,7 @@
             "id": "2",
             "desc": "Get the intersection Subatom 1 and M0.",
             "method": "boolean",
-            "type": "module",
+            "savein": "module",
             "delete": "false",
             "debug": "false",
 
@@ -77,11 +68,6 @@
                 "poly": "result"
             },
 
-            "savein": {
-                "layer": "",
-                "poly": ""
-            },
-
             "result": []
         },
 
@@ -89,7 +75,7 @@
             "id": "3",
             "desc": "Connect M1 (Subatom 2) to M0 with via I0",
             "method": "boolean",
-            "type": "module",
+            "savein": "module",
             "delete": "false",
             "debug": "false",
 
@@ -105,11 +91,6 @@
                 "poly": "result"
             },
 
-            "savein": {
-                "layer": "",
-                "poly": ""
-            },
-
             "result": []
         },
 
@@ -117,7 +98,7 @@
             "id": "4",
             "desc": "Get the intersection Subatom 3 and MN1.",
             "method": "boolean",
-            "type": "module",
+            "savein": "module",
             "delete": "false",
             "debug": "false",
 
@@ -133,11 +114,6 @@
                 "poly": "result"
             },
 
-            "savein": {
-                "layer": "",
-                "poly": ""
-            },
-
             "result": []
         },
 
@@ -145,7 +121,7 @@
             "id": "5",
             "desc": "Connect M0 (Subatom 4) to MN1 with via IN1",
             "method": "boolean",
-            "type": "module",
+            "savein": "module",
             "delete": "false",
             "debug": "false",
 
@@ -161,19 +137,14 @@
                 "poly": "result"
             },
 
-            "savein": {
-                "layer": "",
-                "poly": ""
-            },
-
             "result": []
         },
 
         {
             "id": "6",
-            "desc": "Remove the VIAs that has IN2 in them. These are MN2-M2 connections.",
+            "desc": "Remove the VIAs that has IN2 in them.",
             "method": "boolean",
-            "type": "subatom",
+            "savein": "subatom",
             "delete": "true",
             "debug": "false",
 
@@ -187,11 +158,6 @@
                 "class": "Module",
                 "layer": 5,
                 "poly": "result"
-            },
-
-            "savein": {
-                "layer": "",
-                "poly": ""
             },
 
             "result": []

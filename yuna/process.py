@@ -33,10 +33,13 @@ gdsii = gdspy.GdsLibrary()
 
 
 def transpose_cell(Layers, cellpolygons, origin, name):
-    """
-        The cells are centered in the middle of the gds
-        file canvas. To include this cell into the main
-        cell, we have to transpose it to the required position.
+    """ * The cells are centered in the middle of the gds
+          file canvas. To include this cell into the main
+          cell, we have to transpose it to the required position.
+
+        * Save tranposed coordinates in 'Layers' object.
+          Maybe we should automate this later by making
+          'result' a {} and not a [].
     """
 
     for key, polygons in cellpolygons.items():
@@ -47,9 +50,6 @@ def transpose_cell(Layers, cellpolygons, origin, name):
                         coord[0] = coord[0] + origin[0]
                         coord[1] = coord[1] + origin[1]
 
-                    # Save tranposed coordinates in 'Layers' object.
-                    # Maybe we should automate this later by making
-                    # 'result' a {} and not a [].
                     if (layer == 'JJ'):
                         lay_data['result'].append(poly.tolist())
                     elif (layer == 'JP') or (layer == 'JC'):
@@ -59,7 +59,7 @@ def transpose_cell(Layers, cellpolygons, origin, name):
 
 
 def union_polygons(Layers):
-    """ Union the polygons. """
+    """ Union the normal wiring polygons. """
 
     tools.green_print('Union Layer:')
     for key, layer in Layers.items():
@@ -67,66 +67,19 @@ def union_polygons(Layers):
             tools.union_wire(Layers, key, 'result')
 
 
-# def does_contain_junctions(Elements):
-#     """ Check if the layout contains any Junctions. """
-#
-#     hasjj = False
-#     for element in Elements:
-#         if isinstance(element, gdspy.CellReference):
-#             name = element.ref_cell.name
-#             if name[:2] == 'JJ':
-#                 hasjj = True
-#
-#     return hasjj
-#
-#
-# def junction_area(Elements):
-#     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-#     print('Junction areas:')
-#     for element in Elements:
-#         if isinstance(element, gdspy.CellReference):
-#             name = element.ref_cell.name
-#             if name[:2] == 'JJ':
-#                 for key, value in element.area(True).items():
-#                     if key[0] == 6:
-#                         print('      ' + name + ' --> ' + str(value * 1e-12) + 'um')
-#
-#
-# def resistance_area(Layers):
-#     """
-#         * We have to get the center of each resistance polygon.
-#         * Test if the center of each polygon is inside
-#           layer 9. If so, then remove that polygon.
-#         * Finally, we should be left with just the
-#           resistance branch polygon.
-#     """
-#
-#     # NB: We have to save the JJ name with the corresponding area value.
-#
-#     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-#     print('Parasitic resistance areas:')
-#
-#     for key, value in Layers.items():
-#         if value['type'] == 'resistance':
-#             for poly in value['jj']:
-#                 poly_element = gdspy.Polygon(poly, 21)
-#                 value = poly_element.area(True).values()[0]
-#                 print('      ' + key + ' --> ' + str(value * 1e-12) + 'um')
-
-
-
 class Process:
     """
-        Variables
-        ---------
-            origin : dict
-                This dict contains all the original layers as read in
-                from the import GDS file, before manipulation.
-            uPoly : dict
-                Union of polygon layers, like m1 that has been union, m1 and m2
-                that has been intersected, etc.
-            iPoly : dict
-                Intersection result of two or more polygons.
+    Read and parse the JSON config files.
+    The main JSON objects are created and updated.
+
+    Parameters
+    ----------
+    basedir : string
+        String that is the main directory of Yuna.
+    gds_file : string
+        Path to the GDS file in the corresponding test directory.
+    config_data : dict
+        Full dict as readin and updated from the JSON config file.
     """
 
     def __init__(self, basedir, gds_file, config_data):
@@ -136,142 +89,108 @@ class Process:
 
     def init_layers(self, cellref):
         """
-            Fills the 'result' and 'jj' lists inside each
-            layer in 'Layers' object.
+        Read the data from the GDS file, either from
+        the toplevel CELL of the CELL as speficied
+        the user.
 
-            Todo
-            ----
+        Attributes
+        ----------
+        Elements : list
+            Elements as read in from the GDS file using the GDSPY library.
+        Layer : list
+            The Layer object as specified in the json config file.
 
-                * Add PolygonPaths
-                * Add nTrons
+        Notes
+        -----
+        After the elements has been added to the Layer object,
+        we ably the union polygon operation on the layer polygons.
         """
 
         gdsii.read_gds(self.gds_file, unit=1.0e-12)
 
+        Elements = None
+
         if cellref:
             cell = gdsii.extract(cellref)
             flatcell = tools.flatten_cell(cell)
-
             Elements = flatcell.elements
-            Layers = self.config_data['Layers']
-
-            layers.add_elements(Layers, Elements)
-            union_polygons(Layers)
         else:
             top_cell = gdsii.top_level()[0]
             gdsii.extract(top_cell)
-
             Elements = gdsii.top_level()[0].elements
-            Layers = self.config_data['Layers']
 
+        if Elements:
+            Layers = self.config_data['Layers']
             layers.add_elements(Layers, Elements)
             union_polygons(Layers)
+        else:
+            raise Exception('The Element object cannot be None.')
 
         return Elements
 
     def config_layers(self, cellref):
-        """
-            This function is process specific.
-            It looks at each layer and dicides
-            what to do with it, for example:
-
-            * If it's a wiring layer, union it.
-            * If it's a via then test which wiring
-              layers is connect and union them.
-
-            Notes
-            -----
-
-                * By default all individual layers should
-                  be union.
-
-            Todo
-            ----
-
-                Implement the default layer union of other
-                layers, not just the wiring layers.
-        """
+        """ Main loop of the class. Loop over each
+        atom, subatom and module. Then update
+        the config data structure results. """
 
         Elements = self.init_layers(cellref)
+
         Layers = self.config_data['Layers']
         Atom = self.config_data['Atom']
 
         tools.green_print('Running Atom:')
-        for i, atom in enumerate(Atom):
+        for atom in Atom:
             if tools.is_layer_active(Layers, atom):
-                self.calculate_atom(i)
+                self.calculate_atom(atom)
 
         cParams = params.Params()
         cParams.calculate_area(Elements, Layers)
 
-    def read_module(self, atom_id, subatom_id):
-        """  """
-
-        tools.green_print('Reading Module:')
-
-        atom = self.config_data['Atom'][atom_id]
-        subatom = atom['Subatom'][subatom_id]
-
-        config_file = self.basedir + '/' + subatom['module'] + '.json'
-        print('        Subatom: ' + subatom['module'])
-
-        with open(config_file) as data_file:
-            subatom['Module'] = json.load(data_file)['Module']
-
-    def calculate_atom(self, atom_id):
+    def calculate_atom(self, atom):
         """
-            * Read the Module data file in
-              and save it in the 'moduledata'
-              variable in the Subatom struct.
-            * Loop through the modules and calculate
-              the result of the Subatom struct.
+        * Read the Module data file in
+          and save it in the 'Module'
+          variable in the Subatom struct.
+        * Loop through the modules and calculate
+          the result of the Subatom struct.
         """
 
-        atom = self.config_data['Atom'][atom_id]
         print('      Num: ' + atom['id'])
 
-        for i, subatom in enumerate(atom['Subatom']):
-            self.read_module(atom_id, i)
+        for subatom in atom['Subatom']:
+            tools.read_module(self.basedir, atom, subatom)
             if not json.loads(atom['skip']):
-                for j, module in enumerate(subatom['Module']):
-                    self.calculate_module(atom_id, i, j)
+                for module in subatom['Module']:
+                    self.calculate_module(atom, subatom, module)
 
-    def calculate_module(self, atom_id, subatom_id, module_id):
+    def calculate_module(self, atom, subatom, module):
         """
-            1. Calculate the Subject polygon list.
-            2. Calculate the Clippers polygon list.
-            3. Clip and 1. and 2. using the proposed
-               method and save the result.
+        * Calculate the Subject polygon list.
+        * Calculate the Clippers polygon list.
+        * Clip and 1. and 2. using the proposed
+          method and save the result.
         """
-
-        atom = self.config_data['Atom'][atom_id]
-        subatom = atom['Subatom'][subatom_id]
-        module = subatom['Module'][module_id]
-
-        # print(subatom['Module'])
 
         print('          Module: ' + str(module['id']))
         print('          ' + str(module['desc']))
         if module['method'] == 'offset':
-            self.execute_offset(atom_id, subatom_id, module_id)
+            self.execute_offset(atom, subatom, module)
         elif module['method'] == 'boolean':
-            self.execute_bool(atom_id, subatom_id, module_id)
+            self.execute_bool(atom, subatom, module)
         elif module['method'] == 'intersection':
-            self.execute_method(atom_id, subatom_id, module_id)
-            print(module)
+            self.execute_method(atom, subatom, module)
         elif module['method'] == 'difference':
-            self.execute_method(atom_id, subatom_id, module_id)
+            self.execute_method(atom, subatom, module)
         elif module['method'] == 'union':
-            self.execute_method(atom_id, subatom_id, module_id)
+            self.execute_method(atom, subatom, module)
         else:
             raise Exception('Please specify a valid Clippers method')
 
-    def execute_offset(self, atom_id, subatom_id, module_id):
-        """ """
-
-        atom = self.config_data['Atom'][atom_id]
-        subatom = atom['Subatom'][subatom_id]
-        module = subatom['Module'][module_id]
+    def execute_offset(self, atom, subatom, module):
+        """ Update the 'result' variable when
+        after offsetting the current polygon.
+        This method is normally used to detect
+        layer overlapping. """
 
         result_list = []
         subj = self.subject(atom, subatom, module)
@@ -279,14 +198,11 @@ class Process:
         if subj:
             result_list = tools.angusj_offset(subj)
             if result_list:
-                self.update_layer(atom_id, subatom_id, module_id, result_list)
+                self.update_layer(atom, subatom, module, result_list)
 
-    def execute_method(self, atom_id, subatom_id, module_id):
-        """ """
-
-        atom = self.config_data['Atom'][atom_id]
-        subatom = atom['Subatom'][subatom_id]
-        module = subatom['Module'][module_id]
+    def execute_method(self, atom, subatom, module):
+        """ Apply polygon method, either union,
+        intersection or difference. """
 
         subj = self.subject(atom, subatom, module)
         clip = self.clipper(atom, subatom, module)
@@ -295,22 +211,16 @@ class Process:
         if subj and clip:
             result_list = tools.angusj(clip, subj, module['method'])
             if result_list:
-                self.update_layer(atom_id, subatom_id, module_id, result_list)
+                self.update_layer(atom, subatom, module, result_list)
             else:
                 atom['skip'] = 'true'
         else:
             atom['skip'] = 'true'
 
-    def execute_bool(self, atom_id, subatom_id, module_id):
-        """
-            We assume that doing a boolean test on
-            whether two layers are overlapping, will always
-            use the 'intersection' polygon method.
-        """
-
-        atom = self.config_data['Atom'][atom_id]
-        subatom = atom['Subatom'][subatom_id]
-        module = subatom['Module'][module_id]
+    def execute_bool(self, atom, subatom, module):
+        """ We assume that doing a boolean test on
+        whether two layers are overlapping, will always
+        use the 'intersection' polygon method. """
 
         subj = self.subject(atom, subatom, module)
         clip = self.clipper(atom, subatom, module)
@@ -326,9 +236,9 @@ class Process:
                 if result_list:
                     inter_list.append(poly)
 
-        self.update_layer(atom_id, subatom_id, module_id, inter_list)
+        self.update_layer(atom, subatom, module, inter_list)
 
-    def update_layer(self, atom_id, subatom_id, module_id, result):
+    def update_layer(self, atom, subatom, module, result):
         """
             Saves the result back into either:
 
@@ -337,17 +247,10 @@ class Process:
             3. The current Module struct.
         """
 
-        atom = self.config_data['Atom'][atom_id]
-        subatom = atom['Subatom'][subatom_id]
-        module = subatom['Module'][module_id]
-
-        # print(result)
-
         if module['type'] == 'subatom':
             subatom['result'] = result
         elif module['type'] == 'module':
             module['result'] = result
-            # module['id'] = '11111123123'
         elif module['type'] == 'layer':
             Layers = self.config_data['Layers']
             layer = module['savein']['layer']
@@ -355,8 +258,6 @@ class Process:
             Layers[layer][poly] = result
         else:
             raise Exception('Please specify a \'type\' of the sub-module.')
-
-        print(module['result'])
 
     def subject(self, atom, subatom, module):
         """
@@ -422,3 +323,10 @@ class Process:
             clip = Module[modnum]['result']
 
         return clip
+
+
+
+
+
+
+

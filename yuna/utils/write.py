@@ -87,11 +87,11 @@ def stem_process(basedir, Layers, Atom):
                 cell.add(gdspy.Polygon(poly, layer['gds']))
 
     # Plot polygons inside the Modules Object.
-    for atom in Atom:
-        for subatom in atom['Subatom']:
-            for module in subatom['Module']:
-                print(module['id'])
-                print(module['result'])
+#     for atom in Atom:
+#         for subatom in atom['Subatom']:
+#             for module in subatom['Module']:
+#                 print(module['id'])
+#                 print(module['result'])
 
     # Plot polygons inside Atom/Subatom Object.
     for atom in Atom:

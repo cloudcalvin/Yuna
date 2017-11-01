@@ -5,8 +5,16 @@ from collections import defaultdict
 
 import os
 import sys
+import json
 import gdspy
 import pyclipper
+
+
+def parameter_print(arguments):
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print ('Parameters:')
+    for key, value in arguments.items():
+        print('      ' + str(key) + ' : ' + str(value))
 
 
 def red_print(header):
@@ -24,6 +32,12 @@ def magenta_print(header):
 def green_print(header):
     """ Function header (Green) """
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print(header)
+
+
+def cyan_print(header):
+    """ Function header (Green) """
+    print ('\n[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
     print(header)
 
 
@@ -171,3 +185,26 @@ def flatten_cell(cell):
     add_jjs_cells(flatcell, jj_list)
 
     return flatcell
+
+
+def read_module(basedir, atom, subatom):
+    """ Read the Module json file and save
+    it in the Subatom 'Module' variable. """
+
+    green_print('Reading Module:')
+
+    config_file = basedir + '/' + subatom['module'] + '.json'
+    print('        Subatom: ' + subatom['module'])
+
+    with open(config_file) as data_file:
+        subatom['Module'] = json.load(data_file)['Module']
+
+
+
+
+
+
+
+
+
+

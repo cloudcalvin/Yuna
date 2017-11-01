@@ -1,6 +1,7 @@
 from __future__ import print_function # lace this in setup.
 from termcolor import colored
 
+import via
 import json
 import gdspy
 import layers
@@ -163,6 +164,46 @@ class Process:
                 for module in subatom['Module']:
                     self.calculate_module(atom, subatom, module)
 
+    def connect_layers_with_via(self, value):
+        """ Intersect the layers in the 'clip' object
+        in the submodule. """
+
+        tools.magenta_print('Connect layers with VIA')
+
+        # subj = self.subject(atom, subatom, module)
+        # clip = self.clipper(atom, subatom, module)
+
+        via_object = via.Via(value)
+
+        subj = via_object.subject()
+        clip = via_object.clipper()
+
+        # result_list = []
+        # if subj and clip:
+        #     result_list = tools.angusj(clip, subj, module['method'])
+        #     if result_list:
+        #         self.update_layer(atom, subatom, module, result_list)
+        #     else:
+        #         atom['skip'] = 'true'
+        # else:
+        #     atom['skip'] = 'true'
+
+        # Layers = self.config_data['Layers']
+        #
+        # poly_1 = module['clip']['layer'][0]
+        # poly_2 = module['clip']['layer'][1]
+        #
+        # print(poly_1.keys()[0])
+
+        # subj = Layers[subj_layer][subj_poly]
+        # clip = Layers[clip_layer][clip_poly]
+        #
+        # result_list = []
+        #
+        # if subj and clip:
+        #     result_list = tools.angusj(clip, subj, 'intersection')
+        #     self.my_method(atom, subatom, module, result_list)
+
     def calculate_module(self, atom, subatom, module):
         """
         * Calculate the Subject polygon list.
@@ -171,39 +212,28 @@ class Process:
           method and save the result.
         """
 
-        Layers = self.config_data['Layers']
-
-        if module['type'] == 'connect':
-            subj_layer = module['clip']['layer'][0]
-            subj_poly = module['clip']['poly']
-
-            clip_layer = module['clip']['layer'][1]
-            clip_poly = module['clip']['poly']
-
-            subj = Layers[subj_layer][subj_poly]
-            clip = Layers[clip_layer][clip_poly]
-
-            result_list = []
-
-            if subj and clip:
-                result_list = tools.angusj(clip, subj, 'intersection')
-                self.my_method(atom, subatom, module, result_list)
+        for key, value in module.items():
+            if key == 'via_connect':
+                self.connect_layers_with_via(value)
 
 
-        print('          Module: ' + str(module['id']))
-        print('          ' + str(module['desc']))
-        if module['method'] == 'offset':
-            self.execute_offset(atom, subatom, module)
-        elif module['method'] == 'boolean':
-            self.execute_bool(atom, subatom, module)
-        elif module['method'] == 'intersection':
-            self.execute_method(atom, subatom, module)
-        elif module['method'] == 'difference':
-            self.execute_method(atom, subatom, module)
-        elif module['method'] == 'union':
-            self.execute_method(atom, subatom, module)
-        else:
-            raise Exception('Please specify a valid Clippers method')
+        # if module['type'] == 'connect':
+        #     self.connect_layers_with_via(module)
+
+        # print('          Module: ' + str(module['id']))
+        # print('          ' + str(module['desc']))
+        # if module['method'] == 'offset':
+        #     self.execute_offset(atom, subatom, module)
+        # elif module['method'] == 'boolean':
+        #     self.execute_bool(atom, subatom, module)
+        # elif module['method'] == 'intersection':
+        #     self.execute_method(atom, subatom, module)
+        # elif module['method'] == 'difference':
+        #     self.execute_method(atom, subatom, module)
+        # elif module['method'] == 'union':
+        #     self.execute_method(atom, subatom, module)
+        # else:
+        #     raise Exception('Please specify a valid Clippers method')
 
     def execute_offset(self, atom, subatom, module):
         """ Update the 'result' variable when
@@ -315,7 +345,7 @@ class Process:
 
         subj_class = module['subj']['class']
         subj_layer = module['subj']['layer']
-        subj_poly = module['subj']['poly']
+        subj_poly = module['subj']['savein']
 
         if subj_class == 'Layers':
             subj = Layers[subj_layer][subj_poly]
@@ -344,10 +374,11 @@ class Process:
 
         Layers = self.config_data['Layers']
         Module = subatom['Module']
+        clip = None
 
         clip_class = module['clip']['class']
         clip_layer = module['clip']['layer']
-        clip_poly = module['clip']['poly']
+        clip_poly = module['clip']['savein']
 
         if clip_class == 'Layers':
             clip = Layers[clip_layer][clip_poly]
@@ -355,17 +386,6 @@ class Process:
             clip = atom[clip_layer]['result']
         elif clip_class == 'Module':
             modnum = module['clip']['layer']
-
-            if len(modnum) == 1:
-                clip = Module[modnum]['result']
-            else:
-                clip = module['clip']['result']
+            clip = module['clip']['result']
 
         return clip
-
-
-
-
-
-
-

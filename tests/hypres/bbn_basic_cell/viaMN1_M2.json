@@ -4,26 +4,14 @@
         {
             "id": "0",
             "desc": "Connect M2 to M1 with via I1BU",
-            "method": "boolean",
-            "savein": "module",
-            "type": "connect",
-            "delete": "false",
-            "debug": "false",
 
-            "subj": {
-                "class": "Layers",
-                "layer": "I1BU",
-                "poly": "result"
-            },
-
-            "clip": {
-                "class": "Module",
-                "layer": ["M2", "M1"],
-                "poly": "result",
+            "via_connect": {
+                "wire_1": {"Layer": "M1"},
+                "wire_2": {"Layer": "M2"},
+                "via_layer": "I1sBU",
+                "view": "false",
                 "result": []
-            },
-
-            "result": []
+            }
         }
     ]
 }

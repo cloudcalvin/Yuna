@@ -80,15 +80,15 @@ def angusj(clip, subj, method):
     pc.AddPaths(clip, pyclipper.PT_CLIP, True)
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
 
-    if method == "difference":
+    if method == 'difference':
         subj = pc.Execute(pyclipper.CT_DIFFERENCE,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
-    elif method == "union":
+    elif method == 'union':
         subj = pc.Execute(pyclipper.CT_UNION,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)
-    elif method == "intersection":
+    elif method == 'intersection':
         subj = pc.Execute(pyclipper.CT_INTERSECTION,
                           pyclipper.PFT_EVENODD,
                           pyclipper.PFT_EVENODD)

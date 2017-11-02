@@ -4,30 +4,24 @@ class Via:
     """
     """
 
-    def __init__(self, value):
+    def __init__(self, config):
         """
         """
 
-        self.wire_1 = value['wire_1']
-        self.wire_2 = value['wire_2']
-        self.via_layer = value['via_layer']
+        self.config = config
 
-    def subject(self):
+    def get_subject_clipper(self, poly):
         """  """
 
-        Atom = self.config_data['Atom']
-        Layers = self.config_data['Layers']
+        Layers = self.config['Layers']
 
-        subj_class = self.wire_1.keys()
-        subj_layer = module['subj']['layer']
-        subj_poly = module['subj']['savein']
+        polyclass = poly.keys()[0]
+        polylayer = poly.values()[0]
 
-        if subj_class == 'Layers':
-            subj = Layers[subj_layer][subj_poly]
-        elif subj_class == 'Module':
-            subj = Subatom['result']
+        subjclip = None
+        if polyclass == 'Layer':
+            subjclip = Layers[polylayer]['result']
+        elif polyclass == 'Module':
+            print('Implement Module support.')
 
-        return subj
-
-    def clipper(self):
-        """  """
+        return subjclip

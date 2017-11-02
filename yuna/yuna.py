@@ -70,11 +70,6 @@ def machina(process, testname, ldf, cellref, cwd):
     gds_file = examdir + '/' + testname + '.gds'
     config_file = examdir + '/' + testname + '.json'
 
-#     print (basedir)
-#     print (examdir)
-#     print (gds_file)
-#     print (config_file)
-
     gdssetup = None
 
     layers = read.ldf(ldf)

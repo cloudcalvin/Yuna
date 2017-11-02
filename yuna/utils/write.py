@@ -1,6 +1,6 @@
 from __future__ import print_function
 from termcolor import colored
-
+from utils import tools
 
 import gdspy
 import json
@@ -71,27 +71,27 @@ def adp_process(basedir, Layers, Atoms):
     return cell
 
 
-def stem_process(basedir, Layers, Atom):
-    """ """
+def add_polygons_to_cell(cell, item):
+    """ Loop through the polygon list of
+    the layer, subatom or module and add
+    it to the gdspy library for processing."""
 
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Cell: STEM')
-    cell = gdspy.Cell('STEM')
+    print ('      ' + '-> ', end='')
+    print(item['id'])
+    for poly in item['result']:
+        cell.add(gdspy.Polygon(poly, item['gds']))
+
+def layers_cell(cell, Layers):
 
     # Plot polygons inside Layer Object.
     for key, layer in Layers.items():
         if json.loads(layer['debug']):
-            print ('      ' + '-> ', end='')
-            print(key)
-            for poly in layer['result']:
-                cell.add(gdspy.Polygon(poly, layer['gds']))
+            layer['id'] = key
+            add_polygons_to_cell(cell, layer)
 
-    # Plot polygons inside the Modules Object.
-#     for atom in Atom:
-#         for subatom in atom['Subatom']:
-#             for module in subatom['Module']:
-#                 print(module['id'])
-#                 print(module['result'])
+    return cell
+
+def atom_cell(cell, Atom):
 
     # Plot polygons inside Atom/Subatom Object.
     for atom in Atom:
@@ -99,13 +99,11 @@ def stem_process(basedir, Layers, Atom):
         print('Atom: ' + atom['id'])
         for subatom in atom['Subatom']:
             if json.loads(subatom['debug']):
-                print('         * Subatom: ' + str(subatom['id']))
-                print(subatom['result'])
-                for poly in subatom['result']:
-                    cell.add(gdspy.Polygon(poly, subatom['gds']))
+                add_polygons_to_cell(cell, subatom)
+            for module in subatom['Module']:
+                add_polygons_to_cell(cell, module)
 
     return cell
-
 
 class Write:
     def __init__(self, view):
@@ -143,9 +141,14 @@ class Write:
         auronlayout = None
 
         if ldf == 'adp':
+            tools.green_print('Cell: ADP - Japan')
+            cell = gdspy.Cell('ADP')
             auronlayout = adp_process(basedir, Layers, Atom)
         elif ldf == 'stem64':
-            auronlayout = stem_process(basedir, Layers, Atom)
+            tools.green_print('Cell: STEM - Hypres')
+            cell = gdspy.Cell('STEM')
+            cell = layers_cell(cell, Layers)
+            auronlayout = atom_cell(cell, Atom)
         else:
             print ('write.py -> Please specify a LDF file.')
 
@@ -153,3 +156,8 @@ class Write:
             gdspy.LayoutViewer()
 
         self.solution = auronlayout.get_polygons(True)
+
+
+
+
+

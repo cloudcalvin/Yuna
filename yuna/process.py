@@ -163,46 +163,43 @@ class Process:
             if not json.loads(atom['skip']):
                 for module in subatom['Module']:
                     self.calculate_module(atom, subatom, module)
+                    print(module['result'])
 
-    def connect_layers_with_via(self, value):
+    def get_layer_crossings(self, value):
         """ Intersect the layers in the 'clip' object
         in the submodule. """
 
         tools.magenta_print('Connect layers with VIA')
 
-        # subj = self.subject(atom, subatom, module)
-        # clip = self.clipper(atom, subatom, module)
+        via_object = via.Via(self.config_data)
 
-        via_object = via.Via(value)
+        subj = via_object.get_subject_clipper(value['wire_1'])
+        clip = via_object.get_subject_clipper(value['wire_2'])
 
-        subj = via_object.subject()
-        clip = via_object.clipper()
+        layer_crossing = []
+        if subj and clip:
+            layer_crossing = tools.angusj(clip, subj, 'intersection')
+            if not layer_crossing:
+                print('Clipping is zero.')
 
-        # result_list = []
-        # if subj and clip:
-        #     result_list = tools.angusj(clip, subj, module['method'])
-        #     if result_list:
-        #         self.update_layer(atom, subatom, module, result_list)
-        #     else:
-        #         atom['skip'] = 'true'
-        # else:
-        #     atom['skip'] = 'true'
+        return layer_crossing
 
-        # Layers = self.config_data['Layers']
-        #
-        # poly_1 = module['clip']['layer'][0]
-        # poly_2 = module['clip']['layer'][1]
-        #
-        # print(poly_1.keys()[0])
+    def save_via_polygons(self, value, subj):
+        """  """
+        tools.magenta_print('Save Via Polygons:')
 
-        # subj = Layers[subj_layer][subj_poly]
-        # clip = Layers[clip_layer][clip_poly]
-        #
-        # result_list = []
-        #
-        # if subj and clip:
-        #     result_list = tools.angusj(clip, subj, 'intersection')
-        #     self.my_method(atom, subatom, module, result_list)
+        via_object = via.Via(self.config_data)
+
+        clip = via_object.get_subject_clipper(value['via_layer'])
+
+        result_list = []
+        inter_list = []
+        for poly in clip:
+            result_list = tools.angusj([poly], subj, "intersection")
+            if result_list:
+                inter_list.append(poly)
+
+        return result_list
 
     def calculate_module(self, atom, subatom, module):
         """
@@ -214,7 +211,10 @@ class Process:
 
         for key, value in module.items():
             if key == 'via_connect':
-                self.connect_layers_with_via(value)
+                layer_crossing = self.get_layer_crossings(value)
+                viapoly = self.save_via_polygons(value, layer_crossing)
+                module['result'] = viapoly
+
 
 
         # if module['type'] == 'connect':

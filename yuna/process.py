@@ -1,12 +1,12 @@
-from __future__ import print_function # lace this in setup.
+from __future__ import print_function
 from termcolor import colored
+from utils import tools
 
-import via
+import vias
 import json
 import gdspy
 import layers
 import params
-import utils.tools as tools
 
 
 """
@@ -165,42 +165,6 @@ class Process:
                     self.calculate_module(atom, subatom, module)
                     print(module['result'])
 
-    def get_layer_crossings(self, value):
-        """ Intersect the layers in the 'clip' object
-        in the submodule. """
-
-        tools.magenta_print('Connect layers with VIA')
-
-        via_object = via.Via(self.config_data)
-
-        subj = via_object.get_subject_clipper(value['wire_1'])
-        clip = via_object.get_subject_clipper(value['wire_2'])
-
-        layer_crossing = []
-        if subj and clip:
-            layer_crossing = tools.angusj(clip, subj, 'intersection')
-            if not layer_crossing:
-                print('Clipping is zero.')
-
-        return layer_crossing
-
-    def save_via_polygons(self, value, subj):
-        """  """
-        tools.magenta_print('Save Via Polygons:')
-
-        via_object = via.Via(self.config_data)
-
-        clip = via_object.get_subject_clipper(value['via_layer'])
-
-        result_list = []
-        inter_list = []
-        for poly in clip:
-            result_list = tools.angusj([poly], subj, "intersection")
-            if result_list:
-                inter_list.append(poly)
-
-        return result_list
-
     def calculate_module(self, atom, subatom, module):
         """
         * Calculate the Subject polygon list.
@@ -211,11 +175,10 @@ class Process:
 
         for key, value in module.items():
             if key == 'via_connect':
-                layer_crossing = self.get_layer_crossings(value)
-                viapoly = self.save_via_polygons(value, layer_crossing)
-                module['result'] = viapoly
-
-
+                via = vias.Via(self.config_data)
+                layercross = via.get_layercross(value)
+                viacross = via.get_viacross(value, layercross)
+                module['result'] = viacross
 
         # if module['type'] == 'connect':
         #     self.connect_layers_with_via(module)

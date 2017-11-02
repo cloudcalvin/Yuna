@@ -5,7 +5,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 1,
             "jj": [],
             "result": []
@@ -14,7 +14,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 3,
             "jj": [],
             "result": []
@@ -23,7 +23,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 4,
             "jj": [],
             "result": []
@@ -32,7 +32,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 5,
             "result": []
         },
@@ -40,7 +40,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "true",
             "gds": 6,
             "name": [],
             "result": []
@@ -49,7 +49,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 7,
             "jj": [],
             "result": []
@@ -58,7 +58,7 @@
             "type": "resistance",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 8,
             "jj": [],
             "result": []
@@ -67,7 +67,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 9,
             "jj": [],
             "result": []
@@ -76,7 +76,7 @@
             "type": "resistance",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 10,
             "jj": [],
             "result": []
@@ -85,7 +85,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 30,
             "jj": [],
             "result": []
@@ -94,7 +94,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 31,
             "jj": [],
             "result": []
@@ -103,7 +103,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 15,
             "jj": [],
             "result": []
@@ -112,7 +112,7 @@
             "type": "junction",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 21,
             "jj": [],
             "result": []
@@ -121,7 +121,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 34,
             "jj": [],
             "result": []
@@ -130,7 +130,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 38,
             "jj": [],
             "result": []
@@ -139,7 +139,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 42,
             "jj": [],
             "result": []
@@ -148,7 +148,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 32,
             "jj": [],
             "result": []
@@ -157,7 +157,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 36,
             "jj": [],
             "result": []
@@ -166,7 +166,7 @@
             "type": "via",
             "active": "False",
             "union": "true",
-            "debug": "false",
+            "view": "false",
             "gds": 40,
             "jj": [],
             "result": []
@@ -174,12 +174,12 @@
     },
 
     "Atom":
-    [
+    {
+        "vias":
         {
-            "id": "0",
+            "id": 0,
             "desc": "Connect MN1 to M2, through via MN1-M2.",
             "check": ["I1BU", "M2", "I0", "IN1", "M1", "M0", "MN1", "MN2", "IN2"],
-            "skip": "false",
 
             "Subatom":
             [
@@ -187,7 +187,7 @@
                     "id": 0,
                     "gds": 0,
                     "module": "viaMN1_M2",
-                    "view": "false",
+                    "view": "true",
                     "result": []
                 },
 
@@ -195,17 +195,27 @@
                     "id": 1,
                     "gds": 1,
                     "module": "viaMN2_M2",
-                    "view": "false",
+                    "view": "true",
                     "result": []
                 },
                 {
                     "id": 2,
                     "gds": 2,
                     "module": "viaMN3_M2",
-                    "view": "false",
+                    "view": "true",
                     "result": []
                 }
             ]
+
+        },
+
+        "wires":
+        {
+            "id": 1,
+            "desc": "Get the wire polygons between vias.",
+            "check": ["M0", "M1", "M2"],
+
+            "Subatom": ["M2"]
         }
-    ]
+    }
 }

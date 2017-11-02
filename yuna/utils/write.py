@@ -76,40 +76,39 @@ def add_polygons_to_cell(cell, item):
     the layer, subatom or module and add
     it to the gdspy library for processing."""
 
-    print ('      ' + '-> ', end='')
-    print(item['id'])
     for poly in item['result']:
         cell.add(gdspy.Polygon(poly, item['gds']))
 
 
 def layers_cell(cell, Layers):
-
-    # Plot polygons inside Layer Object.
     for key, layer in Layers.items():
-        if json.loads(layer['debug']):
+        if json.loads(layer['view']):
             layer['id'] = key
             add_polygons_to_cell(cell, layer)
 
     return cell
 
 
-def atom_cell(cell, Atom):
+def modules_to_cell(cell, subatom):
+    for module in subatom['Module']:
+        for key, value in module.items():
+            if key == 'via_connect':
+                if json.loads(value['view']):
+                    add_polygons_to_cell(cell, module)
+            elif key == 'via_remove':
+                if json.loads(value['view']):
+                    add_polygons_to_cell(cell, module)
 
-    # Plot polygons inside Atom/Subatom Object.
-    for atom in Atom:
+
+def atom_cell(cell, Atom):
+    for key, atom in Atom.items():
         print ('      ' + '-> ', end='')
-        print('Atom: ' + atom['id'])
-        for subatom in atom['Subatom']:
-            if json.loads(subatom['view']):
-                add_polygons_to_cell(cell, subatom)
-            for module in subatom['Module']:
-                for key, value in module.items():
-                    if key == 'via_connect':
-                        if json.loads(value['view']):
-                            add_polygons_to_cell(cell, module)
-                    elif key == 'via_remove':
-                        if json.loads(value['view']):
-                            add_polygons_to_cell(cell, module)
+        print('Atom: ' + str(atom['id']))
+        if key == 'vias':
+            for subatom in atom['Subatom']:
+                if json.loads(subatom['view']):
+                    add_polygons_to_cell(cell, subatom)
+#                 modules_to_cell(cell, subatom)
 
     return cell
 

@@ -92,6 +92,8 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
     config_data = read.config(config_file)
 
     tools.magenta_print('Process Layers')
+
+    # Read Layout devices in and save polygons.
     cProcess = process.Process(examdir, gds_file, config_data)
     cProcess.config_layers(cellref)
 

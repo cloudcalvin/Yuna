@@ -4,7 +4,7 @@
         {
             "id": 0,
             "desc": "Connect M2 to M1 with via I1BU",
-	    "gds": 3,
+	          "gds": 3,
 
             "via_connect": {
                 "wire_1": {"Layer": "M1"},
@@ -57,9 +57,3 @@
         }
     ]
 }
-
-
-
-
-
-

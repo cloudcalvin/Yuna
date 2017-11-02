@@ -2,6 +2,7 @@ from __future__ import print_function
 from termcolor import colored
 from utils import tools
 
+import wires
 import vias
 import json
 import gdspy
@@ -140,14 +141,17 @@ class Process:
         Atom = self.config_data['Atom']
 
         tools.green_print('Running Atom:')
-        for atom in Atom:
-            if tools.is_layer_active(Layers, atom):
-                self.calculate_atom(atom)
+
+        self.calculate_vias(Atom['vias'])
+        self.calculate_wires(Atom['wires'], Atom['vias'])
 
         cParams = params.Params()
         cParams.calculate_area(Elements, Layers)
 
-    def calculate_atom(self, atom):
+    def copy_module_to_subatom(self, subatom):
+        subatom['result'] = subatom['Module'][-1]['result']
+
+    def calculate_vias(self, atom):
         """
         * Read the Module data file in
           and save it in the 'Module'
@@ -156,14 +160,30 @@ class Process:
           the result of the Subatom struct.
         """
 
-        print('      Num: ' + atom['id'])
+        print('      Num: ' + str(atom['id']))
 
         for subatom in atom['Subatom']:
             tools.read_module(self.basedir, atom, subatom)
-            if not json.loads(atom['skip']):
-                for module in subatom['Module']:
-                    print('Module ID: ' + str(module['id']))
-                    self.calculate_module(atom, subatom, module)
+
+            for module in subatom['Module']:
+                print('Module ID: ' + str(module['id']))
+                self.calculate_module(atom, subatom, module)
+
+            self.copy_module_to_subatom(subatom)
+
+    def calculate_wires(self, atom, vias):
+        """  """
+
+        tools.green_print('Calculating Wires:')
+        Layers = self.config_data['Layers']
+
+        wire = wires.Wire(Layers, vias)
+
+        for subatom in atom['Subatom']:
+#             wire.union_wire_layers(subatom)
+            viadiff = wire.find_union_diff(subatom)
+            Layers[subatom]['result'] = viadiff
+            print(viadiff)
 
     def calculate_module(self, atom, subatom, module):
         """

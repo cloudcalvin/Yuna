@@ -13,7 +13,7 @@ class Via:
         self.Layers = config['Layers']
         self.Modules = subatom['Module']
 
-    def get_angusj_polygon(self, poly):
+    def get_polygon(self, poly):
         """  """
 
         polyclass = poly.keys()[0]
@@ -32,8 +32,8 @@ class Via:
         in the submodule. """
 
         tools.magenta_print('Connect layers with VIA')
-        subj = self.get_angusj_polygon(value['wire_1'])
-        clip = self.get_angusj_polygon(value['wire_2'])
+        subj = self.get_polygon(value['wire_1'])
+        clip = self.get_polygon(value['wire_2'])
 
         layercross = []
         if subj and clip:
@@ -47,13 +47,29 @@ class Via:
         """  """
 
         tools.magenta_print('Save Via Polygons:')
-        clip = self.get_angusj_polygon(value['via_layer'])
+        clip = self.get_polygon(value['via_layer'])
 
         result_list = []
         viacross = []
         for poly in subj:
             result_list = tools.angusj([poly], clip, "intersection")
             if result_list:
+                viacross.append(poly)
+
+        return viacross
+
+    def remove_viacross(self, value):
+        """  """
+
+        tools.magenta_print('Remove polygon with VIA inside:')
+        subj = self.get_polygon(value['wire_1'])
+        clip = self.get_polygon(value['via_layer'])
+
+        result_list = []
+        viacross = []
+        for poly in subj:
+            result_list = tools.angusj([poly], clip, "intersection")
+            if not result_list:
                 viacross.append(poly)
 
         return viacross

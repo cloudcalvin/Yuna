@@ -10,23 +10,23 @@ import params
 
 
 """
-    Hacker: 1h3d*n
-    For: Volundr
-    Docs: Algorithm 1
-    Date: 31 April 2017
+Hacker: 1h3d*n
+For: Volundr
+Docs: Algorithm 1
+Date: 31 April 2017
 
-    Description: Using Angusj Clippers library to do
-                 polygon manipulations.
+Description: Using Angusj Clippers library to do
+             polygon manipulations.
 
-    1) The union is done on each polygon of the wiring layer.
-    2) The difference and intersection is done with the
-    union result and the moat layer.
-    3) Note, you might have to multiple each coordinate with
-    1000 to convert small floats 0.25 to integers, 250.
+1) The union is done on each polygon of the wiring layer.
+2) The difference and intersection is done with the
+union result and the moat layer.
+3) Note, you might have to multiple each coordinate with
+1000 to convert small floats 0.25 to integers, 250.
 
-    --> union = or
-    --> difference = not
-    --> intersection = and
+--> union = or
+--> difference = not
+--> intersection = and
 """
 
 
@@ -162,7 +162,7 @@ class Process:
             tools.read_module(self.basedir, atom, subatom)
             if not json.loads(atom['skip']):
                 for module in subatom['Module']:
-                    print('Module ID: ' + module['id'])
+                    print('Module ID: ' + str(module['id']))
                     self.calculate_module(atom, subatom, module)
 
     def calculate_module(self, atom, subatom, module):
@@ -173,18 +173,19 @@ class Process:
           method and save the result.
         """
 
+        print('          Module: ' + str(module['id']))
+        print('          ' + str(module['desc']))
         for key, value in module.items():
             if key == 'via_connect':
                 via = vias.Via(self.config_data, subatom)
                 layercross = via.get_layercross(value)
                 viacross = via.get_viacross(value, layercross)
                 module['result'] = viacross
+            elif key == 'via_remove':
+                via = vias.Via(self.config_data, subatom)
+                viacross = via.remove_viacross(value)
+                module['result'] = viacross
 
-        # if module['type'] == 'connect':
-        #     self.connect_layers_with_via(module)
-
-        # print('          Module: ' + str(module['id']))
-        # print('          ' + str(module['desc']))
         # if module['method'] == 'offset':
         #     self.execute_offset(atom, subatom, module)
         # elif module['method'] == 'boolean':
@@ -195,8 +196,6 @@ class Process:
         #     self.execute_method(atom, subatom, module)
         # elif module['method'] == 'union':
         #     self.execute_method(atom, subatom, module)
-        # else:
-        #     raise Exception('Please specify a valid Clippers method')
 
     def execute_offset(self, atom, subatom, module):
         """ Update the 'result' variable when
@@ -211,22 +210,6 @@ class Process:
             result_list = tools.angusj_offset(subj)
             if result_list:
                 self.update_layer(atom, subatom, module, result_list)
-
-    def my_method(self, atom, subatom, module, clip):
-        """ Apply polygon method, either union,
-        intersection or difference. """
-
-        subj = self.subject(atom, subatom, module)
-
-        result_list = []
-        if subj and clip:
-            result_list = tools.angusj(clip, subj, module['method'])
-            if result_list:
-                self.update_layer(atom, subatom, module, result_list)
-            else:
-                atom['skip'] = 'true'
-        else:
-            atom['skip'] = 'true'
 
     def execute_method(self, atom, subatom, module):
         """ Apply polygon method, either union,

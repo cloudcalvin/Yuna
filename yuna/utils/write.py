@@ -81,6 +81,7 @@ def add_polygons_to_cell(cell, item):
     for poly in item['result']:
         cell.add(gdspy.Polygon(poly, item['gds']))
 
+
 def layers_cell(cell, Layers):
 
     # Plot polygons inside Layer Object.
@@ -90,6 +91,7 @@ def layers_cell(cell, Layers):
             add_polygons_to_cell(cell, layer)
 
     return cell
+
 
 def atom_cell(cell, Atom):
 
@@ -101,10 +103,16 @@ def atom_cell(cell, Atom):
             if json.loads(subatom['view']):
                 add_polygons_to_cell(cell, subatom)
             for module in subatom['Module']:
-                if json.loads(module['via_connect']['view']):
-                    add_polygons_to_cell(cell, module)
+                for key, value in module.items():
+                    if key == 'via_connect':
+                        if json.loads(value['view']):
+                            add_polygons_to_cell(cell, module)
+                    elif key == 'via_remove':
+                        if json.loads(value['view']):
+                            add_polygons_to_cell(cell, module)
 
     return cell
+
 
 class Write:
     def __init__(self, view):

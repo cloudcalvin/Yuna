@@ -162,8 +162,8 @@ class Process:
             tools.read_module(self.basedir, atom, subatom)
             if not json.loads(atom['skip']):
                 for module in subatom['Module']:
-                    print('Module ID: ' + module['id'])
                     self.calculate_module(atom, subatom, module)
+                    print(module['result'])
 
     def calculate_module(self, atom, subatom, module):
         """
@@ -175,7 +175,7 @@ class Process:
 
         for key, value in module.items():
             if key == 'via_connect':
-                via = vias.Via(self.config_data, subatom)
+                via = vias.Via(self.config_data)
                 layercross = via.get_layercross(value)
                 viacross = via.get_viacross(value, layercross)
                 module['result'] = viacross

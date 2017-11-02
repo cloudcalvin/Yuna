@@ -6,25 +6,24 @@ class Via:
     """
     """
 
-    def __init__(self, config):
+    def __init__(self, config, subatom):
         """
         """
 
-        self.config = config
+        self.Layers = config['Layers']
+        self.Modules = subatom['Module']
 
     def get_angusj_polygon(self, poly):
         """  """
-
-        Layers = self.config['Layers']
 
         polyclass = poly.keys()[0]
         polylayer = poly.values()[0]
 
         subjclip = None
         if polyclass == 'Layer':
-            subjclip = Layers[polylayer]['result']
+            subjclip = self.Layers[polylayer]['result']
         elif polyclass == 'Module':
-            print('Implement Module support.')
+            subjclip = self.Modules[polylayer]['result']
 
         return subjclip
 

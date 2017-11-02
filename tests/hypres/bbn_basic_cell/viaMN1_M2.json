@@ -13,6 +13,20 @@
                 "view": "false",
                 "result": []
             }
+        },
+
+        {
+            "id": "1",
+            "desc": "Connect previous Module result to M0 with via I0",
+	    "gds": 4,
+
+            "via_connect": {
+                "wire_1": {"Module": 0},
+                "wire_2": {"Layer": "M0"},
+                "via_layer": {"Layer": "I0"},
+                "view": "true",
+                "result": []
+            }
         }
     ]
 }

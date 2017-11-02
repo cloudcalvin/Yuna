@@ -98,10 +98,11 @@ def atom_cell(cell, Atom):
         print ('      ' + '-> ', end='')
         print('Atom: ' + atom['id'])
         for subatom in atom['Subatom']:
-            if json.loads(subatom['debug']):
+            if json.loads(subatom['view']):
                 add_polygons_to_cell(cell, subatom)
             for module in subatom['Module']:
-                add_polygons_to_cell(cell, module)
+                if json.loads(module['via_connect']['view']):
+                    add_polygons_to_cell(cell, module)
 
     return cell
 

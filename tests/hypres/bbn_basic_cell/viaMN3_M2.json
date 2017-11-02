@@ -4,7 +4,7 @@
         {
             "id": 0,
             "desc": "Connect M2 to M1 with via I1BU",
-	    "gds": 3,
+	    "gds": 33,
 
             "via_connect": {
                 "wire_1": {"Layer": "M1"},
@@ -18,7 +18,7 @@
         {
             "id": 1,
             "desc": "Connect previous Module result to M0 with via I0",
-            "gds": 4,
+            "gds": 34,
 
             "via_connect": {
                 "wire_1": {"Module": 0},
@@ -32,7 +32,7 @@
         {
             "id": 2,
             "desc": "Connect previous Module result to MN1 with via IN1",
-            "gds": 5,
+            "gds": 35,
 
             "via_connect": {
                 "wire_1": {"Module": 1},
@@ -45,12 +45,27 @@
 
         {
             "id": 3,
-            "desc": "Remove the vias that has IN2 in them.",
-            "gds": 6,
+            "desc": "Connect previous Module result to MN2 with via IN2",
+            "gds": 36,
 
-            "via_remove": {
+            "via_connect": {
                 "wire_1": {"Module": 2},
+                "wire_2": {"Layer": "MN2"},
                 "via_layer": {"Layer": "IN2"},
+                "view": "false",
+                "result": []
+            }
+        },
+
+        {
+            "id": 4,
+            "desc": "Connect previous Module result to MN3 with via IN3",
+            "gds": 37,
+
+            "via_connect": {
+                "wire_1": {"Module": 3},
+                "wire_2": {"Layer": "MN3"},
+                "via_layer": {"Layer": "IN3"},
                 "view": "true",
                 "result": []
             }

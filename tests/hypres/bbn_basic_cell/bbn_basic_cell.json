@@ -187,7 +187,22 @@
                     "id": 0,
                     "gds": 0,
                     "module": "viaMN1_M2",
-                    "view": "true",
+                    "view": "false",
+                    "result": []
+                },
+
+                {
+                    "id": 1,
+                    "gds": 1,
+                    "module": "viaMN2_M2",
+                    "view": "false",
+                    "result": []
+                },
+                {
+                    "id": 2,
+                    "gds": 2,
+                    "module": "viaMN3_M2",
+                    "view": "false",
                     "result": []
                 }
             ]

@@ -159,11 +159,9 @@ def add_jjs_cells(flatcell, jj_list):
 
 
 def flatten_cell(cell):
-    """
-        This function does a deep copy of the current
-        working cell, with out the JJs. It then flattens
-        this cell the afterwards add the JJs.
-    """
+    """ This function does a deep copy of the current
+    working cell, without the JJs. It then flattens
+    this cell and afterwards adds the JJs. """
 
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Deep copying cell:')

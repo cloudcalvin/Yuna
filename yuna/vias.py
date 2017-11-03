@@ -31,7 +31,7 @@ class Via:
         """ Intersect the layers in the 'clip' object
         in the submodule. """
 
-        tools.magenta_print('Connect layers with VIA')
+#         tools.magenta_print('Connect layers with VIA')
         subj = self.get_polygon(value['wire_1'])
         clip = self.get_polygon(value['wire_2'])
 
@@ -46,7 +46,7 @@ class Via:
     def get_viacross(self, value, subj):
         """  """
 
-        tools.magenta_print('Save Via Polygons:')
+#         tools.magenta_print('Save Via Polygons:')
         clip = self.get_polygon(value['via_layer'])
 
         result_list = []
@@ -58,10 +58,32 @@ class Via:
 
         return viacross
 
+    def reverse_via(self, value, subj):
+        """ This method is called when we have
+        to save the via as the first layer below
+        it. This is needed when the crossings 
+        of the two wiring layers are not equally large.
+        
+        Note
+        ----
+        Note that wire_1 must be the largest polygon.
+        """
+
+        clip = self.get_polygon(value['wire_1'])
+
+        result_list = []
+        wireconnect = []
+        for poly in clip:
+            result_list = tools.angusj([poly], subj, 'intersection')
+            if result_list:
+                wireconnect.append(poly)
+
+        return wireconnect
+
     def remove_viacross(self, value):
         """  """
 
-        tools.magenta_print('Remove polygon with VIA inside:')
+#         tools.magenta_print('Remove polygon with VIA inside:')
         subj = self.get_polygon(value['wire_1'])
         clip = self.get_polygon(value['via_layer'])
 

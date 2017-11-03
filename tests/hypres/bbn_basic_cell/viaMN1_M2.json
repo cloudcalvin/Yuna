@@ -51,7 +51,7 @@
             "via_remove": {
                 "wire_1": {"Module": 2},
                 "via_layer": {"Layer": "IN2"},
-                "view": "true",
+                "view": "false",
                 "result": []
             }
         }

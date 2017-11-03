@@ -2,6 +2,7 @@ from __future__ import print_function
 from termcolor import colored
 from utils import tools
 
+
 import gdspy
 import json
 import numpy as np
@@ -108,7 +109,7 @@ def atom_cell(cell, Atom):
             for subatom in atom['Subatom']:
                 if json.loads(subatom['view']):
                     add_polygons_to_cell(cell, subatom)
-#                 modules_to_cell(cell, subatom)
+                # modules_to_cell(cell, subatom)
 
     return cell
 
@@ -164,8 +165,3 @@ class Write:
             gdspy.LayoutViewer()
 
         self.solution = auronlayout.get_polygons(True)
-
-
-
-
-

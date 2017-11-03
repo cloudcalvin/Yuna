@@ -66,15 +66,9 @@
                 "wire_1": {"Module": 3},
                 "wire_2": {"Layer": "MN3"},
                 "via_layer": {"Layer": "IN3"},
-                "view": "true",
+                "view": "false",
                 "result": []
             }
         }
     ]
 }
-
-
-
-
-
-

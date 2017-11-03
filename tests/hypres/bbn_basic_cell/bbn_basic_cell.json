@@ -50,7 +50,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
-            "gds": 7,
+            "gds": 8,
             "jj": [],
             "result": []
         },
@@ -58,8 +58,8 @@
             "type": "resistance",
             "active": "False",
             "union": "true",
-            "view": "false",
-            "gds": 8,
+            "view": "true",
+            "gds": 9,
             "jj": [],
             "result": []
         },
@@ -68,7 +68,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
-            "gds": 9,
+            "gds": 10,
             "jj": [],
             "result": []
         },
@@ -77,7 +77,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
-            "gds": 10,
+            "gds": 11,
             "jj": [],
             "result": []
         },
@@ -121,7 +121,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "view": "false",
+            "view": "true",
             "gds": 34,
             "jj": [],
             "result": []
@@ -130,7 +130,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "view": "false",
+            "view": "true",
             "gds": 38,
             "jj": [],
             "result": []
@@ -139,7 +139,7 @@
             "type": "wire",
             "active": "False",
             "union": "true",
-            "view": "false",
+            "view": "true",
             "gds": 42,
             "jj": [],
             "result": []
@@ -204,9 +204,15 @@
                     "module": "viaMN3_M2",
                     "view": "true",
                     "result": []
+                },
+                {
+                    "id": 3,
+                    "gds": 103,
+                    "module": "viaM2_R2",
+                    "view": "true",
+                    "result": []
                 }
             ]
-
         },
 
         "wires":
@@ -215,7 +221,7 @@
             "desc": "Get the wire polygons between vias.",
             "check": ["M0", "M1", "M2"],
 
-            "Subatom": ["M2"]
+            "Subatom": ["M2", "MN1", "MN2", "MN3", "R2"]
         }
     }
 }

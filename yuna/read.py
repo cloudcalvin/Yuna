@@ -36,7 +36,7 @@ def ldf(process):
             A1       5
             M2       6      Wire layer 2
             I2       8      Via M2 to M3
-            R2       9
+            R2       9      Resistor
             M3       10     Wire layer 3
             R3       11
             M0       30     Ground layer
@@ -45,7 +45,7 @@ def ldf(process):
             IN2      36     Contact (via) between MN2 and MN1
             IN3      40     Contact (via) between MN3 and MN2
             I1BL     59
-            J2       21
+            J2       21     Junction 2
             MN1      34     Wire layer
             MN2      38     Wire layer
             MN3      42     Wire layer

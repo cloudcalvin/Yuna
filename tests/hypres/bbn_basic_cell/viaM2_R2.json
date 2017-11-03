@@ -1,0 +1,18 @@
+{
+    "Module":
+    [
+        {
+            "id": 0,
+            "desc": "Connect M2 to R2 with via I1BU",
+	          "gds": 3,
+
+            "via_connect_reverse": {
+                "wire_1": {"Layer": "M2"},
+                "wire_2": {"Layer": "R2"},
+                "via_layer": {"Layer": "I1BU"},
+                "view": "false",
+                "result": []
+            }
+        }
+    ]
+}

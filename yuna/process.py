@@ -60,15 +60,6 @@ def transpose_cell(Layers, cellpolygons, origin, name):
                         lay_data['jj'].append(poly)
 
 
-def union_polygons(Layers):
-    """ Union the normal wiring polygons. """
-
-    tools.green_print('Union Layer:')
-    for key, layer in Layers.items():
-        if json.loads(layer['union']):
-            tools.union_wire(Layers, key, 'result')
-
-
 class Process:
     """
     Read and parse the JSON config files.
@@ -124,7 +115,6 @@ class Process:
         if Elements:
             Layers = self.config_data['Layers']
             layers.add_elements(Layers, Elements)
-            union_polygons(Layers)
         else:
             raise Exception('The Element object cannot be None.')
 
@@ -141,7 +131,6 @@ class Process:
         Atom = self.config_data['Atom']
 
         tools.green_print('Running Atom:')
-
         self.calculate_vias(Atom['vias'])
         self.calculate_wires(Atom['wires'], Atom['vias'])
 
@@ -166,7 +155,6 @@ class Process:
             tools.read_module(self.basedir, atom, subatom)
 
             for module in subatom['Module']:
-                print('Module ID: ' + str(module['id']))
                 self.calculate_module(atom, subatom, module)
 
             self.copy_module_to_subatom(subatom)
@@ -177,14 +165,18 @@ class Process:
         tools.green_print('Calculating Wires:')
         Layers = self.config_data['Layers']
 
-        wire = wires.Wire(Layers, vias)
+        wire = wires.Wire(Layers, atom['Subatom'], vias)
+
+        wire.union_polygons(Layers)
 
         for subatom in atom['Subatom']:
-#             wire.union_wire_layers(subatom)
-            viadiff = wire.find_union_diff(subatom)
+            viadiff = wire.find_via_diff(subatom)
             Layers[subatom]['result'] = viadiff
-            print(viadiff)
 
+#         for subatom in atom['Subatom']:
+#             wirediff = wire.find_wire_diff(subatom)
+#             Layers[subatom]['result'] = wirediff
+ 
     def calculate_module(self, atom, subatom, module):
         """
         * Calculate the Subject polygon list.
@@ -201,157 +193,152 @@ class Process:
                 layercross = via.get_layercross(value)
                 viacross = via.get_viacross(value, layercross)
                 module['result'] = viacross
+            elif key == 'via_connect_reverse':
+                via = vias.Via(self.config_data, subatom)
+                layercross = via.get_layercross(value)
+                viacross = via.get_viacross(value, layercross)
+                wireconnect = via.reverse_via(value, viacross)
+                module['result'] = wireconnect
             elif key == 'via_remove':
                 via = vias.Via(self.config_data, subatom)
                 viacross = via.remove_viacross(value)
                 module['result'] = viacross
 
-        # if module['method'] == 'offset':
-        #     self.execute_offset(atom, subatom, module)
-        # elif module['method'] == 'boolean':
-        #     self.execute_bool(atom, subatom, module)
-        # elif module['method'] == 'intersection':
-        #     self.execute_method(atom, subatom, module)
-        # elif module['method'] == 'difference':
-        #     self.execute_method(atom, subatom, module)
-        # elif module['method'] == 'union':
-        #     self.execute_method(atom, subatom, module)
-
-    def execute_offset(self, atom, subatom, module):
-        """ Update the 'result' variable when
-        after offsetting the current polygon.
-        This method is normally used to detect
-        layer overlapping. """
-
-        result_list = []
-        subj = self.subject(atom, subatom, module)
-
-        if subj:
-            result_list = tools.angusj_offset(subj)
-            if result_list:
-                self.update_layer(atom, subatom, module, result_list)
-
-    def execute_method(self, atom, subatom, module):
-        """ Apply polygon method, either union,
-        intersection or difference. """
-
-        subj = self.subject(atom, subatom, module)
-        clip = self.clipper(atom, subatom, module)
-
-        result_list = []
-        if subj and clip:
-            result_list = tools.angusj(clip, subj, module['method'])
-            if result_list:
-                self.update_layer(atom, subatom, module, result_list)
-            else:
-                atom['skip'] = 'true'
-        else:
-            atom['skip'] = 'true'
-
-    def execute_bool(self, atom, subatom, module):
-        """ We assume that doing a boolean test on
-        whether two layers are overlapping, will always
-        use the 'intersection' polygon method. """
-
-        subj = self.subject(atom, subatom, module)
-        clip = self.clipper(atom, subatom, module)
-
-        result_list = []
-        inter_list = []
-        for poly in clip:
-            result_list = tools.angusj([poly], subj, "intersection")
-            if json.loads(module['delete']):
-                if not result_list:
-                    inter_list.append(poly)
-            else:
-                if result_list:
-                    inter_list.append(poly)
-
-        self.update_layer(atom, subatom, module, inter_list)
-
-    def update_layer(self, atom, subatom, module, result):
-        """
-            Saves the result back into either:
-
-            1. The Layer struct.
-            2. The Subatom struct.
-            3. The current Module struct.
-        """
-
-        if module['savein'] == 'subatom':
-            subatom['result'] = result
-        elif module['savein'] == 'module':
-            module['result'] = result
-#         elif module['savein'] == 'layer':
-#             Layers = self.config_data['Layers']
-#             layer = module['savein']['layer']
-#             poly = module['savein']['poly']
-#             Layers[layer][poly] = result
-        else:
-            raise Exception('Please specify a \'type\' of the sub-module.')
-
-    def subject(self, atom, subatom, module):
-        """
-            Parameters
-            ----------
-                subj_layer : The layer in use.
-
-                subj_class : Can only be "Layers" or "Atom".
-
-                subj_poly : For now it can either be "jj" or "result".
-
-            Atom
-            ----
-
-                * Access the last element in the Subatom.
-        """
-
-        Atom = self.config_data['Atom']
-        Layers = self.config_data['Layers']
-
-        subj_class = module['subj']['class']
-        subj_layer = module['subj']['layer']
-        subj_poly = module['subj']['savein']
-
-        if subj_class == 'Layers':
-            subj = Layers[subj_layer][subj_poly]
-        elif subj_class == 'Atom':
-            Subatom = Atom[subj_layer]['Subatom'][-1]
-            subj = Subatom['result']
-
-        return subj
-
-    def clipper(self, atom, subatom, module):
-        """
-            Parameters
-            ----------
-
-                clip_layer : The layer in use.
-
-                clip_class : Can only be "Layers" or "Atom".
-
-                clip_poly : For now it can either be "jj" or "result".
-
-            Note
-            ----
-
-                * Subatom classes must be in Clip Object.
-        """
-
-        Layers = self.config_data['Layers']
-        Module = subatom['Module']
-        clip = None
-
-        clip_class = module['clip']['class']
-        clip_layer = module['clip']['layer']
-        clip_poly = module['clip']['savein']
-
-        if clip_class == 'Layers':
-            clip = Layers[clip_layer][clip_poly]
-        elif clip_class == 'Atom':
-            clip = atom[clip_layer]['result']
-        elif clip_class == 'Module':
-            modnum = module['clip']['layer']
-            clip = module['clip']['result']
-
-        return clip
+#     def execute_offset(self, atom, subatom, module):
+#         """ Update the 'result' variable when
+#         after offsetting the current polygon.
+#         This method is normally used to detect
+#         layer overlapping. """
+# 
+#         result_list = []
+#         subj = self.subject(atom, subatom, module)
+# 
+#         if subj:
+#             result_list = tools.angusj_offset(subj)
+#             if result_list:
+#                 self.update_layer(atom, subatom, module, result_list)
+# 
+#     def execute_method(self, atom, subatom, module):
+#         """ Apply polygon method, either union,
+#         intersection or difference. """
+# 
+#         subj = self.subject(atom, subatom, module)
+#         clip = self.clipper(atom, subatom, module)
+# 
+#         result_list = []
+#         if subj and clip:
+#             result_list = tools.angusj(clip, subj, module['method'])
+#             if result_list:
+#                 self.update_layer(atom, subatom, module, result_list)
+#             else:
+#                 atom['skip'] = 'true'
+#         else:
+#             atom['skip'] = 'true'
+# 
+#     def execute_bool(self, atom, subatom, module):
+#         """ We assume that doing a boolean test on
+#         whether two layers are overlapping, will always
+#         use the 'intersection' polygon method. """
+# 
+#         subj = self.subject(atom, subatom, module)
+#         clip = self.clipper(atom, subatom, module)
+# 
+#         result_list = []
+#         inter_list = []
+#         for poly in clip:
+#             result_list = tools.angusj([poly], subj, "intersection")
+#             if json.loads(module['delete']):
+#                 if not result_list:
+#                     inter_list.append(poly)
+#             else:
+#                 if result_list:
+#                     inter_list.append(poly)
+# 
+#         self.update_layer(atom, subatom, module, inter_list)
+# 
+#     def update_layer(self, atom, subatom, module, result):
+#         """
+#             Saves the result back into either:
+# 
+#             1. The Layer struct.
+#             2. The Subatom struct.
+#             3. The current Module struct.
+#         """
+# 
+#         if module['savein'] == 'subatom':
+#             subatom['result'] = result
+#         elif module['savein'] == 'module':
+#             module['result'] = result
+# #         elif module['savein'] == 'layer':
+# #             Layers = self.config_data['Layers']
+# #             layer = module['savein']['layer']
+# #             poly = module['savein']['poly']
+# #             Layers[layer][poly] = result
+#         else:
+#             raise Exception('Please specify a \'type\' of the sub-module.')
+# 
+#     def subject(self, atom, subatom, module):
+#         """
+#             Parameters
+#             ----------
+#                 subj_layer : The layer in use.
+# 
+#                 subj_class : Can only be "Layers" or "Atom".
+# 
+#                 subj_poly : For now it can either be "jj" or "result".
+# 
+#             Atom
+#             ----
+# 
+#                 * Access the last element in the Subatom.
+#         """
+# 
+#         Atom = self.config_data['Atom']
+#         Layers = self.config_data['Layers']
+# 
+#         subj_class = module['subj']['class']
+#         subj_layer = module['subj']['layer']
+#         subj_poly = module['subj']['savein']
+# 
+#         if subj_class == 'Layers':
+#             subj = Layers[subj_layer][subj_poly]
+#         elif subj_class == 'Atom':
+#             Subatom = Atom[subj_layer]['Subatom'][-1]
+#             subj = Subatom['result']
+# 
+#         return subj
+# 
+#     def clipper(self, atom, subatom, module):
+#         """
+#             Parameters
+#             ----------
+# 
+#                 clip_layer : The layer in use.
+# 
+#                 clip_class : Can only be "Layers" or "Atom".
+# 
+#                 clip_poly : For now it can either be "jj" or "result".
+# 
+#             Note
+#             ----
+# 
+#                 * Subatom classes must be in Clip Object.
+#         """
+# 
+#         Layers = self.config_data['Layers']
+#         Module = subatom['Module']
+#         clip = None
+# 
+#         clip_class = module['clip']['class']
+#         clip_layer = module['clip']['layer']
+#         clip_poly = module['clip']['savein']
+# 
+#         if clip_class == 'Layers':
+#             clip = Layers[clip_layer][clip_poly]
+#         elif clip_class == 'Atom':
+#             clip = atom[clip_layer]['result']
+#         elif clip_class == 'Module':
+#             modnum = module['clip']['layer']
+#             clip = module['clip']['result']
+# 
+#         return clip

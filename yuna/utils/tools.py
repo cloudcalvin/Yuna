@@ -174,7 +174,7 @@ def flatten_cell(cell):
     for i, element in enumerate(flatcell.elements):
         if isinstance(element, gdspy.CellReference):
             name = element.ref_cell.name
-            if name == 'aj03_p2j00sb':
+            if name[:2] == 'JJ':
                 indices.append(i)
                 jj_list.append(element)
 

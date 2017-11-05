@@ -63,7 +63,7 @@ class Via:
         to save the via as the first layer below
         it. This is needed when the crossings 
         of the two wiring layers are not equally large.
-        
+
         Note
         ----
         Note that wire_1 must be the largest polygon.

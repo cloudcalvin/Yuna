@@ -99,17 +99,31 @@ def modules_to_cell(cell, subatom):
             elif key == 'via_remove':
                 if json.loads(value['view']):
                     add_polygons_to_cell(cell, module)
+            elif key == 'jj_base':
+                if json.loads(value['view']):
+                    add_polygons_to_cell(cell, module)
+            elif key == 'jj_diff':
+                if json.loads(value['view']):
+                    add_polygons_to_cell(cell, module)
 
 
 def atom_cell(cell, Atom):
     for key, atom in Atom.items():
         print ('      ' + '-> ', end='')
         print('Atom: ' + str(atom['id']))
+
         if key == 'vias':
             for subatom in atom['Subatom']:
                 if json.loads(subatom['view']):
+                    print(subatom['module'])
                     add_polygons_to_cell(cell, subatom)
                 # modules_to_cell(cell, subatom)
+        elif key == 'jj':
+            for subatom in atom['Subatom']:
+                if json.loads(subatom['view']):
+                    print(subatom['module'])
+#                     add_polygons_to_cell(cell, subatom)
+                modules_to_cell(cell, subatom)
 
     return cell
 
@@ -147,21 +161,26 @@ class Write:
                 70 : Holes
         """
 
-        auronlayout = None
+        yunalayout = None
 
         if ldf == 'adp':
             tools.green_print('Cell: ADP - Japan')
-            cell = gdspy.Cell('ADP')
-            auronlayout = adp_process(basedir, Layers, Atom)
+            yunacell = gdspy.Cell('ADP')
+            yunacell = adp_process(basedir, Layers, Atom)
         elif ldf == 'stem64':
             tools.green_print('Cell: STEM - Hypres')
-            cell = gdspy.Cell('STEM')
-            cell = layers_cell(cell, Layers)
-            auronlayout = atom_cell(cell, Atom)
+            yunacell = gdspy.Cell('STEM')
+            yunacell = layers_cell(yunacell, Layers)
+            yunacell = atom_cell(yunacell, Atom)
         else:
             print ('write.py -> Please specify a LDF file.')
 
         if self.view:
             gdspy.LayoutViewer()
 
-        self.solution = auronlayout.get_polygons(True)
+        self.solution = yunacell.get_polygons(True)
+
+
+
+
+

@@ -87,7 +87,6 @@
             "union": "true",
             "view": "false",
             "gds": 30,
-            "jj": [],
             "result": []
         },
         "I0": {
@@ -96,7 +95,6 @@
             "union": "true",
             "view": "false",
             "gds": 31,
-            "jj": [],
             "result": []
         },
         "I1BL": {
@@ -105,7 +103,6 @@
             "union": "true",
             "view": "false",
             "gds": 15,
-            "jj": [],
             "result": []
         },
         "J2": {
@@ -114,7 +111,6 @@
             "union": "true",
             "view": "false",
             "gds": 21,
-            "jj": [],
             "result": []
         },
         "MN1": {
@@ -123,7 +119,6 @@
             "union": "true",
             "view": "true",
             "gds": 34,
-            "jj": [],
             "result": []
         },
         "MN2": {
@@ -132,7 +127,6 @@
             "union": "true",
             "view": "true",
             "gds": 38,
-            "jj": [],
             "result": []
         },
         "MN3": {
@@ -141,7 +135,6 @@
             "union": "true",
             "view": "true",
             "gds": 42,
-            "jj": [],
             "result": []
         },
         "IN1": {
@@ -150,7 +143,6 @@
             "union": "true",
             "view": "false",
             "gds": 32,
-            "jj": [],
             "result": []
         },
         "IN2": {
@@ -159,7 +151,6 @@
             "union": "true",
             "view": "false",
             "gds": 36,
-            "jj": [],
             "result": []
         },
         "IN3": {
@@ -168,7 +159,6 @@
             "union": "true",
             "view": "false",
             "gds": 40,
-            "jj": [],
             "result": []
         }
     },
@@ -222,6 +212,24 @@
             "check": ["M0", "M1", "M2"],
 
             "Subatom": ["M2", "MN1", "MN2", "MN3", "R2"]
+        },
+
+        "jj":
+        {
+            "id": 2,
+            "desc": "Detect the Junctions in the layout.",
+            "check": ["J2"],
+
+            "Subatom":
+            [
+                {
+                    "id": 0,
+                    "gds": 203,
+                    "module": "j2",
+                    "view": "true",
+                    "result": []
+                }
+            ]
         }
     }
 }

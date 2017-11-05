@@ -1,0 +1,103 @@
+from __future__ import print_function
+from utils import tools
+
+import gdspy
+
+def fill_junction_list(gdsii, Layers, Elements):
+    """ Loop over all elements, such as
+    polygons, polgyonsets, cellrefences, etc
+    and find the CellRefences. CellRefs
+    which is a junction has to start with JJ. """
+
+    tools.magenta_print('Fill junctions')
+
+    jj_list = []
+    for element in Elements:
+        if isinstance(element, gdspy.CellReference):
+            print('      CellReference: ', end='')
+            print(element)
+
+            refname = element.ref_cell.name
+            if refname[:2] == 'JJ':
+                jj = junctions.Junction(gdsii, Layers, element, refname)
+                jj.transpose_cell()
+                jj_list.append(jj.layers)
+
+    return jj_list
+
+def calculate_jj_json(self, atom):
+    tools.green_print('Calculating junctions json:')
+    Layers = self.config_data['Layers']
+
+    for subatom in atom['Subatom']:
+        tools.read_module(self.basedir, atom, subatom)
+        for module in subatom['Module']:
+            for key, value in module.items():
+                if key == 'jj_base':
+
+                    print(value)
+
+
+class Junction:
+    """
+
+    """
+
+    def __init__(self, gdsii, Layers, element, name):
+        """  """
+
+        self.gdsii = gdsii
+        self.Layers = Layers
+        self.element = element
+        self.name = name
+        self.layers = {}
+        self.resistance = None
+
+    def which_junction_layer(self):
+        """ Find the junction layer in the process.
+        Some fabs like Hypres has multiple JJ layers. """
+
+        cellpolygons = self.gdsii.extract(self.name).get_polygons(True)
+        for key, polygons in cellpolygons.items():
+            print(key)
+
+    def transpose_cell(self):
+        """ 
+        The cells are centered in the middle of the gds
+        file canvas. To include this cell into the main
+        cell, we have to transpose it to the required position.
+
+        Save tranposed coordinates in 'Layers' object.
+        Maybe we should automate this later by making
+        'result' a {} and not a [].
+        """
+
+        tools.green_print('Detecting ' + self.name)
+        cellpolygons = self.gdsii.extract(self.name).get_polygons(True)
+
+        for key, polygons in cellpolygons.items():
+            for layer, lay_data in self.Layers.items():
+                if lay_data['gds'] == key[0]:
+                    for poly in polygons:
+                        for coord in poly:
+                            coord[0] = coord[0] + self.element.origin[0]
+                            coord[1] = coord[1] + self.element.origin[1]
+
+                        self.layers[layer] = poly.tolist()
+
+#                         if (layer == 'JJ'):
+#                             lay_data['result'].append(poly.tolist())
+#                         elif (layer == 'JP') or (layer == 'JC'):
+#                             lay_data['result'].append(poly.tolist())
+#                         else:
+#                             lay_data['jj'].append(poly)
+ 
+
+
+
+
+
+
+
+
+

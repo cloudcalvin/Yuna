@@ -4,11 +4,11 @@
         {
             "id": 0,
             "desc": "Get the base layer of the junction",
-	        "gds": 3,
+	        "gds": 41,
 
             "jj_base": {
-                "wire_1": {"JJ": "M1"},
-                "wire_2": {"Layers": "M2"},
+                "wire_1": {"JJ": "BAS"},
+                "wire_2": {"Layers": "COU"},
                 "view": "true",
                 "result": []
             }
@@ -17,11 +17,11 @@
         {
             "id": 1,
             "desc": "Get the difference of JJ and wire.",
-            "gds": 44,
+            "gds": 42,
 
             "jj_diff": {
-                "wire_1": {"JJ": "M1"},
-                "wire_2": {"Layers": "M2"},
+                "wire_1": {"JJ": "BAS"},
+                "wire_2": {"Layers": "COU"},
                 "view": "true",
                 "result": []
             }

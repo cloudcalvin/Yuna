@@ -55,7 +55,7 @@
             "result": []
         },
         "R2": {
-            "type": "resistance",
+            "type": "shunt",
             "active": "False",
             "union": "true",
             "view": "true",

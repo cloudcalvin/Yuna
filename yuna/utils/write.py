@@ -30,48 +30,6 @@ def add_jj_cell(cell, config):
         cell.add(cell_jj)
 
 
-def adp_process(basedir, Layers, Atoms):
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Cell: ADP')
-    cell = gdspy.Cell('ADP')
-
-    # add_jj_cell(cell, config)
-
-    # for poly in config['Layers']['RC']['jj']:
-    #     cell.add(gdspy.Polygon(poly, 20))
-    print ('      ' + '-> ', end='')
-    print('RES JJ')
-    for poly in Layers['RES']['jj']:
-        cell.add(gdspy.Polygon(poly, 21))
-
-    print ('      ' + '-> ', end='')
-    print('CC')
-    for poly in Layers['CC']['result']:
-        cell.add(gdspy.Polygon(poly, 11))
-
-    print ('      ' + '-> ', end='')
-    print('COU')
-    for poly in Layers['COU']['result']:
-        cell.add(gdspy.Polygon(poly, 8))
-
-    print ('      ' + '-> ', end='')
-    print('CTL')
-    for poly in Layers['CTL']['result']:
-        cell.add(gdspy.Polygon(poly, 12))
-
-    print ('      ' + '-> ', end='')
-    print('COU JJ')
-    for poly in Layers['COU']['jj']:
-        cell.add(gdspy.Polygon(poly, 108))
-
-    print ('      ' + '-> ', end='')
-    print('TERM')
-    for poly in Layers['TERM']['result']:
-        cell.add(gdspy.Polygon(poly, 15))
-
-    return cell
-
-
 def add_polygons_to_cell(cell, item):
     """ Loop through the polygon list of
     the layer, subatom or module and add
@@ -163,17 +121,22 @@ class Write:
 
         yunalayout = None
 
-        if ldf == 'adp':
-            tools.green_print('Cell: ADP - Japan')
-            yunacell = gdspy.Cell('ADP')
-            yunacell = adp_process(basedir, Layers, Atom)
-        elif ldf == 'stem64':
-            tools.green_print('Cell: STEM - Hypres')
-            yunacell = gdspy.Cell('STEM')
-            yunacell = layers_cell(yunacell, Layers)
-            yunacell = atom_cell(yunacell, Atom)
-        else:
-            print ('write.py -> Please specify a LDF file.')
+        tools.green_print('Cell: STEM - Hypres')
+        yunacell = gdspy.Cell('STEM')
+        yunacell = layers_cell(yunacell, Layers)
+        yunacell = atom_cell(yunacell, Atom)
+
+#         if ldf == 'adp':
+#             tools.green_print('Cell: ADP - Japan')
+#             yunacell = gdspy.Cell('ADP')
+#             yunacell = adp_process(basedir, Layers, Atom)
+#         elif ldf == 'stem64':
+#             tools.green_print('Cell: STEM - Hypres')
+#             yunacell = gdspy.Cell('STEM')
+#             yunacell = layers_cell(yunacell, Layers)
+#             yunacell = atom_cell(yunacell, Atom)
+#         else:
+#             print ('write.py -> Please specify a LDF file.')
 
         if self.view:
             gdspy.LayoutViewer()

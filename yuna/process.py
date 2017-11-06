@@ -103,7 +103,7 @@ class Process:
 
         tools.green_print('Running Atom:')
         self.calculate_vias(Atom['vias'])
-        jjs.calculate_jj_json(self.basedir, self.gdsii, Layers, self.Elements, Atom['jj'])
+        jjs.calculate_jj(self.basedir, self.gdsii, Layers, self.Elements, Atom['jj'])
         self.calculate_wires(Atom['wires'], Atom['vias'])
 
 #         cParams = params.Params()
@@ -138,17 +138,12 @@ class Process:
         Layers = self.config_data['Layers']
 
         wire = wires.Wire(Layers, atom['Subatom'], vias)
-
         wire.union_polygons(Layers)
 
         for subatom in atom['Subatom']:
             viadiff = wire.find_via_diff(subatom)
             Layers[subatom]['result'] = viadiff
 
-#         for subatom in atom['Subatom']:
-#             wirediff = wire.find_wire_diff(subatom)
-#             Layers[subatom]['result'] = wirediff
- 
     def calculate_module(self, atom, subatom, module):
         """
         * Calculate the Subject polygon list.

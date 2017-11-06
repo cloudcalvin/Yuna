@@ -7,6 +7,31 @@ import gdspy
 import utils.tools as tools
 
 
+def does_layers_intersect(layer_1, layer_2):
+    if tools.angusj(layer_1, layer_2, 'intersection'):
+        return True
+    else:
+        return False
+
+
+def get_shunt_layer(Layers):
+    layershunt = None
+    for key, layer in Layers.items():
+        if layer['type'] == 'shunt':
+            layershunt = key
+
+    return layershunt
+
+
+def get_junction_layer(Layers):
+    layerjj = None
+    for key, layer in Layers.items():
+        if layer['type'] == 'junction':
+            layerjj = key
+
+    return layerjj
+
+
 def fill_layers_object(Layers, Elements):
     """
         Add the elements read from GDSPY to the

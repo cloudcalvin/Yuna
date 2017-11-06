@@ -30,78 +30,19 @@ def fill_junction_list(gdsii, Layers, Elements):
     return jj_list
 
 
-def jj_inside_res(Layers, jj, res_layer):
-    """ Filter the res inside the junction
-    cell object with a JJ layer inside it. """
-
-    name = layers.get_junction_layer(Layers)
-    jj_layer = jj[name]
-
-    if layers.does_layers_intersect(jj_layer, res_layer):
-        return True
-    else:
-        return False
-
-
-def filter_juntion_resistance(Layers, jjs):
-    """ Filter the resistance polygons that
-    has the JJ layer inside them. Look at the
-    Japan junction layouts. """
+def remove_poly_with_noshunt(Layers, jjs, subj):
+    clip = []
 
     shuntname = layers.get_shunt_layer(Layers)
+    layershunt = jj[shuntname]
 
-    jj_res = []
     for jj in jjs:
-        layer_res = jj[shuntname]
-
-        for res in layer_res:
-            print(res)
-            if not jj_inside_res(Layers, jj, [res]):
-                jj_res.append(res)
-
-    return jj_res
-
-
-def union_res(Layers, res_layer):
-    count = [0]
-    unionlayer = defaultdict(list)
-
-    for poly in res_layer:
-        if (count[0] == 0):
-            unionlayer = [poly]
-        else:
-            clip = poly
-            pc = pyclipper.Pyclipper()
-
-            pc.AddPath(clip, pyclipper.PT_CLIP, True)
-            pc.AddPaths(unionlayer, pyclipper.PT_SUBJECT, True)
-
-            unionlayer = pc.Execute(pyclipper.CT_UNION,
-                                           pyclipper.PFT_EVENODD,
-                                           pyclipper.PFT_EVENODD)
-
-        count[0] += 1
-
-    return unionlayer
-
-def remove_poly_with_noshunt(Layers, jjs, subj):
-#     shuntname = layers.get_shunt_layer(Layers)
-
-#     clip = []
-#     for jj in jjs:
-#         layershunt = jj[shuntname]
-#         print(layershunt)
-#         clip.append(layershunt)
-
-    res_layer = filter_juntion_resistance(Layers, jjs)
-    clip = union_res(Layers, res_layer)
-    print(clip)
+        clip.append(layershunt)
 
     shuntedlayer = []
     for poly in subj:
-        print(subj)
         if layers.does_layers_intersect([poly], clip):
-            shuntedlayer.append(poly)
+            noshunt.append(poly)
 
     return shuntedlayer
 

@@ -39,7 +39,7 @@ def add_polygons_to_cell(cell, item):
         cell.add(gdspy.Polygon(poly, item['gds']))
 
 
-def layers_cell(cell, Layers):
+def layers_to_cell(cell, Layers):
     for key, layer in Layers.items():
         if json.loads(layer['view']):
             layer['id'] = key
@@ -65,7 +65,7 @@ def modules_to_cell(cell, subatom):
                     add_polygons_to_cell(cell, module)
 
 
-def atom_cell(cell, Atom):
+def atom_to_cell(cell, Atom):
     for key, atom in Atom.items():
         print ('      ' + '-> ', end='')
         print('Atom: ' + str(atom['id']))
@@ -73,13 +73,12 @@ def atom_cell(cell, Atom):
         if key == 'vias':
             for subatom in atom['Subatom']:
                 if json.loads(subatom['view']):
-                    print(subatom['module'])
                     add_polygons_to_cell(cell, subatom)
                 # modules_to_cell(cell, subatom)
         elif key == 'jj':
             for subatom in atom['Subatom']:
                 if json.loads(subatom['view']):
-                    print(subatom['module'])
+                    print('awe')
 #                     add_polygons_to_cell(cell, subatom)
                 modules_to_cell(cell, subatom)
 
@@ -93,50 +92,16 @@ class Write:
         self.holes = None
 
     def write_gds(self, basedir, Layers, Atom, ldf):
-        """
-            Write the GDS file that contains the difference
-            of the moat layer with the wiring layer and the
-            union of the moat/wire layers.
-
-            Notes
-            -----
-                * These three or more polygons combined will
-                  represent the full union structure of the
-                  wire layer, but with the area over the moat
-                  known. The polygon area over the moat will
-                  have a GDS number of 70.
-
-                * Poly read into gdspy.Polygon must be a 1D list:
-                  [[x,y], [x1,y1], [x2,y2]]
-
-            Layer numbers
-            -------------
-
-                80 : Wire layer
-                81 : Via
-                72 : Ground polygons
-                71 : JJ polygons
-                70 : Holes
-        """
+        """ Write polygons to a new GDS cell using 
+        gdspy. The polygons written are read from 
+        the updated JSON Config file. """
 
         yunalayout = None
 
         tools.green_print('Cell: STEM - Hypres')
         yunacell = gdspy.Cell('STEM')
-        yunacell = layers_cell(yunacell, Layers)
-        yunacell = atom_cell(yunacell, Atom)
-
-#         if ldf == 'adp':
-#             tools.green_print('Cell: ADP - Japan')
-#             yunacell = gdspy.Cell('ADP')
-#             yunacell = adp_process(basedir, Layers, Atom)
-#         elif ldf == 'stem64':
-#             tools.green_print('Cell: STEM - Hypres')
-#             yunacell = gdspy.Cell('STEM')
-#             yunacell = layers_cell(yunacell, Layers)
-#             yunacell = atom_cell(yunacell, Atom)
-#         else:
-#             print ('write.py -> Please specify a LDF file.')
+        yunacell = layers_to_cell(yunacell, Layers)
+        yunacell = atom_to_cell(yunacell, Atom)
 
         if self.view:
             gdspy.LayoutViewer()

@@ -4,7 +4,7 @@
         {
             "id": 0,
             "desc": "Get the base layer of the junction",
-	        "gds": 41,
+  	        "gds": 41,
 
             "jj_base": {
                 "wire_1": {"JJ": "BAS"},

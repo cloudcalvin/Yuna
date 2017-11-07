@@ -3,6 +3,7 @@ from collections import defaultdict
 from pprint import pprint
 from utils import tools
 
+
 import gdspy
 import layers
 import pyclipper
@@ -27,6 +28,7 @@ def transpose_cell(gdsii, Layers, refname, element):
         for layername, layerdata in Layers.items():
             if layerdata['gds'] == key[0]:
                 save_transposed_coords(layers, polygons, layername, element)
+#                 layer_list.append(layers)
 
     return layers
 
@@ -58,10 +60,12 @@ def clipping(subj, clip, operation):
         elif operation == 'difference':
             layercross = tools.angusj(clip, subj, 'difference')
 
+        if not layercross:
+            print('Clipping is zero.')
+
     return layercross
 
 
-Beweeg die na layers.py
 def filter_base(baselayer, jjlayer):
     """ If the junction object has more than 
     one M0 polygon, then we have to find the 
@@ -84,6 +88,8 @@ def junction_inside_res(Layers, jj, res_layer):
 
     name = layers.get_junction_layer(Layers)
     jj_layer = jj[name]
+
+    print(res_layer)
 
     if layers.does_layers_intersect([res_layer], jj_layer):
         return True
@@ -112,12 +118,6 @@ class Junction:
     *_value : double
         The shunt resistance and junction area 
         value of this junction.
-
-    Notes
-    -----
-
-    * Assume that each junction will only have one
-      'base' and one 'res' layer, each.
     """
     
     def __init__(self, basedir, gdsii, Layers):
@@ -149,8 +149,11 @@ class Junction:
             base = subatom['Module']['base']['layer']
             res = subatom['Module']['res']['layer']
 
-            self.base = self.base_with_jj_inside(base)
-            self.res = self.res_connected_to_base(jj_base, res)
+            jj_base = self.base_with_jj_inside(base)
+#             jj_res = self.junction_res(jj_base, res)
+
+            self.base = jj_base
+#             self.res = jj_res
 
     def base_with_jj_inside(self, basename):
         """ Get the base layer (M0) polygon in the Junction
@@ -161,11 +164,13 @@ class Junction:
         baselayer = self.layers[basename]
         jjlayer = self.layers[name]
 
-        return filter_base(baselayer, jjlayer)
+        jj_base = filter_base(baselayer, jjlayer)
 
-    def res_connected_to_base(self, jj_base, res):
+        return jj_base
+
+    def junction_res(self, jj_base, res):
         """ Get the shunt resistance branch
-        in the junction CellRefence. """
+        in the junction cell ref. """
 
         name = layers.get_res_layer(self.Layers)
         reslayer = self.layers[name]
@@ -175,13 +180,8 @@ class Junction:
             if not junction_inside_res(self.Layers, self.layers, poly):
                 all_reslayers.append(poly)
 
-        return clipping(all_reslayers, [jj_base], 'difference')        
-
-    def calculate_shunt_value(self):
-        pass
-
-    def calculate_area_value(self):
-        pass
+        shunt = clipping(all_reslayers, jj_base, 'difference')        
+        return shunt
 
 
 

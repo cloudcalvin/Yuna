@@ -48,20 +48,20 @@ def layers_to_cell(cell, Layers):
     return cell
 
 
-def jj_modules_to_cell(cell, subatom):
-    if subatom['Module']['base']:
-        base = subatom['Module']['base']
-        view = base['view']
-        if json.loads(view):
-            add_polygons_to_cell(cell, base)
-
-    if subatom['Module']['res']:
-        print(subatom['Module']['res'])
-        res = subatom['Module']['res']
-        view = res['view']
-        if json.loads(view):
-            add_polygons_to_cell(cell, res)
-
+# def jj_modules_to_cell(cell, subatom):
+#     if subatom['Module']['base']:
+#         base = subatom['Module']['base']
+#         view = base['view']
+#         if json.loads(view):
+#             add_polygons_to_cell(cell, base)
+# 
+#     if subatom['Module']['res']:
+#         print(subatom['Module']['res'])
+#         res = subatom['Module']['res']
+#         view = res['view']
+#         if json.loads(view):
+#             add_polygons_to_cell(cell, res)
+# 
 
 def modules_to_cell(cell, subatom):
     for module in subatom['Module']:
@@ -83,11 +83,21 @@ def atom_to_cell(cell, Atom):
             for subatom in atom['Subatom']:
                 if json.loads(subatom['view']):
                     add_polygons_to_cell(cell, subatom)
-        elif key == 'jj':
-            for subatom in atom['Subatom']:
-                jj_modules_to_cell(cell, subatom)
+#         elif key == 'jj':
+#             for subatom in atom['Subatom']:
+#                 jj_modules_to_cell(cell, subatom)
 
     return cell
+
+
+def add_junctions_to_cell(cell, jjs):
+    """ Loop through the polygon list of
+    the layer, subatom or module and add
+    it to the gdspy library for processing."""
+
+    for jj in jjs:
+        cell.add(gdspy.Polygon(jj.base, 10))
+        cell.add(gdspy.Polygon(jj.res, 22))
 
 
 class Write:
@@ -96,9 +106,9 @@ class Write:
         self.solution = None
         self.holes = None
 
-    def write_gds(self, basedir, Layers, Atom, ldf):
-        """ Write polygons to a new GDS cell using 
-        gdspy. The polygons written are read from 
+    def write_gds(self, basedir, Layers, Atom, ldf, jjs):
+        """ Write polygons to a new GDS cell using
+        gdspy. The polygons written are read from
         the updated JSON Config file. """
 
         yunalayout = None
@@ -108,10 +118,14 @@ class Write:
         yunacell = layers_to_cell(yunacell, Layers)
         yunacell = atom_to_cell(yunacell, Atom)
 
+        add_junctions_to_cell(yunacell, jjs)
+
         if self.view:
             gdspy.LayoutViewer()
 
         self.solution = yunacell.get_polygons(True)
+
+
 
 
 

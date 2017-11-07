@@ -94,20 +94,15 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
     tools.magenta_print('Process Layers')
     cProcess = process.Process(examdir, gds_file, config_data)
     cProcess.config_layers(cellref)
+    jjs = cProcess.jjs
 
     Layers = cProcess.config_data['Layers']
     Atoms = cProcess.config_data['Atom']
 
     tools.magenta_print('Write Layers')
     cWrite = write.Write(True)
-    cWrite.write_gds(examdir, Layers, Atoms, ldf)
+    cWrite.write_gds(examdir, Layers, Atoms, ldf, jjs)
 
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-

@@ -1,4 +1,3 @@
-MANIFEST.in
 README.md
 setup.cfg
 setup.py
@@ -6,11 +5,15 @@ tests/__init__.py
 tests/runall.py
 tests/test0.py
 yuna/__init__.py
+yuna/config.py
 yuna/docopt.py
+yuna/junctions.py
 yuna/layers.py
 yuna/params.py
 yuna/process.py
 yuna/read.py
+yuna/vias.py
+yuna/wires.py
 yuna/yuna.py
 yuna.egg-info/PKG-INFO
 yuna.egg-info/SOURCES.txt

@@ -4,7 +4,7 @@ from utils import tools
 from pprint import pprint
 
 
-import junctions as jjs
+import junctions
 import wires
 import vias
 import json
@@ -51,6 +51,8 @@ class Process:
         self.gds_file = gds_file
         self.config_data = config_data
         self.Elements = None
+        self.Layers = None
+        self.jjs = []
 
     def user_cellref(self, usercell):
         cell = self.gdsii.extract(usercell)
@@ -82,14 +84,38 @@ class Process:
         """
 
         self.gdsii.read_gds(self.gds_file, unit=1.0e-12)
-        Layers = self.config_data['Layers']
+        self.Layers = self.config_data['Layers']
 
         if usercell:
             self.user_cellref(usercell)
         else:
             self.toplevel_cellref()
 
-        layers.fill_layers_object(Layers, self.Elements)
+        layers.fill_layers_object(self.Layers, self.Elements)
+
+    def fill_junction_list(self):
+        """ Loop over all elements, such as
+        polygons, polgyonsets, cellrefences, etc
+        and find the CellRefences. CellRefs
+        which is a junction has to start with JJ. """
+
+        Atom = self.config_data['Atom']
+
+        for element in self.Elements:
+            if isinstance(element, gdspy.CellReference):
+                print('      CellReference: ', end='')
+                print(element)
+
+                refname = element.ref_cell.name
+                if refname[:2] == 'JJ':
+                    jj = junctions.Junction(self.basedir, self.gdsii, self.Layers)
+
+                    layers = junctions.transpose_cell(self.gdsii, self.Layers, refname, element)
+
+                    jj.set_layers(layers)
+                    jj.detect_jj(Atom['jj'])
+
+                    self.jjs.append(jj)
 
     def config_layers(self, cellref):
         """ Main loop of the class. Loop over each
@@ -98,16 +124,15 @@ class Process:
 
         self.init_layers(cellref)
 
-        Layers = self.config_data['Layers']
         Atom = self.config_data['Atom']
 
         tools.green_print('Running Atom:')
         self.calculate_vias(Atom['vias'])
 
-        jjObjects = jjs.JunctionObjects(self.basedir, self.gdsii, Layers)
-        jjObjects.calculate_jj(self.Elements, Atom['jj'])
+        self.fill_junction_list()
 
-        
+#         jj = jjs.JunctionObjects(self.basedir, self.gdsii, Layers)
+#         jj.calculate_jj(self.Elements, Atom['jj'])
 
         self.calculate_wires(Atom['wires'], Atom['vias'])
 
@@ -140,14 +165,13 @@ class Process:
         """  """
 
         tools.green_print('Calculating wires json:')
-        Layers = self.config_data['Layers']
 
-        wire = wires.Wire(Layers, atom['Subatom'], vias)
-        wire.union_polygons(Layers)
+        wire = wires.Wire(self.Layers, atom['Subatom'], vias)
+        wire.union_polygons(self.Layers)
 
         for subatom in atom['Subatom']:
             viadiff = wire.find_via_diff(subatom)
-            Layers[subatom]['result'] = viadiff
+            self.Layers[subatom]['result'] = viadiff
 
     def calculate_module(self, atom, subatom, module):
         """

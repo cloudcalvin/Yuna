@@ -1,30 +1,22 @@
 {
     "Module":
-    [
-        {
+    {
+        "base": {
             "id": 0,
             "desc": "Get the base layer of the junction",
-  	        "gds": 41,
-
-            "jj_base": {
-                "wire_1": {"JJ": "BAS"},
-                "wire_2": {"Layers": "COU"},
-                "view": "true",
-                "result": []
-            }
+	        "gds": 3,
+            "layer": "COU",
+            "view": "true",
+            "result": []
         },
 
-        {
+        "res": {
             "id": 1,
-            "desc": "Get the difference of JJ and wire.",
-            "gds": 42,
-
-            "jj_diff": {
-                "wire_1": {"JJ": "BAS"},
-                "wire_2": {"Layers": "COU"},
-                "view": "true",
-                "result": []
-            }
+            "desc": "Get the base layer of the junction",
+            "gds": 4,
+            "layer": "RES",
+            "view": "true",
+            "result": []
         }
-    ]
+    }
 }

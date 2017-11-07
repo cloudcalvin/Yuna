@@ -1,10 +1,12 @@
 from __future__ import print_function
 from termcolor import colored
+from collections import defaultdict
 
 
 import json
 import gdspy
 import utils.tools as tools
+import pyclipper
 
 
 def does_layers_intersect(layer_1, layer_2):
@@ -14,7 +16,7 @@ def does_layers_intersect(layer_1, layer_2):
         return False
 
 
-def get_shunt_layer(Layers):
+def get_res_layer(Layers):
     layershunt = None
     for key, layer in Layers.items():
         if layer['type'] == 'shunt':
@@ -30,6 +32,30 @@ def get_junction_layer(Layers):
             layerjj = key
 
     return layerjj
+
+
+def union_wires(Layers, layer):
+    count = [0]
+    unionlayer = defaultdict(list)
+    cell_layer = Layers[layer]['result']
+
+    for poly in cell_layer:
+        if (count[0] == 0):
+            unionlayer = [poly]
+        else:
+            clip = poly
+            pc = pyclipper.Pyclipper()
+
+            pc.AddPath(clip, pyclipper.PT_CLIP, True)
+            pc.AddPaths(unionlayer, pyclipper.PT_SUBJECT, True)
+
+            unionlayer = pc.Execute(pyclipper.CT_UNION,
+                                           pyclipper.PFT_EVENODD,
+                                           pyclipper.PFT_EVENODD)
+
+        count[0] += 1
+
+    return unionlayer
 
 
 def fill_layers_object(Layers, Elements):

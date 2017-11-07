@@ -48,6 +48,21 @@ def layers_to_cell(cell, Layers):
     return cell
 
 
+def jj_modules_to_cell(cell, subatom):
+    if subatom['Module']['base']:
+        base = subatom['Module']['base']
+        view = base['view']
+        if json.loads(view):
+            add_polygons_to_cell(cell, base)
+
+    if subatom['Module']['res']:
+        print(subatom['Module']['res'])
+        res = subatom['Module']['res']
+        view = res['view']
+        if json.loads(view):
+            add_polygons_to_cell(cell, res)
+
+
 def modules_to_cell(cell, subatom):
     for module in subatom['Module']:
         for key, value in module.items():
@@ -55,12 +70,6 @@ def modules_to_cell(cell, subatom):
                 if json.loads(value['view']):
                     add_polygons_to_cell(cell, module)
             elif key == 'via_remove':
-                if json.loads(value['view']):
-                    add_polygons_to_cell(cell, module)
-            elif key == 'jj_base':
-                if json.loads(value['view']):
-                    add_polygons_to_cell(cell, module)
-            elif key == 'jj_diff':
                 if json.loads(value['view']):
                     add_polygons_to_cell(cell, module)
 
@@ -74,13 +83,9 @@ def atom_to_cell(cell, Atom):
             for subatom in atom['Subatom']:
                 if json.loads(subatom['view']):
                     add_polygons_to_cell(cell, subatom)
-                # modules_to_cell(cell, subatom)
         elif key == 'jj':
             for subatom in atom['Subatom']:
-                if json.loads(subatom['view']):
-                    print('awe')
-#                     add_polygons_to_cell(cell, subatom)
-                modules_to_cell(cell, subatom)
+                jj_modules_to_cell(cell, subatom)
 
     return cell
 

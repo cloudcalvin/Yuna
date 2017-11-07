@@ -103,7 +103,12 @@ class Process:
 
         tools.green_print('Running Atom:')
         self.calculate_vias(Atom['vias'])
-        jjs.calculate_jj(self.basedir, self.gdsii, Layers, self.Elements, Atom['jj'])
+
+        jjObjects = jjs.JunctionObjects(self.basedir, self.gdsii, Layers)
+        jjObjects.calculate_jj(self.Elements, Atom['jj'])
+
+        
+
         self.calculate_wires(Atom['wires'], Atom['vias'])
 
 #         cParams = params.Params()

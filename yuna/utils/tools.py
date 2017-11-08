@@ -113,13 +113,11 @@ def angusj_offset(subj):
 
 
 def union_wire(Layers, layer, config_save):
-    """
-        This function saves the union of each
-        individual layer polygon. The result
-        is saved in the 'result' variable ien
-        the config.json file of the corrisponding
-        layer.
-    """
+    """ This function saves the union of each
+    individual layer polygon. The result
+    is saved in the 'result' variable 
+    in the config.json file of the 
+    corrisponding layer. """
 
     print('      -> ' + layer)
 

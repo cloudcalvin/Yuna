@@ -53,6 +53,8 @@ class Process:
         self.Elements = None
         self.Layers = None
         self.jjs = []
+        self.wires = []
+        self.vias = []
 
     def user_cellref(self, usercell):
         cell = self.gdsii.extract(usercell)
@@ -93,30 +95,28 @@ class Process:
 
         layers.fill_layers_object(self.Layers, self.Elements)
 
-    def fill_junction_list(self):
-        """ Loop over all elements, such as
-        polygons, polgyonsets, cellrefences, etc
-        and find the CellRefences. CellRefs
-        which is a junction has to start with JJ. """
+    def is_jj_cell(self, element):
+        """  """
 
-        Atom = self.config_data['Atom']
+        jjbool = False
+        if isinstance(element, gdspy.CellReference):
+            print('      CellReference: ', end='')
+            print(element)
+            refname = element.ref_cell.name
+            if refname[:2] == 'JJ':
+                jjbool = True
 
-        for element in self.Elements:
-            if isinstance(element, gdspy.CellReference):
-                print('      CellReference: ', end='')
-                print(element)
+        return jjbool
 
-                refname = element.ref_cell.name
-                if refname[:2] == 'JJ':
-                    jj = junctions.Junction(self.basedir, self.gdsii, self.Layers)
+    def add_via(self, via):
+        self.vias.append(via)
 
-                    layers = junctions.transpose_cell(self.gdsii, self.Layers, refname, element)
+    def add_jj(self, jj):
+        self.jjs.append(jj)
 
-                    jj.set_layers(layers)
-                    jj.detect_jj(Atom['jj'])
-
-                    self.jjs.append(jj)
-
+    def add_wire(self, wire):
+        self.wires.append(wire)
+                    
     def config_layers(self, cellref):
         """ Main loop of the class. Loop over each
         atom, subatom and module. Then update
@@ -128,13 +128,9 @@ class Process:
 
         tools.green_print('Running Atom:')
         self.calculate_vias(Atom['vias'])
-
-        self.fill_junction_list()
-
-#         jj = jjs.JunctionObjects(self.basedir, self.gdsii, Layers)
-#         jj.calculate_jj(self.Elements, Atom['jj'])
-
-        self.calculate_wires(Atom['wires'], Atom['vias'])
+        self.fill_via_list(Atom['vias'])
+        self.fill_jj_list(Atom['jj'])
+        self.fill_wires_list(Atom['wires'])
 
 #         cParams = params.Params()
 #         cParams.calculate_area(self.Elements, Layers)
@@ -143,8 +139,7 @@ class Process:
         subatom['result'] = subatom['Module'][-1]['result']
 
     def calculate_vias(self, atom):
-        """
-        * Read the Module data file in
+        """ * Read the Module data file in
           and save it in the 'Module'
           variable in the Subatom struct.
         * Loop through the modules and calculate
@@ -161,17 +156,61 @@ class Process:
 
             self.copy_module_to_subatom(subatom)
 
-    def calculate_wires(self, atom, vias):
-        """  """
-
-        tools.green_print('Calculating wires json:')
-
-        wire = wires.Wire(self.Layers, atom['Subatom'], vias)
-        wire.union_polygons(self.Layers)
+    def fill_via_list(self, atom):
+        """ Copy the 'result' list in the vias 
+        Subatom to the self.vias list of 
+        via objects. """
 
         for subatom in atom['Subatom']:
-            viadiff = wire.find_via_diff(subatom)
-            self.Layers[subatom]['result'] = viadiff
+            for poly in subatom['result']:
+                via = vias.Via()
+
+                via.set_base(poly)
+                via.set_gds(subatom['gds'])
+
+                self.add_via(via)
+
+    def fill_jj_list(self, atom):
+        """ Loop over all elements, such as
+        polygons, polgyonsets, cellrefences, etc
+        and find the CellRefences. CellRefs
+        which is a junction has to start with JJ. """
+
+        for element in self.Elements:
+            if self.is_jj_cell(element):
+                gdsii = self.gdsii
+                Layers = self.Layers
+
+                layers = junctions.transpose_cell(gdsii, Layers, element)
+
+                jj = junctions.Junction(self.basedir, self.Layers)
+
+                jj.set_layers(layers)
+                jj.detect_jj(atom)
+
+                self.add_jj(jj)
+
+    def fill_wires_list(self, atom):
+        """ Loop through the Layer object
+        and save each layer as a wire object."""
+        
+        tools.green_print('Calculating wires json:')
+        wires.union_polygons(self.Layers)
+
+        for key, layer in self.Layers.items():
+            wire = wires.Wire()
+
+            view = json.loads(layer['view'])
+
+            wire.set_name(key)
+            wire.set_gds(layer['gds'])
+            wire.set_layer(layer['result']) 
+            wire.set_active(view)
+
+            wire.update_with_via_diff(self.vias)
+            wire.update_with_jj_diff(self.jjs)
+
+            self.add_wire(wire)
 
     def calculate_module(self, atom, subatom, module):
         """
@@ -186,19 +225,16 @@ class Process:
 
         for key, value in module.items():
             if key == 'via_connect':
-                via = vias.Via(self.config_data, subatom)
-                layercross = via.get_layercross(value)
-                viacross = via.get_viacross(value, layercross)
+                layercross = vias.get_layercross(self.Layers, subatom['Module'], value)
+                viacross = vias.get_viacross(self.Layers, subatom['Module'], value, layercross)
                 module['result'] = viacross
             elif key == 'via_connect_reverse':
-                via = vias.Via(self.config_data, subatom)
-                layercross = via.get_layercross(value)
-                viacross = via.get_viacross(value, layercross)
-                wireconnect = via.reverse_via(value, viacross)
+                layercross = vias.get_layercross(self.Layers, subatom['Module'], value)
+                viacross = vias.get_viacross(self.Layers, subatom['Module'], value, layercross)
+                wireconnect = vias.reverse_via(self.Layers, subatom['Module'], value, viacross)
                 module['result'] = wireconnect
             elif key == 'via_remove':
-                via = vias.Via(self.config_data, subatom)
-                viacross = via.remove_viacross(value)
+                viacross = vias.remove_viacross(self.Layers, subatom['Module'], value)
                 module['result'] = viacross
             
             

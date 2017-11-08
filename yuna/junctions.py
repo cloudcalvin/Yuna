@@ -8,7 +8,7 @@ import layers
 import pyclipper
 
 
-def transpose_cell(gdsii, Layers, refname, element):
+def transpose_cell(gdsii, Layers, element):
     """ 
     The cells are centered in the middle of the gds
     file canvas. To include this cell into the main
@@ -19,19 +19,21 @@ def transpose_cell(gdsii, Layers, refname, element):
     'result' a {} and not a [].
     """
 
+    refname = element.ref_cell.name
     tools.green_print('Detecting ' + refname)
-    cellpolygons = gdsii.extract(refname).get_polygons(True)
+    cell = gdsii.extract(refname)
+    cellpolygons = cell.get_polygons(True)
 
     layers = {}
     for key, polygons in cellpolygons.items():
         for layername, layerdata in Layers.items():
             if layerdata['gds'] == key[0]:
-                save_transposed_coords(layers, polygons, layername, element)
+                save_coords(layers, polygons, layername, element)
 
     return layers
 
 
-def save_transposed_coords(layers, polygons, layername, element):
+def save_coords(layers, polygons, layername, element):
     """ Transpose each layer in the Junction reference
     and save it by layername in a dict. """
 
@@ -59,36 +61,6 @@ def clipping(subj, clip, operation):
             layercross = tools.angusj(clip, subj, 'difference')
 
     return layercross
-
-
-Beweeg die na layers.py
-def filter_base(baselayer, jjlayer):
-    """ If the junction object has more than 
-    one M0 polygon, then we have to find the 
-    one with the JJ layer inside it. """
-
-    subj = jjlayer
-    clip = baselayer
-
-    baselayer = None
-    for poly in clip:
-        if layers.does_layers_intersect([poly], subj):
-            baselayer = poly
-
-    return baselayer
-
-
-def junction_inside_res(Layers, jj, res_layer):
-    """ Filter the res inside the junction
-    cell object with a JJ layer inside it. """
-
-    name = layers.get_junction_layer(Layers)
-    jj_layer = jj[name]
-
-    if layers.does_layers_intersect([res_layer], jj_layer):
-        return True
-    else:
-        return False
 
 
 class Junction:
@@ -120,9 +92,8 @@ class Junction:
       'base' and one 'res' layer, each.
     """
     
-    def __init__(self, basedir, gdsii, Layers):
+    def __init__(self, basedir,  Layers):
         self.basedir = basedir
-        self.gdsii = gdsii
         self.Layers = Layers
 
         self.shunt_value = None
@@ -132,9 +103,14 @@ class Junction:
         self.edges = []
         self.base = []
         self.res = []
+        self.gds_base = 0
+        self.gds_res = 0
 
     def set_layers(self, layers):
         self.layers = layers
+
+    def set_gds(num):
+        self.gds = num
 
     def detect_jj(self, atom):
         """ The 'JJ' key means that we have to
@@ -149,8 +125,11 @@ class Junction:
             base = subatom['Module']['base']['layer']
             res = subatom['Module']['res']['layer']
 
+            self.gds_base = subatom['Module']['base']['gds']
+            self.gds_res = subatom['Module']['res']['gds']
+
             self.base = self.base_with_jj_inside(base)
-            self.res = self.res_connected_to_base(jj_base, res)
+            self.res = self.res_connected_to_base(res)
 
     def base_with_jj_inside(self, basename):
         """ Get the base layer (M0) polygon in the Junction
@@ -161,9 +140,9 @@ class Junction:
         baselayer = self.layers[basename]
         jjlayer = self.layers[name]
 
-        return filter_base(baselayer, jjlayer)
+        return layers.filter_base(baselayer, jjlayer)
 
-    def res_connected_to_base(self, jj_base, res):
+    def res_connected_to_base(self, res):
         """ Get the shunt resistance branch
         in the junction CellRefence. """
 
@@ -172,10 +151,10 @@ class Junction:
 
         all_reslayers = []
         for poly in reslayer:
-            if not junction_inside_res(self.Layers, self.layers, poly):
+            if not layers.junction_inside_res(self.Layers, self.layers, poly):
                 all_reslayers.append(poly)
 
-        return clipping(all_reslayers, [jj_base], 'difference')        
+        return clipping(all_reslayers, [self.base], 'difference')        
 
     def calculate_shunt_value(self):
         pass
@@ -183,6 +162,9 @@ class Junction:
     def calculate_area_value(self):
         pass
 
+    def plot_jj(self, cell):
+        cell.add(gdspy.Polygon(self.base, self.gds_base))
+        cell.add(gdspy.Polygon(self.res, self.gds_res))
 
 
 

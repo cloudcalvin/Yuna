@@ -9,6 +9,35 @@ import utils.tools as tools
 import pyclipper
 
 
+def filter_base(baselayer, jjlayer):
+    """ If the junction object has more than 
+    one M0 polygon, then we have to find the 
+    one with the JJ layer inside it. """
+
+    subj = jjlayer
+    clip = baselayer
+
+    baselayer = None
+    for poly in clip:
+        if does_layers_intersect([poly], subj):
+            baselayer = poly
+
+    return baselayer
+
+
+def junction_inside_res(Layers, jj, res_layer):
+    """ Filter the res inside the junction
+    cell object with a JJ layer inside it. """
+
+    name = get_junction_layer(Layers)
+    jj_layer = jj[name]
+
+    if does_layers_intersect([res_layer], jj_layer):
+        return True
+    else:
+        return False
+
+
 def does_layers_intersect(layer_1, layer_2):
     if tools.angusj(layer_1, layer_2, 'intersection'):
         return True

@@ -10,94 +10,27 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 
 
-def add_jj_cell(cell, config):
-    """
-        Add the JJ polygons to the main cell using a
-        subcell. This is to label the JJ value with
-        it's required values. The name of the JJ cell
-        has to be different than the original, hence
-        the 'yuna_' addition string.
-    """
-
-    for num, jj in enumerate(config['Layers']['JJ']['result']):
-        jjname = 'yuna_' + config['Layers']['JJ']['name'][num]
-        label = gdspy.Label(jjname, (0, 0), 'sw')
-
-        cell_jj = gdspy.Cell(jjname)
-        cell_jj.add(gdspy.Polygon(jj, 6))
-        cell_jj.add(label)
-
-        cell.add(cell_jj)
-
-
-def add_polygons_to_cell(cell, item):
-    """ Loop through the polygon list of
-    the layer, subatom or module and add
-    it to the gdspy library for processing."""
-
-    for poly in item['result']:
-        cell.add(gdspy.Polygon(poly, item['gds']))
-
-
-def layers_to_cell(cell, Layers):
-    for key, layer in Layers.items():
-        if json.loads(layer['view']):
-            layer['id'] = key
-            add_polygons_to_cell(cell, layer)
-
-    return cell
-
-
-# def jj_modules_to_cell(cell, subatom):
-#     if subatom['Module']['base']:
-#         base = subatom['Module']['base']
-#         view = base['view']
-#         if json.loads(view):
-#             add_polygons_to_cell(cell, base)
+# def add_vias_to_cell(cell, vias):
+#     """ Loop over the vias object 
+#     list and plot the 'base' polygons. """
 # 
-#     if subatom['Module']['res']:
-#         print(subatom['Module']['res'])
-#         res = subatom['Module']['res']
-#         view = res['view']
-#         if json.loads(view):
-#             add_polygons_to_cell(cell, res)
+#     for via in vias:
+#         via.plot_via(cell)
 # 
-
-def modules_to_cell(cell, subatom):
-    for module in subatom['Module']:
-        for key, value in module.items():
-            if key == 'via_connect':
-                if json.loads(value['view']):
-                    add_polygons_to_cell(cell, module)
-            elif key == 'via_remove':
-                if json.loads(value['view']):
-                    add_polygons_to_cell(cell, module)
-
-
-def atom_to_cell(cell, Atom):
-    for key, atom in Atom.items():
-        print ('      ' + '-> ', end='')
-        print('Atom: ' + str(atom['id']))
-
-        if key == 'vias':
-            for subatom in atom['Subatom']:
-                if json.loads(subatom['view']):
-                    add_polygons_to_cell(cell, subatom)
-#         elif key == 'jj':
-#             for subatom in atom['Subatom']:
-#                 jj_modules_to_cell(cell, subatom)
-
-    return cell
-
-
-def add_junctions_to_cell(cell, jjs):
-    """ Loop through the polygon list of
-    the layer, subatom or module and add
-    it to the gdspy library for processing."""
-
-    for jj in jjs:
-        cell.add(gdspy.Polygon(jj.base, 10))
-        cell.add(gdspy.Polygon(jj.res, 22))
+# 
+# def add_jj_to_cell(cell, jjs):
+#     """ Loop through the polygon list of
+#     the layer, subatom or module and add
+#     it to the gdspy library for processing."""
+# 
+#     for jj in jjs:
+#         jj.plot_jj(cell)
+# 
+# 
+# def add_wires_to_cell(cell, wires):
+#     """  """
+#     for wire in wires:
+#         wire.plot_wire(cell)
 
 
 class Write:
@@ -106,24 +39,29 @@ class Write:
         self.solution = None
         self.holes = None
 
-    def write_gds(self, basedir, Layers, Atom, ldf, jjs):
+    def write_gds(self, basedir, Layers, Atom, ldf, jjs, vias, wires):
         """ Write polygons to a new GDS cell using
         gdspy. The polygons written are read from
         the updated JSON Config file. """
 
-        yunalayout = None
-
         tools.green_print('Cell: STEM - Hypres')
-        yunacell = gdspy.Cell('STEM')
-        yunacell = layers_to_cell(yunacell, Layers)
-        yunacell = atom_to_cell(yunacell, Atom)
+        cell = gdspy.Cell('STEM')
 
-        add_junctions_to_cell(yunacell, jjs)
+        for via in vias:
+            via.plot_via(cell)
+        for jj in jjs:
+            jj.plot_jj(cell)
+        for wire in wires:
+            wire.plot_wire(cell)
+
+#         add_jj_to_cell(cell, jjs)
+#         add_vias_to_cell(cell, vias)
+#         add_wires_to_cell(cell, wires)
 
         if self.view:
             gdspy.LayoutViewer()
 
-        self.solution = yunacell.get_polygons(True)
+        self.solution = cell.get_polygons(True)
 
 
 

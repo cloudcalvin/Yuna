@@ -175,7 +175,7 @@
             [
                 {
                     "id": 0,
-                    "gds": 0,
+                    "gds": 100,
                     "module": "viaMN1_M2",
                     "view": "true",
                     "result": []
@@ -183,14 +183,14 @@
 
                 {
                     "id": 1,
-                    "gds": 1,
+                    "gds": 101,
                     "module": "viaMN2_M2",
                     "view": "true",
                     "result": []
                 },
                 {
                     "id": 2,
-                    "gds": 2,
+                    "gds": 102,
                     "module": "viaMN3_M2",
                     "view": "true",
                     "result": []

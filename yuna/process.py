@@ -132,11 +132,17 @@ class Process:
         self.fill_jj_list(Atom['jj'])
         self.fill_wires_list(Atom['wires'])
 
+        self.vias_to_wires()
+
 #         cParams = params.Params()
 #         cParams.calculate_area(self.Elements, Layers)
 
     def copy_module_to_subatom(self, subatom):
         subatom['result'] = subatom['Module'][-1]['result']
+
+    def vias_to_wires(self):
+        for via in self.vias:
+            via.connect_wires(self.wires)
 
     def calculate_vias(self, atom):
         """ * Read the Module data file in

@@ -99,15 +99,22 @@ def angusj(clip, subj, method):
         return []
 
 
-def angusj_offset(subj):
-    """ Angusj offset function using Clippers """
+def angusj_offset(layer, size):
+    """
+    Apply polygon offsetting using Angusj.
+    Either blow up polygons or blow it down.
+    """
 
     solution = []
 
-    for poly in subj:
+    for poly in layer:
         pco = pyclipper.PyclipperOffset()
         pco.AddPath(poly, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
-        solution.append(pco.Execute(-10e4)[0])
+
+        if size == 'down':
+            solution.append(pco.Execute(-10e4)[0])
+        elif size == 'up':
+            solution.append(pco.Execute(100)[0])
 
     return solution
 

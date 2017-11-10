@@ -132,17 +132,31 @@ class Process:
         self.fill_jj_list(Atom['jj'])
         self.fill_wires_list(Atom['wires'])
 
-        self.vias_to_wires()
+        for via in self.vias:
+            via.connect_wires(self.wires)
+            via.connect_edges()
+
+#             via.generate_graph()
+
+        for via in self.vias:
+            for gds_edge, edge in via.edges.items():
+                for gds_wire, wire in via.wires.items():
+                    if wire:
+                        for point in wire[0]:
+                            if (edge[0] == point) or (edge[1] == point):
+                                print(edge)
+
+        for wire in self.wires:
+            wire.generate_graph()
+
+
+        self.vias[0].plot_edges()
 
 #         cParams = params.Params()
 #         cParams.calculate_area(self.Elements, Layers)
 
     def copy_module_to_subatom(self, subatom):
         subatom['result'] = subatom['Module'][-1]['result']
-
-    def vias_to_wires(self):
-        for via in self.vias:
-            via.connect_wires(self.wires)
 
     def calculate_vias(self, atom):
         """ * Read the Module data file in

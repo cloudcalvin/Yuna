@@ -29,7 +29,7 @@ class Write:
         for via in vias:
             via.plot_via(cell)
 
-        vias[3].plot_connected_wires(cell)
+#         vias[3].plot_connected_wires(cell)
 
 #         for jj in jjs:
 #             jj.plot_jj(cell)

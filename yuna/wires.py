@@ -4,6 +4,7 @@ from utils import tools
 
 
 import gdspy
+import networkx as nx
 
 
 def union_polygons(Layers):
@@ -63,6 +64,22 @@ class Wire:
 
         if subj and clip:
             self.layer = tools.angusj(clip, subj, 'difference')
+
+    def generate_graph(self):
+        for layer in self.layer:
+            g = nx.Graph()
+            num_nodes = len(layer)
+
+            for i, node in enumerate(layer):
+                g.add_node(i, pos=node) 
+
+                if i < num_nodes-1:
+                    g.add_edge(i, i+1)
+                else:
+                    g.add_edge(i, 0)
+
+            pos = nx.get_node_attributes(g,'pos')
+            nx.draw(g, pos, node_size=30)
 
     def plot_wire(self, cell):
         if self.active:

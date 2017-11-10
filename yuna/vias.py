@@ -1,10 +1,18 @@
 from __future__ import print_function
 from termcolor import colored
 from utils import tools
+ 
+from matplotlib.path import Path
+from matplotlib.patches import PathPatch
 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import networkx as nx
 
 import gdspy
 import layers
+import pyclipper
 
 
 def get_polygon(Layers, Modules, poly):
@@ -135,14 +143,14 @@ class Via:
           wire.gds and the value is the polygons connected.
         """
 
-        self.edges = []
+        self.edges = {}
         self.base = []
         self.gds = 0
         self.wires = {}
 
 
-    Maybe give access to select a specific 
-    via or viaset (kind, like viaMN1_M2).
+#     Maybe give access to select a specific 
+#     via or viaset (kind, like viaMN1_M2).
 
     def set_base(self, poly):
         self.base = poly
@@ -150,14 +158,22 @@ class Via:
     def set_gds(self, num):
         self.gds = num
 
-    def connect_edges(self):
-        pass
-
     def connect_wires(self, wires):
         for wire in wires:
             if wire.active:
                poly_list = add_layers(self.base, wire)
                self.wires[wire.gds] = poly_list
+
+    def connect_edges(self):
+        for gds, layer in self.wires.items():
+            if layer:
+                self.edges[gds] = []
+                for point in layer[0]:
+                    inside = pyclipper.PointInPolygon(point, self.base)
+
+                    if inside != 0:
+                        self.edges[gds].append(point)
+#                         self.edges.append(point)
 
     def plot_via(self, cell):
         cell.add(gdspy.Polygon(self.base, self.gds))
@@ -167,6 +183,72 @@ class Via:
         for gds, layers in self.wires.items():
             for poly in layers:
                 cell.add(gdspy.Polygon(poly, gds))
+
+    def generate_graph(self):
+        g = nx.Graph()
+
+        g.add_node(1, pos=self.base[0])
+        g.add_node(2, pos=self.base[1])
+        g.add_node(3, pos=self.base[2])
+        g.add_node(4, pos=self.base[3])
+
+        g.add_edge(1,2)
+        g.add_edge(2,3)
+        g.add_edge(3,4)
+        g.add_edge(4,1)
+
+        pos = nx.get_node_attributes(g,'pos')
+
+        nx.draw(g, pos)
+
+    def plot_edges(self):
+        verts = [
+            (0., 0.), # left, bottom
+            (0., 1.), # left, top
+            (1., 1.), # right, top
+            (1., 0.), # right, bottom
+            (0., 0.), # ignored
+            ]
+
+        codes = [Path.MOVETO,
+                 Path.LINETO,
+                 Path.LINETO,
+                 Path.LINETO,
+                 Path.CLOSEPOLY,
+                 ]
+
+        path = Path(verts, codes)
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        patch = patches.PathPatch(path, facecolor='orange', lw=2)
+        ax.add_patch(patch)
+        ax.set_xlim(-2,2)
+        ax.set_ylim(-2,2)
+        plt.show()
+
+#         vertices = []
+#         codes = []
+# 
+#         codes = [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY]
+#         vertices = [(1, 1), (1, 2), (2, 2), (2, 1), (0, 0)]
+# 
+#         codes += [Path.MOVETO] + [Path.LINETO]*2 + [Path.CLOSEPOLY]
+#         vertices += [(4, 4), (5, 5), (5, 4), (0, 0)]
+# 
+#         vertices = np.array(vertices, float)
+#         path = Path(vertices, codes)
+# 
+#         pathpatch = PathPatch(path, facecolor='None', edgecolor='green')
+# 
+#         fig, ax = plt.subplots()
+#         ax.add_patch(pathpatch)
+#         ax.set_title('A compound path')
+# 
+#         ax.dataLim.update_from_data_xy(vertices)
+#         ax.autoscale_view()
+# 
+#         plt.show()
 
 
 

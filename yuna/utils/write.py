@@ -26,8 +26,8 @@ class Write:
         tools.green_print('Cell: STEM - Hypres')
         cell = gdspy.Cell('STEM')
 
-        for via in vias:
-            via.plot_via(cell)
+#         for via in vias:
+#             via.plot_via(cell)
 
 #         vias[3].plot_connected_wires(cell)
 

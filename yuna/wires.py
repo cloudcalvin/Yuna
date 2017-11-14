@@ -66,17 +66,20 @@ class Wire:
             self.layer = tools.angusj(clip, subj, 'difference')
 
     def generate_graph(self):
-        for layer in self.layer:
+        for poly in self.layer:
             g = nx.Graph()
-            num_nodes = len(layer)
+            num_nodes = len(poly)
 
-            for i, node in enumerate(layer):
+            for i, node in enumerate(poly):
                 g.add_node(i, pos=node) 
 
                 if i < num_nodes-1:
                     g.add_edge(i, i+1)
                 else:
                     g.add_edge(i, 0)
+
+            for n, p in g.nodes(data=True):
+                print(p['pos'])
 
             pos = nx.get_node_attributes(g,'pos')
             nx.draw(g, pos, node_size=30)

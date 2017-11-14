@@ -3,6 +3,10 @@ from termcolor import colored
 from utils import tools
 from pprint import pprint
 
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+import networkx as nx
 
 import junctions
 import wires
@@ -133,24 +137,24 @@ class Process:
         self.fill_wires_list(Atom['wires'])
 
         for via in self.vias:
-            via.connect_wires(self.wires)
-            via.connect_edges()
+            for wire in self.wires:
+                via.connect_wires(wire)
+                via.connect_edges()
 
-#             via.generate_graph()
+#         for via in self.vias:
+#             for gds_edge, edge in via.edges.items():
+#                 for gds_wire, wire in via.wires.items():
+#                     if wire:
+#                         for point in wire[0]:
+#                             if (edge[0] == point) or (edge[1] == point):
+#                                 print(edge)
 
+#         for wire in self.wires:
+#             wire.generate_graph()
+
+        # TODO: Add multiple graph readouts here.
         for via in self.vias:
-            for gds_edge, edge in via.edges.items():
-                for gds_wire, wire in via.wires.items():
-                    if wire:
-                        for point in wire[0]:
-                            if (edge[0] == point) or (edge[1] == point):
-                                print(edge)
-
-        for wire in self.wires:
-            wire.generate_graph()
-
-
-        self.vias[0].plot_edges()
+            via.generate_graph()
 
 #         cParams = params.Params()
 #         cParams.calculate_area(self.Elements, Layers)
@@ -217,20 +221,21 @@ class Process:
         tools.green_print('Calculating wires json:')
         wires.union_polygons(self.Layers)
 
-        for key, layer in self.Layers.items():
-            wire = wires.Wire()
+        for key, layers in self.Layers.items():
+            for layer in layers['result']:
+                wire = wires.Wire()
 
-            view = json.loads(layer['view'])
+                view = json.loads(layers['view'])
 
-            wire.set_name(key)
-            wire.set_gds(layer['gds'])
-            wire.set_layer(layer['result']) 
-            wire.set_active(view)
+                wire.set_name(key)
+                wire.set_gds(layers['gds'])
+                wire.set_layer([layer])
+                wire.set_active(view)
 
-            wire.update_with_via_diff(self.vias)
-            wire.update_with_jj_diff(self.jjs)
+                wire.update_with_via_diff(self.vias)
+                wire.update_with_jj_diff(self.jjs)
 
-            self.add_wire(wire)
+                self.add_wire(wire)
 
     def calculate_module(self, atom, subatom, module):
         """

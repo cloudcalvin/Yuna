@@ -52,13 +52,21 @@ def add_layers(base, wire):
 
     poly_list = []
 
-    for poly in wire.layer:
-        wireoffset = tools.angusj_offset([poly], 'up')
+    print(wire.layer)
 
-        if layers.does_layers_intersect([base], wireoffset):
-            poly_list.append(poly)
+#     for poly in wire.layer:
+#         wireoffset = tools.angusj_offset([poly], 'up')
+# 
+#         if layers.does_layers_intersect([base], wireoffset):
+#             poly_list.append(poly)
 
-    return poly_list
+    wireoffset = tools.angusj_offset(wire.layer, 'up')
+    print(wireoffset)
+
+    if layers.does_layers_intersect([base], wireoffset):
+        return True
+    else:
+        return False
 
 
 def get_viacross(Layers, Modules, value, subj):
@@ -143,11 +151,10 @@ class Via:
           wire.gds and the value is the polygons connected.
         """
 
-        self.edges = {}
-        self.base = []
         self.gds = 0
-        self.wires = {}
-
+        self.base = []
+        self.wires = []
+        self.edges = []
 
 #     Maybe give access to select a specific 
 #     via or viaset (kind, like viaMN1_M2).
@@ -158,22 +165,46 @@ class Via:
     def set_gds(self, num):
         self.gds = num
 
-    def connect_wires(self, wires):
-        for wire in wires:
-            if wire.active:
-               poly_list = add_layers(self.base, wire)
-               self.wires[wire.gds] = poly_list
+    def connect_wires(self, wire):
+        if wire.active and wire.layer:
+            wireoffset = tools.angusj_offset(wire.layer, 'up')
+            if layers.does_layers_intersect([self.base], wireoffset):
+                self.wires.append(wire)
 
     def connect_edges(self):
-        for gds, layer in self.wires.items():
-            if layer:
-                self.edges[gds] = []
-                for point in layer[0]:
+        for wire in self.wires:
+            for layer in wire.layer:
+                for point in layer:
                     inside = pyclipper.PointInPolygon(point, self.base)
 
                     if inside != 0:
-                        self.edges[gds].append(point)
-#                         self.edges.append(point)
+                        self.edges.append(point)
+
+    def generate_graph(self):
+        g = nx.Graph()
+
+        layer = self.base
+        num_nodes = len(layer)
+
+        color_map = []
+        for i, node in enumerate(layer):
+            g.add_node(i, pos=node) 
+            color_map.append('green')
+
+#             match = False
+#             for edge in self.edges:
+#                 if (set(edge) == set(node)):
+#                     color_map[i] = 'red'
+#                     match = True
+
+            if i < num_nodes-1:
+                g.add_edge(i, i+1)
+            else:
+                g.add_edge(i, 0)
+
+        pos = nx.get_node_attributes(g, 'pos')
+        nx.draw(g, pos, edge_color=color_map, node_size=30)
+        plt.show()
 
     def plot_via(self, cell):
         cell.add(gdspy.Polygon(self.base, self.gds))
@@ -184,71 +215,6 @@ class Via:
             for poly in layers:
                 cell.add(gdspy.Polygon(poly, gds))
 
-    def generate_graph(self):
-        g = nx.Graph()
-
-        g.add_node(1, pos=self.base[0])
-        g.add_node(2, pos=self.base[1])
-        g.add_node(3, pos=self.base[2])
-        g.add_node(4, pos=self.base[3])
-
-        g.add_edge(1,2)
-        g.add_edge(2,3)
-        g.add_edge(3,4)
-        g.add_edge(4,1)
-
-        pos = nx.get_node_attributes(g,'pos')
-
-        nx.draw(g, pos)
-
-    def plot_edges(self):
-        verts = [
-            (0., 0.), # left, bottom
-            (0., 1.), # left, top
-            (1., 1.), # right, top
-            (1., 0.), # right, bottom
-            (0., 0.), # ignored
-            ]
-
-        codes = [Path.MOVETO,
-                 Path.LINETO,
-                 Path.LINETO,
-                 Path.LINETO,
-                 Path.CLOSEPOLY,
-                 ]
-
-        path = Path(verts, codes)
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        patch = patches.PathPatch(path, facecolor='orange', lw=2)
-        ax.add_patch(patch)
-        ax.set_xlim(-2,2)
-        ax.set_ylim(-2,2)
-        plt.show()
-
-#         vertices = []
-#         codes = []
-# 
-#         codes = [Path.MOVETO] + [Path.LINETO]*3 + [Path.CLOSEPOLY]
-#         vertices = [(1, 1), (1, 2), (2, 2), (2, 1), (0, 0)]
-# 
-#         codes += [Path.MOVETO] + [Path.LINETO]*2 + [Path.CLOSEPOLY]
-#         vertices += [(4, 4), (5, 5), (5, 4), (0, 0)]
-# 
-#         vertices = np.array(vertices, float)
-#         path = Path(vertices, codes)
-# 
-#         pathpatch = PathPatch(path, facecolor='None', edgecolor='green')
-# 
-#         fig, ax = plt.subplots()
-#         ax.add_patch(pathpatch)
-#         ax.set_title('A compound path')
-# 
-#         ax.dataLim.update_from_data_xy(vertices)
-#         ax.autoscale_view()
-# 
-#         plt.show()
 
 
 

@@ -96,8 +96,8 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
     wires = cProcess.wires
 
     tools.magenta_print('Write Layers')
-    cWrite = write.Write(True)
-    cWrite.write_gds(examdir, ldf, jjs, vias, wires)
+#     cWrite = write.Write(True)
+#     cWrite.write_gds(examdir, ldf, jjs, vias, wires)
 
 
 if __name__ == '__main__':

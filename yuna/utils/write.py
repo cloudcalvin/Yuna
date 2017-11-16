@@ -1,6 +1,6 @@
 from __future__ import print_function
 from termcolor import colored
-from utils import tools
+from yuna.utils import tools
 
 
 import gdspy
@@ -15,7 +15,6 @@ class Write:
 
     def __init__(self, view):
         self.view = view
-        self.solution = None
         self.holes = None
 
     def write_gds(self, basedir, ldf, jjs, vias, wires):
@@ -28,22 +27,14 @@ class Write:
 
 #         for via in vias:
 #             via.plot_via(cell)
-
-#         vias[3].plot_connected_wires(cell)
-
 #         for jj in jjs:
 #             jj.plot_jj(cell)
-#         for wire in wires:
-#             wire.plot_wire(cell)
+        for wire in wires:
+            wire.plot_wire(cell)
+
+#         vias[3].plot_connected_wires(cell)
 
         if self.view:
             gdspy.LayoutViewer()
 
-        self.solution = cell.get_polygons(True)
-
-
-
-
-
-
-
+        return cell.get_polygons(True)

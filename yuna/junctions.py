@@ -1,15 +1,15 @@
 from __future__ import print_function
 from collections import defaultdict
 from pprint import pprint
-from utils import tools
+from yuna.utils import tools
 
 import gdspy
-import layers
+import yuna.layers as layers
 import pyclipper
 
 
 def transpose_cell(gdsii, Layers, element):
-    """ 
+    """
     The cells are centered in the middle of the gds
     file canvas. To include this cell into the main
     cell, we have to transpose it to the required position.
@@ -64,16 +64,16 @@ def clipping(subj, clip, operation):
 
 
 class Junction:
-    """ 
+    """
     This class contains a list of all the
-    junction objects inside the gds layout. 
-    
+    junction objects inside the gds layout.
+
     Variables
     ---------
     layers : list
         Original layers of the junction CellRefence.
     edges : list
-        Edges of the wire polygons that connect 
+        Edges of the wire polygons that connect
         to the 'base' of this junction.
     base : list
         The base polygon of the junction (M2, COU, etc)
@@ -82,7 +82,7 @@ class Junction:
         The shunt resistance polygon that is connected
         to the base polygon.
     *_value : double
-        The shunt resistance and junction area 
+        The shunt resistance and junction area
         value of this junction.
 
     Notes
@@ -91,7 +91,7 @@ class Junction:
     * Assume that each junction will only have one
       'base' and one 'res' layer, each.
     """
-    
+
     def __init__(self, basedir,  Layers):
         self.basedir = basedir
         self.Layers = Layers
@@ -154,7 +154,7 @@ class Junction:
             if not layers.junction_inside_res(self.Layers, self.layers, poly):
                 all_reslayers.append(poly)
 
-        return clipping(all_reslayers, [self.base], 'difference')        
+        return clipping(all_reslayers, [self.base], 'difference')
 
     def calculate_shunt_value(self):
         pass
@@ -165,7 +165,3 @@ class Junction:
     def plot_jj(self, cell):
         cell.add(gdspy.Polygon(self.base, self.gds_base))
         cell.add(gdspy.Polygon(self.res, self.gds_res))
-
-
-
-

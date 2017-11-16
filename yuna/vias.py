@@ -1,7 +1,7 @@
 from __future__ import print_function
 from termcolor import colored
-from utils import tools
- 
+from yuna.utils import tools
+
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 
@@ -11,15 +11,15 @@ import matplotlib.patches as patches
 import networkx as nx
 
 import gdspy
-import layers
+import yuna.layers as layers
 import pyclipper
 
 
 def get_polygon(Layers, Modules, poly):
     """  """
 
-    polyclass = poly.keys()[0]
-    polylayer = poly.values()[0]
+    polyclass = list(poly.keys())[0]
+    polylayer = list(poly.values())[0]
 
     subjclip = None
     if polyclass == 'Layer':
@@ -56,7 +56,7 @@ def add_layers(base, wire):
 
 #     for poly in wire.layer:
 #         wireoffset = tools.angusj_offset([poly], 'up')
-# 
+#
 #         if layers.does_layers_intersect([base], wireoffset):
 #             poly_list.append(poly)
 
@@ -87,7 +87,7 @@ def get_viacross(Layers, Modules, value, subj):
 def reverse_via(Layers, Modules, value, subj):
     """ This method is called when we have
     to save the via as the first layer below
-    it. This is needed when the crossings 
+    it. This is needed when the crossings
     of the two wiring layers are not equally large.
 
     Note
@@ -141,13 +141,13 @@ class Via:
         wires : list
             Dict of 'wire' objects that are connected
             to the via. The 'edge' variable contains
-            the edges of these wire layers connected 
+            the edges of these wire layers connected
             to the via.
 
         Note
         ----
-        * Not all layers in a wire object is connected 
-          to the via. Therefore, self.wires.key is the 
+        * Not all layers in a wire object is connected
+          to the via. Therefore, self.wires.key is the
           wire.gds and the value is the polygons connected.
         """
 
@@ -156,7 +156,7 @@ class Via:
         self.wires = []
         self.edges = []
 
-#     Maybe give access to select a specific 
+#     Maybe give access to select a specific
 #     via or viaset (kind, like viaMN1_M2).
 
     def set_base(self, poly):
@@ -188,7 +188,7 @@ class Via:
 
         color_map = []
         for i, node in enumerate(layer):
-            g.add_node(i, pos=node) 
+            g.add_node(i, pos=node)
             color_map.append('green')
 
 #             match = False
@@ -214,13 +214,3 @@ class Via:
         for gds, layers in self.wires.items():
             for poly in layers:
                 cell.add(gdspy.Polygon(poly, gds))
-
-
-
-
-
-
-
-
-
-

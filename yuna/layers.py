@@ -5,13 +5,13 @@ from collections import defaultdict
 
 import json
 import gdspy
-import utils.tools as tools
+import yuna.utils.tools as tools
 import pyclipper
 
 
 def filter_base(baselayer, jjlayer):
-    """ If the junction object has more than 
-    one M0 polygon, then we have to find the 
+    """ If the junction object has more than
+    one M0 polygon, then we have to find the
     one with the JJ layer inside it. """
 
     subj = jjlayer
@@ -108,7 +108,7 @@ def fill_layers_object(Layers, Elements):
 
 
 def polygon_result(Layers, element):
-    """ Add the polygon to the 'result' 
+    """ Add the polygon to the 'result'
     key in the 'Layers' object """
 
     print('      Polygons: ', end='')
@@ -136,10 +136,10 @@ def polygonset_result(Layers, element):
 
 # def path_result(Layers, element):
 #     """ Add the path to the 'result' key in the 'Layers' object """
-# 
+#
 #     print('      Paths: ', end='')
 #     print(element)
-# 
+#
 #     for layer, lay_data in Layers.items():
 #         if lay_data['gds'] == element.layer:
 #             Layers[layer]['result'].append(element.points.tolist())
@@ -147,19 +147,14 @@ def polygonset_result(Layers, element):
 
 # def polygon_jj(Layers, element):
 #     """ Add the polygon to the 'jj' key in the 'Layers' object. """
-# 
+#
 #     print('      CellReference: ', end='')
 #     print(element)
-# 
+#
 #     name = element.ref_cell.name
 #     if name[:2] == 'JJ':
 #         tools.green_print('Detecting ' + name)
 #         Layers['JJ']['name'].append(name)
 #         cellpolygons = gdsii.extract(name).get_polygons(True)
 #         transpose_cell(Layers, cellpolygons, element.origin, name)
-# 
-
-
-
-
-
+#

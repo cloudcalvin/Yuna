@@ -22,11 +22,11 @@ from docopt import docopt
 import os
 import json
 import gdspy
-import process
-import read
+import yuna.process as process
+import yuna.read as read
 
-from utils import write
-from utils import tools
+from yuna.utils import write
+from yuna.utils import tools
 
 
 def main():
@@ -66,18 +66,18 @@ def machina(process, testname, ldf, cellref, cwd):
     gds_file = examdir + '/' + testname + '.gds'
     config_file = examdir + '/' + testname + '.json'
 
-    gdssetup = None
+    wires = None
 
     layers = read.ldf(ldf)
 
     if cellref == 'list':
         tools.list_layout_cells(gds_file)
     else:
-        gdssetup = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref)
+        wires = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref)
 
     tools.cyan_print('Yuna. Done.')
 
-    return gdssetup
+    return wires
 
 
 def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
@@ -96,14 +96,11 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
     wires = cProcess.wires
 
     tools.magenta_print('Write Layers')
-#     cWrite = write.Write(True)
-#     cWrite.write_gds(examdir, ldf, jjs, vias, wires)
+    cWrite = write.Write(True)
+    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wires)
+
+    return wires
 
 
 if __name__ == '__main__':
     main()
-
-
-
-
-

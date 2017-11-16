@@ -3,8 +3,8 @@ import os
 import operator
 import json
 
-from utils import tools
-from utils import system
+from yuna.utils import tools
+from yuna.utils import system
 
 from pprint import pprint
 from itertools import chain

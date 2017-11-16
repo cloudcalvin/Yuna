@@ -1,6 +1,6 @@
 from __future__ import print_function
 from termcolor import colored
-from utils import tools
+from yuna.utils import tools
 from pprint import pprint
 
 import numpy as np
@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
 
-import junctions
-import wires
-import vias
+import yuna.junctions as junctions
+import yuna.wires as wires
+import yuna.vias as vias
 import json
 import gdspy
-import layers
-import params
+import yuna.layers as layers
+import yuna.params as params
 
 
 """
@@ -120,7 +120,7 @@ class Process:
 
     def add_wire(self, wire):
         self.wires.append(wire)
-                    
+
     def config_layers(self, cellref):
         """ Main loop of the class. Loop over each
         atom, subatom and module. Then update
@@ -153,8 +153,8 @@ class Process:
 #             wire.generate_graph()
 
         # TODO: Add multiple graph readouts here.
-        for via in self.vias:
-            via.generate_graph()
+        # for via in self.vias:
+        #     via.generate_graph()
 
 #         cParams = params.Params()
 #         cParams.calculate_area(self.Elements, Layers)
@@ -181,8 +181,8 @@ class Process:
             self.copy_module_to_subatom(subatom)
 
     def fill_via_list(self, atom):
-        """ Copy the 'result' list in the vias 
-        Subatom to the self.vias list of 
+        """ Copy the 'result' list in the vias
+        Subatom to the self.vias list of
         via objects. """
 
         for subatom in atom['Subatom']:
@@ -217,7 +217,7 @@ class Process:
     def fill_wires_list(self, atom):
         """ Loop through the Layer object
         and save each layer as a wire object."""
-        
+
         tools.green_print('Calculating wires json:')
         wires.union_polygons(self.Layers)
 
@@ -248,7 +248,7 @@ class Process:
         print('          Module: ' + str(module['id']))
         print('          ' + str(module['desc']))
 
-        for key, value in module.items():
+        for key, value in list(module.items()):
             if key == 'via_connect':
                 layercross = vias.get_layercross(self.Layers, subatom['Module'], value)
                 viacross = vias.get_viacross(self.Layers, subatom['Module'], value, layercross)
@@ -261,13 +261,3 @@ class Process:
             elif key == 'via_remove':
                 viacross = vias.remove_viacross(self.Layers, subatom['Module'], value)
                 module['result'] = viacross
-            
-            
-
-
-
-
-
-
-
-

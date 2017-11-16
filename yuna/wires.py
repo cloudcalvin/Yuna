@@ -1,6 +1,6 @@
 from __future__ import print_function
 from termcolor import colored
-from utils import tools
+from yuna.utils import tools
 
 
 import gdspy
@@ -32,7 +32,7 @@ class Wire:
 
     def set_gds(self, num):
         self.gds = num
-            
+
     def set_layer(self, layer):
         self.layer = layer
 
@@ -71,7 +71,7 @@ class Wire:
             num_nodes = len(poly)
 
             for i, node in enumerate(poly):
-                g.add_node(i, pos=node) 
+                g.add_node(i, pos=node)
 
                 if i < num_nodes-1:
                     g.add_edge(i, i+1)
@@ -88,20 +88,3 @@ class Wire:
         if self.active:
             for poly in self.layer:
                 cell.add(gdspy.Polygon(poly, self.gds))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

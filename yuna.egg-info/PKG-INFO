@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: yuna
-Version: 0.0.1
+Version: 0.0.2
 Summary: Processes the layers from a GDS file.
 Home-page: https://github.com/rubenvanstaden/yuna
 Author: Ruben van Staden

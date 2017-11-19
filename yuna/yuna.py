@@ -16,13 +16,16 @@ Options:
 
 
 from __future__ import print_function
-from termcolor import colored
+from __future__ import absolute_import
+
 from docopt import docopt
+from termcolor import colored
 
 import os
 import json
 import gdspy
-import yuna.process as process
+
+import yuna.process as proc
 import yuna.read as read
 
 from yuna.utils import write
@@ -88,7 +91,7 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
     config_data = read.config(config_file)
 
     tools.magenta_print('Process Layers')
-    cProcess = process.Process(examdir, gds_file, config_data)
+    cProcess = proc.Process(examdir, gds_file, config_data)
     cProcess.config_layers(cellref)
 
     jjs = cProcess.jjs
@@ -104,3 +107,8 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
 
 if __name__ == '__main__':
     main()
+    
+    
+    
+    
+    

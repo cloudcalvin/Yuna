@@ -5,6 +5,7 @@ tests/__init__.py
 tests/runall.py
 tests/test0.py
 yuna/__init__.py
+yuna/__main__.py
 yuna/config.py
 yuna/docopt.py
 yuna/junctions.py

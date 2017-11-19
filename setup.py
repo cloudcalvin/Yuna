@@ -4,12 +4,14 @@
 
 
 from __future__ import print_function
+from __future__ import absolute_import
+
 import os
 from setuptools import setup, find_packages
 from termcolor import colored
 
 
-version = '0.0.1'
+version = '0.0.2'
 
 
 setup(

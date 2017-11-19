@@ -1,6 +1,7 @@
 from __future__ import print_function
+from __future__ import absolute_import
+
 from termcolor import colored
-from yuna.utils import tools
 from pprint import pprint
 
 import numpy as np
@@ -15,6 +16,7 @@ import json
 import gdspy
 import yuna.layers as layers
 import yuna.params as params
+from yuna.utils import tools
 
 
 """

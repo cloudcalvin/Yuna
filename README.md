@@ -131,3 +131,8 @@ To disregard small changes use:
 ```
 git checkout .
 ```
+
+# Mac OS
+
+To get the Tkinter UI working in Mac, add the following file in `~/.matplotlib`:
+https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python

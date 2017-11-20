@@ -143,13 +143,10 @@ class Process:
                 via.connect_wires(wire)
                 via.connect_edges()
 
-#         for via in self.vias:
-#             for gds_edge, edge in via.edges.items():
-#                 for gds_wire, wire in via.wires.items():
-#                     if wire:
-#                         for point in wire[0]:
-#                             if (edge[0] == point) or (edge[1] == point):
-#                                 print(edge)
+        # for wire in self.wires:
+        #     if wire.name == 'MN3':
+        #         print(wire.layer)
+                # wire.layer = tools.angusj_offset(wire.layer, 'down')
 
 #         for wire in self.wires:
 #             wire.generate_graph()
@@ -216,6 +213,9 @@ class Process:
 
                 self.add_jj(jj)
 
+    def shrink_touching_layers(self, layer):
+        return tools.angusj_offset(layer, 'down')
+
     def fill_wires_list(self, atom):
         """ Loop through the Layer object
         and save each layer as a wire object."""
@@ -229,9 +229,11 @@ class Process:
 
                 view = json.loads(layers['view'])
 
+                wireoffset = self.shrink_touching_layers([layer])
+
                 wire.set_name(key)
                 wire.set_gds(layers['gds'])
-                wire.set_layer([layer])
+                wire.set_layer(wireoffset)
                 wire.set_active(view)
 
                 wire.update_with_via_diff(self.vias)

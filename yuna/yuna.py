@@ -107,8 +107,3 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
 
 if __name__ == '__main__':
     main()
-    
-    
-    
-    
-    

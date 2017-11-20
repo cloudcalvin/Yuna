@@ -112,7 +112,7 @@ def angusj_offset(layer, size):
         pco.AddPath(poly, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
         if size == 'down':
-            solution.append(pco.Execute(-10e4)[0])
+            solution.append(pco.Execute(-100)[0])
         elif size == 'up':
             solution.append(pco.Execute(100)[0])
 
@@ -122,8 +122,8 @@ def angusj_offset(layer, size):
 def union_wire(Layers, layer, config_save):
     """ This function saves the union of each
     individual layer polygon. The result
-    is saved in the 'result' variable 
-    in the config.json file of the 
+    is saved in the 'result' variable
+    in the config.json file of the
     corrisponding layer. """
 
     print('      -> ' + layer)
@@ -201,13 +201,3 @@ def read_module(basedir, atom, subatom):
 
     with open(config_file) as data_file:
         subatom['Module'] = json.load(data_file)['Module']
-
-
-
-
-
-
-
-
-
-

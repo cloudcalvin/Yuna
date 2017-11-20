@@ -32,8 +32,6 @@ class Write:
         for wire in wires:
             wire.plot_wire(cell)
 
-#         vias[3].plot_connected_wires(cell)
-
         if self.view:
             gdspy.LayoutViewer()
 

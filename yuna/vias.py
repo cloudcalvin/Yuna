@@ -125,11 +125,16 @@ def remove_viacross(Layers, Modules, value):
     return viacross
 
 
+def update_wire_object(wire, i, _id):
+    print(wire.edgelabels)
+    wire.edgelabels[i] = _id
+
+
 class Via:
     """
     """
 
-    def __init__(self):
+    def __init__(self, _id):
         """
         Variables
         ---------
@@ -153,13 +158,10 @@ class Via:
           wire.gds and the value is the polygons connected.
         """
 
+        self.id = _id
         self.gds = 0
         self.base = []
-        self.wires = []
         self.edges = []
-
-#     Maybe give access to select a specific
-#     via or viaset (kind, like viaMN1_M2).
 
     def set_base(self, poly):
         self.base = poly
@@ -168,57 +170,51 @@ class Via:
         self.gds = num
 
     def connect_wires(self, wire):
-        if wire.active and wire.layer:
-            wireoffset = tools.angusj_offset(wire.layer, 'up')
+        if wire.active and wire.points:
+            wireoffset = tools.angusj_offset(wire.points, 'up')
             if layers.does_layers_intersect([self.base], wireoffset):
-                self.wires.append(wire)
+                self.connect_edges(wire)
 
-    def connect_edges(self):
-        for wire in self.wires:
-            for layer in wire.layer:
-                for point in layer:
-                    inside = pyclipper.PointInPolygon(point, self.base)
+    def connect_edges(self, wire):
+        for i, points in enumerate(wire.points):
+            print(i)
+            for point in points:
+                inside = pyclipper.PointInPolygon(point, self.base)
 
-                    if inside != 0:
-                        self.edges.append(point)
+                if inside != 0:
+                    self.edges.append(point)
+                    update_wire_object(wire, i, self.id)
 
-    def generate_graph(self):
-        g = nx.Graph()
-
-        layer = self.base
-        num_nodes = len(layer)
-
-        color_map = []
-        for i, node in enumerate(layer):
-            g.add_node(i, pos=node)
-            color_map.append('green')
-
-#             match = False
-#             for edge in self.edges:
-#                 if (set(edge) == set(node)):
-#                     color_map[i] = 'red'
-#                     match = True
-
-            if i < num_nodes-1:
-                g.add_edge(i, i+1)
-            else:
-                g.add_edge(i, 0)
-
-        pos = nx.get_node_attributes(g, 'pos')
-        nx.draw(g, pos, edge_color=color_map, node_size=30)
-        plt.show()
+#     def generate_graph(self):
+#         g = nx.Graph()
+#
+#         layer = self.base
+#         num_nodes = len(layer)
+#
+#         color_map = []
+#         for i, node in enumerate(layer):
+#             g.add_node(i, pos=node)
+#             color_map.append('green')
+#
+# #             match = False
+# #             for edge in self.edges:
+# #                 if (set(edge) == set(node)):
+# #                     color_map[i] = 'red'
+# #                     match = True
+#
+#             if i < num_nodes-1:
+#                 g.add_edge(i, i+1)
+#             else:
+#                 g.add_edge(i, 0)
+#
+#         pos = nx.get_node_attributes(g, 'pos')
+#         nx.draw(g, pos, edge_color=color_map, node_size=30)
+#         plt.show()
 
     def plot_via(self, cell):
         cell.add(gdspy.Polygon(self.base, self.gds))
 
-    # TODO: Maybe add the debug verbose option here.
     def plot_connected_wires(self, cell):
         for gds, layers in self.wires.items():
             for poly in layers:
                 cell.add(gdspy.Polygon(poly, gds))
-                
-                
-                
-                
-                
-                

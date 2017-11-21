@@ -12,6 +12,10 @@ from pprint import pprint
 from itertools import chain
 
 
+# def shrink_touching_layers(layer):
+#     return tools.angusj_offset(layer, 'down')
+
+
 def config(config_file):
     """
         Reads the config file that is written in
@@ -22,7 +26,15 @@ def config(config_file):
     data = None
     with open(config_file) as data_file:
         data = json.load(data_file)
-        # print(json.dumps(data, indent=4, sort_keys=True))
+
+    # # Shink layers a little, to make
+    # # sure they are not touching eachother.
+    # for name, layers in data['Layers'].items():
+    #     for i in range(len(layers['result'])):
+    #         poly = layers['result'][i]
+    #         layeroffset = shrink_touching_layers([poly])
+    #         layers['result'][i] = layeroffset
+
     return data
 
 

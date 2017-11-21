@@ -36,6 +36,10 @@ union result and the moat layer.
 """
 
 
+def shrink_touching_layers(layer):
+    return tools.angusj_offset(layer, 'down')
+
+
 class Process:
     """
     Read and parse the JSON config files.
@@ -58,8 +62,8 @@ class Process:
         self.config_data = config_data
         self.Elements = None
         self.Layers = None
+        self.wireset_list = []
         self.jjs = []
-        self.wires = []
         self.vias = []
 
     def user_cellref(self, usercell):
@@ -120,10 +124,10 @@ class Process:
     def add_jj(self, jj):
         self.jjs.append(jj)
 
-    def add_wire(self, wire):
-        self.wires.append(wire)
+    def add_to_wireset_list(self, wireset):
+        self.wireset_list.append(wireset)
 
-    def config_layers(self, cellref):
+    def config_layers(self, cellref, union):
         """ Main loop of the class. Loop over each
         atom, subatom and module. Then update
         the config data structure results. """
@@ -133,30 +137,51 @@ class Process:
         Atom = self.config_data['Atom']
 
         tools.green_print('Running Atom:')
+
         self.calculate_vias(Atom['vias'])
         self.fill_via_list(Atom['vias'])
         self.fill_jj_list(Atom['jj'])
-        self.fill_wires_list(Atom['wires'])
+        self.fill_wires_list(union)
 
+        # Find the differene between the via, jjs and wires.
+        for wireset in self.wireset_list:
+            for wire in wireset.wires:
+                wire.update_with_via_diff(self.vias)
+                wire.update_with_jj_diff(self.jjs)
+
+        # Connect the wires and via objects.
         for via in self.vias:
-            for wire in self.wires:
-                via.connect_wires(wire)
-                via.connect_edges()
+            for wireset in self.wireset_list:
+                for wire in wireset.wires:
+                    via.connect_wires(wire)
 
-        # for wire in self.wires:
-        #     if wire.name == 'MN3':
-        #         print(wire.layer)
-                # wire.layer = tools.angusj_offset(wire.layer, 'down')
+        # cParams = params.Params()
+        # cParams.calculate_area(self.Elements, Layers)
 
-#         for wire in self.wires:
-#             wire.generate_graph()
+    def fill_wires_list(self, union):
+        """ Loop through the Layer object
+        and save each layer as a wire object."""
 
-        # TODO: Add multiple graph readouts here.
-        # for via in self.vias:
-        #     via.generate_graph()
+        tools.green_print('Calculating wires json:')
 
-#         cParams = params.Params()
-#         cParams.calculate_area(self.Elements, Layers)
+        if union:
+            wires.union_polygons(self.Layers)
+        else:
+            print('Note: UNION wires is not set')
+
+        for name, layers in self.Layers.items():
+            if (layers['type'] == 'wire') or (layers['type'] == 'resistance') or (layers['type'] == 'shunt'):
+                wireset = wires.WireSet(name, layers['gds'])
+
+                for layer in layers['result']:
+                    view = json.loads(layers['view'])
+
+                    offset = shrink_touching_layers([layer])
+
+                    wire = wires.Wire(offset, active=view)
+                    wireset.add_wire_object(wire)
+
+                self.add_to_wireset_list(wireset)
 
     def copy_module_to_subatom(self, subatom):
         subatom['result'] = subatom['Module'][-1]['result']
@@ -184,14 +209,16 @@ class Process:
         Subatom to the self.vias list of
         via objects. """
 
+        _id = 0
         for subatom in atom['Subatom']:
             for poly in subatom['result']:
-                via = vias.Via()
+                via = vias.Via(_id)
 
                 via.set_base(poly)
                 via.set_gds(subatom['gds'])
 
                 self.add_via(via)
+                _id += 1
 
     def fill_jj_list(self, atom):
         """ Loop over all elements, such as
@@ -212,34 +239,6 @@ class Process:
                 jj.detect_jj(atom)
 
                 self.add_jj(jj)
-
-    def shrink_touching_layers(self, layer):
-        return tools.angusj_offset(layer, 'down')
-
-    def fill_wires_list(self, atom):
-        """ Loop through the Layer object
-        and save each layer as a wire object."""
-
-        tools.green_print('Calculating wires json:')
-        wires.union_polygons(self.Layers)
-
-        for key, layers in self.Layers.items():
-            for layer in layers['result']:
-                wire = wires.Wire()
-
-                view = json.loads(layers['view'])
-
-                wireoffset = self.shrink_touching_layers([layer])
-
-                wire.set_name(key)
-                wire.set_gds(layers['gds'])
-                wire.set_layer(wireoffset)
-                wire.set_active(view)
-
-                wire.update_with_via_diff(self.vias)
-                wire.update_with_jj_diff(self.jjs)
-
-                self.add_wire(wire)
 
     def calculate_module(self, atom, subatom, module):
         """

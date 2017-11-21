@@ -17,7 +17,7 @@ class Write:
         self.view = view
         self.holes = None
 
-    def write_gds(self, basedir, ldf, jjs, vias, wires):
+    def write_gds(self, basedir, ldf, jjs, vias, wireset_list):
         """ Write polygons to a new GDS cell using
         gdspy. The polygons written are read from
         the updated JSON Config file. """
@@ -29,8 +29,9 @@ class Write:
 #             via.plot_via(cell)
 #         for jj in jjs:
 #             jj.plot_jj(cell)
-        for wire in wires:
-            wire.plot_wire(cell)
+        for wireset in wireset_list:
+            for wire in wireset.wires:
+                wire.plot_wire(cell, wireset.gds)
 
         if self.view:
             gdspy.LayoutViewer()

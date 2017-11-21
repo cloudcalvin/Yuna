@@ -141,9 +141,15 @@ Description: # Yuna
         git checkout .
         ```
         
+        # Mac OS
+        
+        To get the Tkinter UI working in Mac, add the following file in `~/.matplotlib`:
+        https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python
+        
 Keywords: yuna
 Platform: UNKNOWN
 Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
 Classifier: Development Status :: 2 - Alpha
 Classifier: Topic :: Utilities

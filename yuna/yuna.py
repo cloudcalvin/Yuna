@@ -1,7 +1,7 @@
 """
 
 Usage:
-    yuna <process> <testname> <ldf> [--cell=<cellname>] [(<atom_num> <subatom_num>)]
+    yuna <process> <testname> <ldf> [--cell=<cellname>] [--union] [--model]
     yuna (-h | --help)
     yuna (-V | --version)
 
@@ -50,12 +50,12 @@ def main():
     else:
         cellref = ""
 
-    machina(process, testname, ldf, cellref, '')
+    machina(process, testname, ldf, cellref, '', False)
 
     tools.red_print('Auron. Done.')
 
 
-def machina(process, testname, ldf, cellref, cwd):
+def machina(process, testname, ldf, cellref, cwd, union):
     """  """
 
     tools.cyan_print('Running Yuna...')
@@ -76,14 +76,14 @@ def machina(process, testname, ldf, cellref, cwd):
     if cellref == 'list':
         tools.list_layout_cells(gds_file)
     else:
-        wires = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref)
+        wireset, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
 
     tools.cyan_print('Yuna. Done.')
 
-    return wires
+    return wireset, Layers
 
 
-def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
+def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
@@ -92,17 +92,17 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
 
     tools.magenta_print('Process Layers')
     cProcess = proc.Process(examdir, gds_file, config_data)
-    cProcess.config_layers(cellref)
+    cProcess.config_layers(cellref, union)
 
     jjs = cProcess.jjs
     vias = cProcess.vias
-    wires = cProcess.wires
+    wireset = cProcess.wireset_list
 
     tools.magenta_print('Write Layers')
     cWrite = write.Write(True)
-    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wires)
+    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
 
-    return wires
+    return wireset, config_data['Layers']
 
 
 if __name__ == '__main__':

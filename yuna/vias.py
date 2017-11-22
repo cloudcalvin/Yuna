@@ -170,46 +170,20 @@ class Via:
         self.gds = num
 
     def connect_wires(self, wire):
-        if wire.active and wire.points:
-            wireoffset = tools.angusj_offset(wire.points, 'up')
+        if wire.active and wire.polygon:
+            wireoffset = tools.angusj_offset(wire.polygon, 'up')
             if layers.does_layers_intersect([self.base], wireoffset):
                 self.connect_edges(wire)
 
     def connect_edges(self, wire):
-        for i, points in enumerate(wire.points):
+        for i, polygon in enumerate(wire.polygon):
             print(i)
-            for point in points:
+            for point in polygon:
                 inside = pyclipper.PointInPolygon(point, self.base)
 
                 if inside != 0:
                     self.edges.append(point)
                     update_wire_object(wire, i, self.id)
-
-#     def generate_graph(self):
-#         g = nx.Graph()
-#
-#         layer = self.base
-#         num_nodes = len(layer)
-#
-#         color_map = []
-#         for i, node in enumerate(layer):
-#             g.add_node(i, pos=node)
-#             color_map.append('green')
-#
-# #             match = False
-# #             for edge in self.edges:
-# #                 if (set(edge) == set(node)):
-# #                     color_map[i] = 'red'
-# #                     match = True
-#
-#             if i < num_nodes-1:
-#                 g.add_edge(i, i+1)
-#             else:
-#                 g.add_edge(i, 0)
-#
-#         pos = nx.get_node_attributes(g, 'pos')
-#         nx.draw(g, pos, edge_color=color_map, node_size=30)
-#         plt.show()
 
     def plot_via(self, cell):
         cell.add(gdspy.Polygon(self.base, self.gds))
@@ -218,3 +192,11 @@ class Via:
         for gds, layers in self.wires.items():
             for poly in layers:
                 cell.add(gdspy.Polygon(poly, gds))
+                
+                
+                
+                
+                
+                
+                
+                

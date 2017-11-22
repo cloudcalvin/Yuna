@@ -26,11 +26,8 @@ class WireSet:
         self.gds = gds
         self.name = name
         self.wires = []
-        self.mesh = {}
-        self.graph = None
-
-        self.mesh['points'] = []
-        self.mesh['cells'] = []
+        self.mesh = None
+        self.graph = []
 
     def set_mesh(self, mesh):
         self.mesh = mesh
@@ -46,38 +43,38 @@ class Wire:
     """
     """
 
-    def __init__(self, points, active=False):
+    def __init__(self, polygon, active=False):
         """  """
 
         self.active = active
-        self.points = points
-        self.edgelabels = [None] * len(points[0])
+        self.polygon = polygon
+        self.edgelabels = [None] * len(polygon[0])
 
     def update_with_via_diff(self, vias):
         """ Connect vias and wires by finding
         their difference and not letting the overlap. """
 
-        subj = self.points
+        subj = self.polygon
 
         clip = []
         for via in vias:
             clip.append(via.base)
 
         if clip and subj:
-            self.points = tools.angusj(clip, subj, 'difference')
+            self.polygon = tools.angusj(clip, subj, 'difference')
 
     def update_with_jj_diff(self, jjs):
         """ Find the difference between the wiring
         polygons and the junction base polygons. """
 
-        subj = self.points
+        subj = self.polygon
 
         clip = []
         for jj in jjs:
             clip.append(jj.base)
 
         if clip and subj:
-            self.points = tools.angusj(clip, subj, 'difference')
+            self.polygon = tools.angusj(clip, subj, 'difference')
 
     # def generate_graph(self):
     #     for poly in self.layer:
@@ -100,5 +97,5 @@ class Wire:
 
     def plot_wire(self, cell, gds):
         if self.active:
-            for poly in self.points:
+            for poly in self.polygon:
                 cell.add(gdspy.Polygon(poly, gds))

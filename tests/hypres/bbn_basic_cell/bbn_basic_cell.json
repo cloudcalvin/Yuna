@@ -6,6 +6,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "204 0.6 153",
             "gds": 1,
             "jj": [],
             "result": []
@@ -15,6 +16,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "204 0.6 153",
             "gds": 3,
             "jj": [],
             "result": []
@@ -24,6 +26,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "255 102 204",
             "gds": 4,
             "jj": [],
             "result": []
@@ -33,6 +36,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "191 191 191",
             "gds": 5,
             "result": []
         },
@@ -41,6 +45,7 @@
             "active": "False",
             "union": "true",
             "view": "true",
+            "color": "152 251 152",
             "gds": 6,
             "name": [],
             "result": []
@@ -50,6 +55,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "0 255 255",
             "gds": 8,
             "jj": [],
             "result": []
@@ -59,6 +65,7 @@
             "active": "False",
             "union": "true",
             "view": "true",
+            "color": "255 127 80",
             "gds": 9,
             "jj": [],
             "result": []
@@ -77,6 +84,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "178 102 255",
             "gds": 11,
             "jj": [],
             "result": []
@@ -86,6 +94,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "0.8 0.6 1.0",
             "gds": 30,
             "result": []
         },
@@ -94,6 +103,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "0.8 0.6 1.0",
             "gds": 31,
             "result": []
         },
@@ -102,6 +112,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "192 192 192",
             "gds": 15,
             "result": []
         },
@@ -110,6 +121,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "178 102 255",
             "gds": 21,
             "result": []
         },
@@ -118,6 +130,7 @@
             "active": "False",
             "union": "true",
             "view": "true",
+            "color": "255 102 102",
             "gds": 34,
             "result": []
         },
@@ -126,6 +139,7 @@
             "active": "False",
             "union": "true",
             "view": "true",
+            "color": "255 178 102",
             "gds": 38,
             "result": []
         },
@@ -134,6 +148,7 @@
             "active": "False",
             "union": "true",
             "view": "true",
+            "color": "0 44 128",
             "gds": 42,
             "result": []
         },
@@ -142,6 +157,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "60 44 128",
             "gds": 32,
             "result": []
         },
@@ -150,6 +166,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "10 44 128",
             "gds": 36,
             "result": []
         },
@@ -158,11 +175,12 @@
             "active": "False",
             "union": "true",
             "view": "false",
+            "color": "100 44 128",
             "gds": 40,
             "result": []
         }
     },
-
+    
     "Atom":
     {
         "vias":

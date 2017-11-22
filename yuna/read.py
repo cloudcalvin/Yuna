@@ -17,11 +17,9 @@ from itertools import chain
 
 
 def config(config_file):
-    """
-        Reads the config file that is written in
-        JSON. This file contains the logic of how
-        the different layers will interact.
-    """
+    """ Reads the config file that is written in
+    JSON. This file contains the logic of how
+    the different layers will interact. """
 
     data = None
     with open(config_file) as data_file:

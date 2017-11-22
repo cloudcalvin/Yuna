@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from pprint import pprint
 
 import numpy as np
 import os
@@ -24,6 +25,9 @@ def config(config_file):
     data = None
     with open(config_file) as data_file:
         data = json.load(data_file)
+        
+    for key, _ in data.items():
+        print(key)
 
     # # Shink layers a little, to make
     # # sure they are not touching eachother.

@@ -3,7 +3,6 @@ from __future__ import print_function
 from termcolor import colored
 from .utils import tools
 
-
 import gdspy
 import networkx as nx
 
@@ -17,9 +16,7 @@ def union_polygons(Layers):
 
 
 class WireSet:
-    """
-
-    """
+    """  """
 
     def __init__(self, name, gds, active=False):
         self.active = active
@@ -40,15 +37,18 @@ class WireSet:
 
 
 class Wire:
-    """
-    """
+    """  """
 
     def __init__(self, polygon, active=False):
         """  """
 
         self.active = active
         self.polygon = polygon
+        self.edge_prop = []
         self.edgelabels = [None] * len(polygon[0])
+        
+    # def edge_properties(self):
+        
 
     def update_with_via_diff(self, vias):
         """ Connect vias and wires by finding

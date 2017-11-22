@@ -89,21 +89,56 @@ def union_wires(Layers, layer):
     return unionlayer
 
 
-def fill_layers_object(Layers, Elements):
-    """
-        Add the elements read from GDSPY to the
-        corresponding Layers in the JSON object.
-    """
+class Term:
+    
+    def __init__(self, polygon, label='', layer=''):
+        """ 
+        Parameters
+        ----------
+        Polygon : list
+            List of points that defines the polygon
+            of the terminal layer.
+        Label : string
+            The unique TEXT string name. This Labels
+            the polygon for later use in the meshing.
+        Layer : string
+            The layer that the terminal is connected to.
+        """
+        
+        self.polygon = polygon
+        self.label = label
+        self.layer = layer
+        
+    def connect_label(self, Labels):
+        for label in Labels:                        
+            inside = pyclipper.PointInPolygon(label.position, self.polygon)
+
+            if inside != 0:
+                # label.text : "P1 M2 M0"
+                self.label = label.text.split()[0]
+                self.layer = label.text.split()[1]
+
+
+def fill_layers_object(Params, Layers, Labels, Elements, terms):
+    """ Add the elements read from GDSPY to the
+    corresponding Layers in the JSON object. """
 
     tools.green_print('Elements:')
-
+    
     for element in Elements:
         if isinstance(element, gdspy.Polygon):
-            polygon_result(Layers, element)
+            gds = element.layer
+            
+            if gds == Params['TERM']['gds']:
+                poly = element.points.tolist()
+                term = Term(poly)
+                term.connect_label(Labels)
+                terms.append(term)
+            else:
+                polygon_result(Layers, element)
         elif isinstance(element, gdspy.PolygonSet):
             polygonset_result(Layers, element)
-        elif isinstance(element, gdspy.PolyPath):
-            print('Paths not yet supported')
+        # elif isinstance(element, gdspy.PolyPath):
             # layers.path_result(Layers, element)
 #         elif isinstance(element, gdspy.CellReference):
 #             polygon_jj(Layers, element)
@@ -113,23 +148,17 @@ def polygon_result(Layers, element):
     """ Add the polygon to the 'result'
     key in the 'Layers' object """
 
-    print('      Polygons: ', end='')
     print(element)
-
     for layer, lay_data in Layers.items():
         if lay_data['gds'] == element.layer:
             Layers[layer]['result'].append(element.points.tolist())
 
 
 def polygonset_result(Layers, element):
-    """
-    Add the polygons from the PolygonSet to
-    the 'result' key in the 'Layers' object.
-    """
+    """ Add the polygons from the PolygonSet to
+    the 'result' key in the 'Layers' object. """
 
-    print('      PolygonSet: ', end='')
     print(element)
-
     for layer, lay_data in Layers.items():
         if lay_data['gds'] == element.layers[0]:
             for poly in element.polygons:

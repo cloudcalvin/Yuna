@@ -9,7 +9,7 @@
             "gds": 64
         }
     },
-  
+
     "Layers":
     {
         "M1": {
@@ -27,7 +27,7 @@
             "active": "False",
             "union": "true",
             "view": "false",
-            "color": "204 60 153",
+            "color": "204 0.6 153",
             "gds": 3,
             "jj": [],
             "result": []
@@ -189,76 +189,6 @@
             "color": "100 44 128",
             "gds": 40,
             "result": []
-        }
-    },
-
-    "Atom":
-    {
-        "vias":
-        {
-            "id": 0,
-            "desc": "Connect MN1 to M2, through via MN1-M2.",
-            "check": ["I1BU", "M2", "I0", "IN1", "M1", "M0", "MN1", "MN2", "IN2"],
-
-            "Subatom":
-            [
-                {
-                    "id": 0,
-                    "gds": 100,
-                    "module": "viaMN1_M2",
-                    "view": "true",
-                    "result": []
-                },
-
-                {
-                    "id": 1,
-                    "gds": 101,
-                    "module": "viaMN2_M2",
-                    "view": "true",
-                    "result": []
-                },
-                {
-                    "id": 2,
-                    "gds": 102,
-                    "module": "viaMN3_M2",
-                    "view": "true",
-                    "result": []
-                },
-                {
-                    "id": 3,
-                    "gds": 103,
-                    "module": "viaM2_R2",
-                    "view": "true",
-                    "result": []
-                }
-            ]
-        },
-
-        "wires":
-        {
-            "id": 1,
-            "desc": "Get the wire polygons between vias.",
-            "check": ["M0", "M1", "M2"],
-
-            "Subatom": ["M2", "MN1", "MN2", "MN3", "R2"]
-        },
-
-        "jj":
-        {
-            "id": 2,
-            "desc": "Detect the Junctions in the layout.",
-            "check": ["J2"],
-
-            "Subatom":
-            [
-                {
-                    "id": 0,
-                    "gds": 203,
-                    "module": "j2",
-                    "view": "true",
-                    "result": []
-                }
-            ]
         }
     }
 }

@@ -17,6 +17,7 @@ import gdspy
 import yuna.layers as layers
 import yuna.params as params
 from yuna.utils import tools
+import pyclipper
 
 
 """
@@ -40,12 +41,28 @@ def shrink_touching_layers(layer):
     return tools.angusj_offset(layer, 'down')
 
 
+def connect_term_to_wire(terms, wiresets):
+    tools.green_print('Connect terminals to wires')
+    
+    subj = ((190, 170), (240, 170))
+    clip = ((190, 210), (240, 210), (240, 130), (190, 130))
+
+    pc = pyclipper.Pyclipper()
+    pc.AddPath(clip, pyclipper.PT_CLIP, True)
+    pc.AddPolyTree(subj, pyclipper.PT_SUBJECT, False)
+    
+    # PolyTreeToPaths()
+
+    solution = pc.Execute(pyclipper.CT_INTERSECTION, pyclipper.PFT_EVENODD, pyclipper.PFT_EVENODD)
+    # print(solution)
+
+
 class Process:
     """
     Read and parse the JSON config files.
     The main JSON objects are created and updated.
 
-    Parameters
+    Parameterss
     ----------
     basedir : string
         String that is the main directory of Yuna.
@@ -61,8 +78,11 @@ class Process:
         self.gds_file = gds_file
         self.config_data = config_data
         self.Elements = None
+        self.Labels = None
         self.Layers = None
-        self.wireset_list = []
+        self.Params = None
+        self.wiresets = []
+        self.terms = []
         self.jjs = []
         self.vias = []
 
@@ -70,11 +90,13 @@ class Process:
         cell = self.gdsii.extract(usercell)
         flatcell = tools.flatten_cell(cell)
         self.Elements = flatcell.elements
+        self.Labels = flatcell.labels
 
     def toplevel_cellref(self):
-        top_cell = gdsii.top_level()[0]
+        top_cell = self.gdsii.top_level()[0]
         self.gdsii.extract(top_cell)
-        self.Elements = gdsii.top_level()[0].elements
+        self.Labels = self.gdsii.top_level()[0].labels
+        self.Elements = self.gdsii.top_level()[0].elements
 
     def init_layers(self, usercell):
         """
@@ -96,6 +118,7 @@ class Process:
         """
 
         self.gdsii.read_gds(self.gds_file, unit=1.0e-12)
+        self.Params = self.config_data['Params']
         self.Layers = self.config_data['Layers']
 
         if usercell:
@@ -103,7 +126,13 @@ class Process:
         else:
             self.toplevel_cellref()
 
-        layers.fill_layers_object(self.Layers, self.Elements)
+        layers.fill_layers_object(self.Params, self.Layers, self.Labels, self.Elements, self.terms)
+
+        print('terminal labels:')
+        for term in self.terms:
+            print(term.polygon)
+            print(term.label)
+            print(term.layer)
 
     def is_jj_cell(self, element):
         """  """
@@ -124,8 +153,8 @@ class Process:
     def add_jj(self, jj):
         self.jjs.append(jj)
 
-    def add_to_wireset_list(self, wireset):
-        self.wireset_list.append(wireset)
+    def add_to_wiresets(self, wireset):
+        self.wiresets.append(wireset)
 
     def config_layers(self, cellref, union):
         """ Main loop of the class. Loop over each
@@ -134,26 +163,34 @@ class Process:
 
         self.init_layers(cellref)
 
-        Atom = self.config_data['Atom']
+        # TODO: Update this check, maybe use Lambda function?
+        Atom = None
+        for key, _ in self.config_data.items():
+            if key == 'Atom':
+                Atom = self.config_data['Atom']
 
-        tools.green_print('Running Atom:')
+        if Atom:
+            tools.green_print('Running Atom:')
 
-        self.calculate_vias(Atom['vias'])
-        self.fill_via_list(Atom['vias'])
-        self.fill_jj_list(Atom['jj'])
-        self.fill_wires_list(union)
+            self.calculate_vias(Atom['vias'])
+            self.fill_via_list(Atom['vias'])
+            self.fill_jj_list(Atom['jj'])
+            self.fill_wires_list(union)
 
-        # Find the differene between the via, jjs and wires.
-        for wireset in self.wireset_list:
-            for wire in wireset.wires:
-                wire.update_with_via_diff(self.vias)
-                wire.update_with_jj_diff(self.jjs)
-
-        # Connect the wires and via objects.
-        for via in self.vias:
-            for wireset in self.wireset_list:
+            # Find the differene between the via, jjs and wires.
+            for wireset in self.wiresets:
                 for wire in wireset.wires:
-                    via.connect_wires(wire)
+                    wire.update_with_via_diff(self.vias)
+                    wire.update_with_jj_diff(self.jjs)
+
+            # Connect the wires and via objects.
+            for via in self.vias:
+                for wireset in self.wiresets:
+                    for wire in wireset.wires:
+                        via.connect_wires(wire)
+        else:
+            self.fill_wires_list(union)
+            connect_term_to_wire(self.terms, self.wiresets)
 
         # cParams = params.Params()
         # cParams.calculate_area(self.Elements, Layers)
@@ -181,7 +218,7 @@ class Process:
                     wire = wires.Wire(offset, active=view)
                     wireset.add_wire_object(wire)
 
-                self.add_to_wireset_list(wireset)
+                self.add_to_wiresets(wireset)
 
     def copy_module_to_subatom(self, subatom):
         subatom['result'] = subatom['Module'][-1]['result']

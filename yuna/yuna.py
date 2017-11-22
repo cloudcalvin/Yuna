@@ -31,6 +31,8 @@ import yuna.read as read
 from yuna.utils import write
 from yuna.utils import tools
 
+from pprint import pprint
+
 
 def main():
     """  """
@@ -76,11 +78,11 @@ def machina(process, testname, ldf, cellref, cwd, union):
     if cellref == 'list':
         tools.list_layout_cells(gds_file)
     else:
-        wireset, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
+        wireset, Params, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
 
     tools.cyan_print('Yuna. Done.')
 
-    return wireset, Layers
+    return wireset, Params, Layers
 
 
 def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
@@ -89,6 +91,8 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     GMSH to generate the Mesh. """
 
     config_data = read.config(config_file)
+    
+    pprint(config_data)
 
     tools.magenta_print('Process Layers')
     cProcess = proc.Process(examdir, gds_file, config_data)
@@ -96,14 +100,21 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
 
     jjs = cProcess.jjs
     vias = cProcess.vias
-    wireset = cProcess.wireset_list
+    wireset = cProcess.wiresets
 
     tools.magenta_print('Write Layers')
     cWrite = write.Write(True)
     gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
 
-    return wireset, config_data['Layers']
+    return wireset, config_data['Params'], config_data['Layers']
 
 
 if __name__ == '__main__':
     main()
+    
+    
+    
+    
+    
+    
+    

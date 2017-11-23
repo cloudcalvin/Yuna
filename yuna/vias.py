@@ -49,26 +49,10 @@ def get_layercross(Layers, Modules, value):
 
 
 def add_layers(base, wire):
-    """ Add the wire layers that are
-    connected to the via. """
-
-    poly_list = []
-
-    print(wire.layer)
-
-#     for poly in wire.layer:
-#         wireoffset = tools.angusj_offset([poly], 'up')
-#
-#         if layers.does_layers_intersect([base], wireoffset):
-#             poly_list.append(poly)
+    """ Add the wire layers that are connected to the via. """
 
     wireoffset = tools.angusj_offset(wire.layer, 'up')
-    print(wireoffset)
-
-    if layers.does_layers_intersect([base], wireoffset):
-        return True
-    else:
-        return False
+    return layers.does_layers_intersect([base], wireoffset)
 
 
 def get_viacross(Layers, Modules, value, subj):
@@ -79,8 +63,7 @@ def get_viacross(Layers, Modules, value, subj):
     result_list = []
     viacross = []
     for poly in subj:
-        result_list = tools.angusj([poly], clip, "intersection")
-        if result_list:
+        if tools.angusj([poly], clip, "intersection"):
             viacross.append(poly)
 
     return viacross
@@ -126,22 +109,34 @@ def remove_viacross(Layers, Modules, value):
 
 
 def update_wire_object(wire, i, _id):
-    print(wire.edgelabels)
-    wire.edgelabels[i] = _id
+    """ V1 labeled edge is connected to Via 1.
+    P1 is connected to Port 1. """
+    
+    wire.edgelabels[i] = 'V' + str(_id)
 
+
+def fill_via_list(vias, atom):
+    """ Copy the 'result' list in the vias
+    Subatom to the self.vias list of
+    via objects. """
+
+    via_id = 0
+    for subatom in atom['Subatom']:
+        for poly in subatom['result']:
+            via = Via(via_id, poly, subatom['gds'])
+            vias.append(via)
+            via_id += 1
+            
 
 class Via:
-    """
-    """
-
-    def __init__(self, _id):
+    def __init__(self, via_id, polygon, gds):
         """
         Variables
         ---------
         edges : list
             List of the edges connected to the via.
-        base : list
-            The base polygon that defineds the via.
+        polygon : list
+            The base polygon that defines the via.
         gds : int
             The GDS number in the Module in JSON
             that defines the via.
@@ -158,35 +153,28 @@ class Via:
           wire.gds and the value is the polygons connected.
         """
 
-        self.id = _id
-        self.gds = 0
-        self.base = []
+        self.id = via_id
+        self.polygon = polygon
+        self.gds = gds
         self.edges = []
-
-    def set_base(self, poly):
-        self.base = poly
-
-    def set_gds(self, num):
-        self.gds = num
 
     def connect_wires(self, wire):
         if wire.active and wire.polygon:
             wireoffset = tools.angusj_offset(wire.polygon, 'up')
-            if layers.does_layers_intersect([self.base], wireoffset):
+            if layers.does_layers_intersect([self.polygon], wireoffset):
                 self.connect_edges(wire)
 
     def connect_edges(self, wire):
         for i, polygon in enumerate(wire.polygon):
-            print(i)
             for point in polygon:
-                inside = pyclipper.PointInPolygon(point, self.base)
+                inside = pyclipper.PointInPolygon(point, self.polygon)
 
                 if inside != 0:
                     self.edges.append(point)
                     update_wire_object(wire, i, self.id)
 
     def plot_via(self, cell):
-        cell.add(gdspy.Polygon(self.base, self.gds))
+        cell.add(gdspy.Polygon(self.polygon, self.gds))
 
     def plot_connected_wires(self, cell):
         for gds, layers in self.wires.items():

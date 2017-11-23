@@ -65,6 +65,38 @@ def clipping(subj, clip, operation):
     return layercross
 
 
+def is_jj_cell(element):
+    """  """
+
+    jjbool = False
+    if isinstance(element, gdspy.CellReference):
+        print('      CellReference: ', end='')
+        print(element)
+        refname = element.ref_cell.name
+        if refname[:2] == 'JJ':
+            jjbool = True
+
+    return jjbool
+
+
+def fill_jj_list(config, atom, basedir, jjs):
+    """ Loop over all elements, such as
+    polygons, polgyonsets, cellrefences, etc
+    and find the CellRefences. CellRefs
+    which is a junction has to start with JJ. """
+
+    for element in config.Elements:
+        if is_jj_cell(element):
+            layers = transpose_cell(config.gdsii, config.Layers, element)
+
+            jj = Junction(basedir, config.Layers)
+
+            jj.set_layers(layers)
+            jj.detect_jj(atom)
+
+            jjs.append(jj)
+
+
 class Junction:
     """
     This class contains a list of all the
@@ -103,7 +135,7 @@ class Junction:
 
         self.layers = {}
         self.edges = []
-        self.base = []
+        self.polygon = []
         self.res = []
         self.gds_base = 0
         self.gds_res = 0
@@ -124,13 +156,13 @@ class Junction:
         for subatom in atom['Subatom']:
             tools.read_module(self.basedir, atom, subatom)
 
-            base = subatom['Module']['base']['layer']
+            polygon = subatom['Module']['base']['layer']
             res = subatom['Module']['res']['layer']
 
             self.gds_base = subatom['Module']['base']['gds']
             self.gds_res = subatom['Module']['res']['gds']
 
-            self.base = self.base_with_jj_inside(base)
+            self.polygon = self.base_with_jj_inside(polygon)
             self.res = self.res_connected_to_base(res)
 
     def base_with_jj_inside(self, basename):
@@ -156,7 +188,7 @@ class Junction:
             if not layers.junction_inside_res(self.Layers, self.layers, poly):
                 all_reslayers.append(poly)
 
-        return clipping(all_reslayers, [self.base], 'difference')
+        return clipping(all_reslayers, [self.polygon], 'difference')
 
     def calculate_shunt_value(self):
         pass
@@ -165,11 +197,5 @@ class Junction:
         pass
 
     def plot_jj(self, cell):
-        cell.add(gdspy.Polygon(self.base, self.gds_base))
+        cell.add(gdspy.Polygon(self.polygon, self.gds_base))
         cell.add(gdspy.Polygon(self.res, self.gds_res))
-
-
-
-
-
-

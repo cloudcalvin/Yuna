@@ -90,9 +90,8 @@ def union_wires(Layers, layer):
 
 
 class Term:
-    
-    def __init__(self, polygon, label='', layer=''):
-        """ 
+    def __init__(self, polygon):
+        """
         Parameters
         ----------
         Polygon : list
@@ -104,10 +103,10 @@ class Term:
         Layer : string
             The layer that the terminal is connected to.
         """
-        
+
         self.polygon = polygon
-        self.label = label
-        self.layer = layer
+        self.label = ''
+        self.layer = ''
         
     def connect_label(self, Labels):
         for label in Labels:                        
@@ -117,53 +116,16 @@ class Term:
                 # label.text : "P1 M2 M0"
                 self.label = label.text.split()[0]
                 self.layer = label.text.split()[1]
-
-
-def fill_layers_object(Params, Layers, Labels, Elements, terms):
-    """ Add the elements read from GDSPY to the
-    corresponding Layers in the JSON object. """
-
-    tools.green_print('Elements:')
-    
-    for element in Elements:
-        if isinstance(element, gdspy.Polygon):
-            gds = element.layer
+                
+    def connect_wire_edge(self, i, wire, point):
+        """ V1 labeled edge is connected to Via 1.
+        P1 is connected to Port 1. """
             
-            if gds == Params['TERM']['gds']:
-                poly = element.points.tolist()
-                term = Term(poly)
-                term.connect_label(Labels)
-                terms.append(term)
-            else:
-                polygon_result(Layers, element)
-        elif isinstance(element, gdspy.PolygonSet):
-            polygonset_result(Layers, element)
-        # elif isinstance(element, gdspy.PolyPath):
-            # layers.path_result(Layers, element)
-#         elif isinstance(element, gdspy.CellReference):
-#             polygon_jj(Layers, element)
+        inside = pyclipper.PointInPolygon(point, self.polygon)
 
-
-def polygon_result(Layers, element):
-    """ Add the polygon to the 'result'
-    key in the 'Layers' object """
-
-    print(element)
-    for layer, lay_data in Layers.items():
-        if lay_data['gds'] == element.layer:
-            Layers[layer]['result'].append(element.points.tolist())
-
-
-def polygonset_result(Layers, element):
-    """ Add the polygons from the PolygonSet to
-    the 'result' key in the 'Layers' object. """
-
-    print(element)
-    for layer, lay_data in Layers.items():
-        if lay_data['gds'] == element.layers[0]:
-            for poly in element.polygons:
-                Layers[layer]['result'].append(poly.tolist())
-
+        if inside != 0:
+            if wire.edgelabels[i] == None:
+                wire.edgelabels[i] = self.label
 
 # def path_result(Layers, element):
 #     """ Add the path to the 'result' key in the 'Layers' object """

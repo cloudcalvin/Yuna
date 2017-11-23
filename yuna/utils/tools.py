@@ -115,6 +115,8 @@ def angusj_offset(layer, size):
             solution.append(pco.Execute(-1)[0])
         elif size == 'up':
             solution.append(pco.Execute(100)[0])
+        elif size == 'label':
+            solution.append(pco.Execute(2000)[0])
 
     return solution
 

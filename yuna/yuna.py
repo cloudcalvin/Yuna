@@ -25,7 +25,7 @@ import os
 import json
 import gdspy
 
-import yuna.process as proc
+import yuna.process as process
 import yuna.read as read
 
 from yuna.utils import write
@@ -93,18 +93,29 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     config_data = read.config(config_file)
     
     pprint(config_data)
-
     tools.magenta_print('Process Layers')
-    cProcess = proc.Process(examdir, gds_file, config_data)
-    cProcess.config_layers(cellref, union)
 
-    jjs = cProcess.jjs
-    vias = cProcess.vias
-    wireset = cProcess.wiresets
+    config = process.Config(config_data)
+    config.set_gds(gds_file)
+    
+    if cellref:
+        config.read_usercell_reference(cellref)
+    else:
+        config.read_topcell_reference()
 
-    tools.magenta_print('Write Layers')
-    cWrite = write.Write(True)
-    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
+    config.parse_gdspy_elements(self.terms)
+
+    # proc = process.Process(examdir, config)
+    # proc.circuit_layout(cellref, union)
+    # proc.update_wire_offset()
+    # 
+    # jjs = fab.jjs
+    # vias = fab.vias
+    # wireset = fab.wiresets
+    # 
+    # tools.magenta_print('Write Layers')
+    # cWrite = write.Write(True)
+    # gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
 
     return wireset, config_data['Params'], config_data['Layers']
 

@@ -25,18 +25,6 @@ def config(config_file):
     data = None
     with open(config_file) as data_file:
         data = json.load(data_file)
-        
-    for key, _ in data.items():
-        print(key)
-
-    # # Shink layers a little, to make
-    # # sure they are not touching eachother.
-    # for name, layers in data['Layers'].items():
-    #     for i in range(len(layers['result'])):
-    #         poly = layers['result'][i]
-    #         layeroffset = shrink_touching_layers([poly])
-    #         layers['result'][i] = layeroffset
-
     return data
 
 

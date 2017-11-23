@@ -192,7 +192,7 @@
         }
     },
 
-    "Atom":
+    "Atoms":
     {
         "vias":
         {
@@ -243,7 +243,7 @@
             "Subatom": ["M2", "MN1", "MN2", "MN3", "R2"]
         },
 
-        "jj":
+        "jjs":
         {
             "id": 2,
             "desc": "Detect the Junctions in the layout.",

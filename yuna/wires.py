@@ -3,6 +3,7 @@ from __future__ import print_function
 from termcolor import colored
 from .utils import tools
 
+import json
 import gdspy
 import networkx as nx
 
@@ -18,10 +19,9 @@ def union_polygons(Layers):
 class WireSet:
     """  """
 
-    def __init__(self, name, gds, active=False):
+    def __init__(self, gds, active=False):
         self.active = active
         self.gds = gds
-        self.name = name
         self.wires = []
         self.mesh = None
         self.graph = []
@@ -34,6 +34,29 @@ class WireSet:
 
     def add_wire_object(self, wire):
         self.wires.append(wire)
+        
+
+def fill_wiresets(Layers, wiresets, union):
+    """ Loop through the Layer object
+    and save each layer as a wire object."""
+
+    tools.green_print('Calculating wires json:')
+
+    if union:
+        union_polygons(Layers)
+    else:
+        print('Note: UNION wires is not set')
+
+    for name, layers in Layers.items():
+        if (layers['type'] == 'wire') or (layers['type'] == 'resistance') or (layers['type'] == 'shunt'):
+            wireset = WireSet(layers['gds'])
+
+            for layer in layers['result']:
+                view = json.loads(layers['view'])
+                wire = Wire([layer], active=view)
+                wireset.add_wire_object(wire)
+
+            wiresets[name] = wireset
 
 
 class Wire:
@@ -44,11 +67,7 @@ class Wire:
 
         self.active = active
         self.polygon = polygon
-        self.edge_prop = []
         self.edgelabels = [None] * len(polygon[0])
-        
-    # def edge_properties(self):
-        
 
     def update_with_via_diff(self, vias):
         """ Connect vias and wires by finding
@@ -58,7 +77,7 @@ class Wire:
 
         clip = []
         for via in vias:
-            clip.append(via.base)
+            clip.append(via.polygon)
 
         if clip and subj:
             self.polygon = tools.angusj(clip, subj, 'difference')
@@ -71,7 +90,7 @@ class Wire:
 
         clip = []
         for jj in jjs:
-            clip.append(jj.base)
+            clip.append(jj.polygon)
 
         if clip and subj:
             self.polygon = tools.angusj(clip, subj, 'difference')

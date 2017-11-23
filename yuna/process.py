@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
 
-import yuna.junctions as junctions
+import yuna.junctions as junc
 import yuna.wires as wires
 import yuna.vias as vias
 import json
@@ -41,20 +41,111 @@ def shrink_touching_layers(layer):
     return tools.angusj_offset(layer, 'down')
 
 
+def midpoint(x1, y1, x2, y2):
+    return ((x1 + x2)/2, (y1 + y2)/2)
+            
+
 def connect_term_to_wire(terms, wiresets):
-    tools.green_print('Connect terminals to wires')
-    
-    subj = ((190, 170), (240, 170))
-    clip = ((190, 210), (240, 210), (240, 130), (190, 130))
+    for term in terms:
+        wireset = wiresets[term.layer]
+        for wire in wireset.wires:
+            for poly in wire.polygon:
+                for i in range(len(poly) - 1):
+                    x1, y1 = poly[i][0], poly[i][1]
+                    x2, y2 = poly[i+1][0], poly[i+1][1]
 
-    pc = pyclipper.Pyclipper()
-    pc.AddPath(clip, pyclipper.PT_CLIP, True)
-    pc.AddPolyTree(subj, pyclipper.PT_SUBJECT, False)
-    
-    # PolyTreeToPaths()
+                    cp = midpoint(x1, y1, x2, y2)
+                    term.connect_wire_edge(i, wire, cp)
+                    
+    # TODO: Add verbose parameter
+    for wire in wireset.wires:
+        for edge in wire.edgelabels:
+            print(edge)
+            
+            
+def create_terminal(Labels, element, terms):
+    poly = element.points.tolist()
+    term = layers.Term(poly)
+    term.connect_label(Labels)
+    terms.append(term)
+            
+            
+class Config:
+    """
+    Read the data from the GDS file, either from
+    the toplevel CELL of the CELL as speficied
+    the user.
 
-    solution = pc.Execute(pyclipper.CT_INTERSECTION, pyclipper.PFT_EVENODD, pyclipper.PFT_EVENODD)
-    # print(solution)
+    Attributes
+    ----------
+    Elements : list
+        Elements as read in from the GDS file using the GDSPY library.
+    Layer : list
+        The Layer object as specified in the json config file.
+
+    Notes
+    -----
+    After the elements has been added to the Layer object,
+    we ably the union polygon operation on the layer polygons.
+    """
+    
+    def __init__(self, config_data):
+        self.Params = config_data['Params']
+        self.Layers = config_data['Layers']
+        self.Atom = config_data['Atoms']
+        
+        self.Elements = None
+        self.Labels = None
+        self.gdsii = None
+        
+    def set_gds(self, gds_file):
+        self.gdsii = gdspy.GdsLibrary()
+        self.gdsii.read_gds(gds_file, unit=1.0e-12)
+        
+    def read_topcell_reference(self):
+        topcell = self.gdsii.top_level()[0]
+        self.gdsii.extract(topcell)
+        self.Labels = self.gdsii.top_level()[0].labels
+        self.Elements = self.gdsii.top_level()[0].elements
+        
+    def read_usercell_reference(self, cellref):
+        cell = self.gdsii.extract(cellref)
+        flatcell = tools.flatten_cell(cell)
+        self.Labels = flatcell.labels                
+        self.Elements = flatcell.elements
+        
+    def parse_gdspy_elements(self, terms):
+        """ Add the elements read from GDSPY to the
+        corresponding Layers in the JSON object. """
+
+        tools.green_print('Elements:')
+        for element in self.Elements:
+            if isinstance(element, gdspy.Polygon):            
+                if element.layer == self.Params['TERM']['gds']:
+                    create_terminal(self.Labels, element, terms)
+                else:
+                    from_polygon_object(confselfig.Layers, element)
+            elif isinstance(element, gdspy.PolygonSet):
+                from_polygonset_object(self.Layers, element)   
+                
+    def from_polygon_object(self, element):
+        """ Add the polygon to the 'result'
+        key in the 'Layers' object """
+
+        print(element)
+        for layer, lay_data in self.Layers.items():
+            if lay_data['gds'] == element.layer:
+                self.Layers[layer]['result'].append(element.points.tolist())
+
+    def from_polygonset_object(self, element):
+        """ Add the polygons from the PolygonSet to
+        the 'result' key in the 'Layers' object. """
+
+        print(element)
+        for layer, lay_data in self.Layers.items():
+            if lay_data['gds'] == element.layers[0]:
+                for poly in element.polygons:
+                    self.Layers[layer]['result'].append(poly.tolist())
 
 
 class Process:
@@ -72,159 +163,64 @@ class Process:
         Full dict as readin and updated from the JSON config file.
     """
 
-    def __init__(self, basedir, gds_file, config_data):
-        self.gdsii = gdspy.GdsLibrary()
+    def __init__(self, basedir, config):
         self.basedir = basedir
-        self.gds_file = gds_file
-        self.config_data = config_data
-        self.Elements = None
-        self.Labels = None
-        self.Layers = None
-        self.Params = None
-        self.wiresets = []
+        self.config = config
+        
+        self.wiresets = {}
         self.terms = []
-        self.jjs = []
         self.vias = []
+        self.jjs = []
 
-    def user_cellref(self, usercell):
-        cell = self.gdsii.extract(usercell)
-        flatcell = tools.flatten_cell(cell)
-        self.Elements = flatcell.elements
-        self.Labels = flatcell.labels
-
-    def toplevel_cellref(self):
-        top_cell = self.gdsii.top_level()[0]
-        self.gdsii.extract(top_cell)
-        self.Labels = self.gdsii.top_level()[0].labels
-        self.Elements = self.gdsii.top_level()[0].elements
-
-    def init_layers(self, usercell):
-        """
-        Read the data from the GDS file, either from
-        the toplevel CELL of the CELL as speficied
-        the user.
-
-        Attributes
-        ----------
-        Elements : list
-            Elements as read in from the GDS file using the GDSPY library.
-        Layer : list
-            The Layer object as specified in the json config file.
-
-        Notes
-        -----
-        After the elements has been added to the Layer object,
-        we ably the union polygon operation on the layer polygons.
-        """
-
-        self.gdsii.read_gds(self.gds_file, unit=1.0e-12)
-        self.Params = self.config_data['Params']
-        self.Layers = self.config_data['Layers']
-
-        if usercell:
-            self.user_cellref(usercell)
-        else:
-            self.toplevel_cellref()
-
-        layers.fill_layers_object(self.Params, self.Layers, self.Labels, self.Elements, self.terms)
-
-        print('terminal labels:')
-        for term in self.terms:
-            print(term.polygon)
-            print(term.label)
-            print(term.layer)
-
-    def is_jj_cell(self, element):
-        """  """
-
-        jjbool = False
-        if isinstance(element, gdspy.CellReference):
-            print('      CellReference: ', end='')
-            print(element)
-            refname = element.ref_cell.name
-            if refname[:2] == 'JJ':
-                jjbool = True
-
-        return jjbool
-
-    def add_via(self, via):
-        self.vias.append(via)
-
-    def add_jj(self, jj):
-        self.jjs.append(jj)
-
-    def add_to_wiresets(self, wireset):
-        self.wiresets.append(wireset)
-
-    def config_layers(self, cellref, union):
+    def circuit_layout(self, union):
         """ Main loop of the class. Loop over each
         atom, subatom and module. Then update
         the config data structure results. """
 
-        self.init_layers(cellref)
+        tools.green_print('Running Atom:')
 
-        # TODO: Update this check, maybe use Lambda function?
-        Atom = None
-        for key, _ in self.config_data.items():
-            if key == 'Atom':
-                Atom = self.config_data['Atom']
-
-        if Atom:
-            tools.green_print('Running Atom:')
-
+        if config.Atom['vias']:
             self.calculate_vias(Atom['vias'])
-            self.fill_via_list(Atom['vias'])
-            self.fill_jj_list(Atom['jj'])
-            self.fill_wires_list(union)
+        if config.Atom['jjs']:
+            junc.fill_jj_list(self.config, config.Atom['jjs'], self.basedir, self.jjs)
+        
+        wires.fill_wiresets(self.config.Layers, self.wiresets, union)
+        connect_term_to_wire(self.terms, self.wiresets)
 
-            # Find the differene between the via, jjs and wires.
-            for wireset in self.wiresets:
-                for wire in wireset.wires:
+        # Find the differene between the via, jjs and wires.
+        for key, wireset in self.wiresets.items():
+            for wire in wireset.wires:
+                if config.Atom['vias']:
                     wire.update_with_via_diff(self.vias)
+                if config.Atom['jjs']:
                     wire.update_with_jj_diff(self.jjs)
 
-            # Connect the wires and via objects.
+        # Connect the wires and via objects.
+        if config.Atom['vias']:
             for via in self.vias:
-                for wireset in self.wiresets:
+                for key, wireset in self.wiresets.items():
                     for wire in wireset.wires:
                         via.connect_wires(wire)
-        else:
-            self.fill_wires_list(union)
-            connect_term_to_wire(self.terms, self.wiresets)
-
+            
         # cParams = params.Params()
         # cParams.calculate_area(self.Elements, Layers)
 
-    def fill_wires_list(self, union):
-        """ Loop through the Layer object
-        and save each layer as a wire object."""
-
-        tools.green_print('Calculating wires json:')
-
-        if union:
-            wires.union_polygons(self.Layers)
-        else:
-            print('Note: UNION wires is not set')
-
-        for name, layers in self.Layers.items():
-            if (layers['type'] == 'wire') or (layers['type'] == 'resistance') or (layers['type'] == 'shunt'):
-                wireset = wires.WireSet(name, layers['gds'])
-
-                for layer in layers['result']:
-                    view = json.loads(layers['view'])
-
-                    offset = shrink_touching_layers([layer])
-
-                    wire = wires.Wire(offset, active=view)
-                    wireset.add_wire_object(wire)
-
-                self.add_to_wiresets(wireset)
+    def update_wire_offset(self):
+        for name, wireset in self.wiresets.items():
+            for wires in wireset.wires:
+                wires.polygon = shrink_touching_layers(wires.polygon)        
+        
+        
+        
+        
+        
 
     def copy_module_to_subatom(self, subatom):
         subatom['result'] = subatom['Module'][-1]['result']
 
     def calculate_vias(self, atom):
-        """ * Read the Module data file in
+        """ 
+        * Read the Module data file in
           and save it in the 'Module'
           variable in the Subatom struct.
         * Loop through the modules and calculate
@@ -235,47 +231,11 @@ class Process:
 
         for subatom in atom['Subatom']:
             tools.read_module(self.basedir, atom, subatom)
-
             for module in subatom['Module']:
                 self.calculate_module(atom, subatom, module)
-
             self.copy_module_to_subatom(subatom)
-
-    def fill_via_list(self, atom):
-        """ Copy the 'result' list in the vias
-        Subatom to the self.vias list of
-        via objects. """
-
-        _id = 0
-        for subatom in atom['Subatom']:
-            for poly in subatom['result']:
-                via = vias.Via(_id)
-
-                via.set_base(poly)
-                via.set_gds(subatom['gds'])
-
-                self.add_via(via)
-                _id += 1
-
-    def fill_jj_list(self, atom):
-        """ Loop over all elements, such as
-        polygons, polgyonsets, cellrefences, etc
-        and find the CellRefences. CellRefs
-        which is a junction has to start with JJ. """
-
-        for element in self.Elements:
-            if self.is_jj_cell(element):
-                gdsii = self.gdsii
-                Layers = self.Layers
-
-                layers = junctions.transpose_cell(gdsii, Layers, element)
-
-                jj = junctions.Junction(self.basedir, self.Layers)
-
-                jj.set_layers(layers)
-                jj.detect_jj(atom)
-
-                self.add_jj(jj)
+            
+        vias.fill_via_list(self.vias, atom)
 
     def calculate_module(self, atom, subatom, module):
         """
@@ -290,14 +250,14 @@ class Process:
 
         for key, value in list(module.items()):
             if key == 'via_connect':
-                layercross = vias.get_layercross(self.Layers, subatom['Module'], value)
-                viacross = vias.get_viacross(self.Layers, subatom['Module'], value, layercross)
+                layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)
+                viacross = vias.get_viacross(self.config.Layers, subatom['Module'], value, layercross)
                 module['result'] = viacross
             elif key == 'via_connect_reverse':
-                layercross = vias.get_layercross(self.Layers, subatom['Module'], value)
-                viacross = vias.get_viacross(self.Layers, subatom['Module'], value, layercross)
-                wireconnect = vias.reverse_via(self.Layers, subatom['Module'], value, viacross)
+                layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)
+                viacross = vias.get_viacross(self.config.Layers, subatom['Module'], value, layercross)
+                wireconnect = vias.reverse_via(self.config.Layers, subatom['Module'], value, viacross)
                 module['result'] = wireconnect
             elif key == 'via_remove':
-                viacross = vias.remove_viacross(self.Layers, subatom['Module'], value)
+                viacross = vias.remove_viacross(self.config.Layers, subatom['Module'], value)
                 module['result'] = viacross

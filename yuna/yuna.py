@@ -92,7 +92,6 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
 
     config_data = read.config(config_file)
     
-    pprint(config_data)
     tools.magenta_print('Process Layers')
 
     config = process.Config(config_data)
@@ -103,19 +102,19 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     else:
         config.read_topcell_reference()
 
-    config.parse_gdspy_elements(self.terms)
+    config.parse_gdspy_elements()
 
-    # proc = process.Process(examdir, config)
-    # proc.circuit_layout(cellref, union)
-    # proc.update_wire_offset()
-    # 
-    # jjs = fab.jjs
-    # vias = fab.vias
-    # wireset = fab.wiresets
-    # 
-    # tools.magenta_print('Write Layers')
-    # cWrite = write.Write(True)
-    # gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
+    proc = process.Process(examdir, config)
+    proc.circuit_layout(union)
+    proc.update_wire_offset()
+    
+    jjs = proc.jjs
+    vias = proc.vias
+    wireset = proc.wiresets
+    
+    tools.magenta_print('Write Layers')
+    cWrite = write.Write(True)
+    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
 
     return wireset, config_data['Params'], config_data['Layers']
 

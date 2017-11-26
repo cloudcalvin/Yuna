@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
 
-import yuna.junctions as junc
+import yuna.junctions as junctions
 import yuna.wires as wires
 import yuna.vias as vias
 import json
@@ -57,10 +57,10 @@ def connect_term_to_wire(terms, wiresets):
                     cp = midpoint(x1, y1, x2, y2)
                     term.connect_wire_edge(i, wire, cp)
                     
-    # TODO: Add verbose parameter
-    for wire in wireset.wires:
-        for edge in wire.edgelabels:
-            print(edge)
+        # TODO: Add verbose parameter
+        # for wire in wireset.wires:
+        #     for edge in wire.edgelabels:
+        #         print(edge)
             
             
 def create_terminal(Labels, element, terms):
@@ -93,8 +93,9 @@ class Config:
         self.Params = config_data['Params']
         self.Layers = config_data['Layers']
         self.Atom = config_data['Atoms']
-        
+
         self.Elements = None
+        self.Terms = []
         self.Labels = None
         self.gdsii = None
         
@@ -114,7 +115,7 @@ class Config:
         self.Labels = flatcell.labels                
         self.Elements = flatcell.elements
         
-    def parse_gdspy_elements(self, terms):
+    def parse_gdspy_elements(self):
         """ Add the elements read from GDSPY to the
         corresponding Layers in the JSON object. """
 
@@ -122,11 +123,11 @@ class Config:
         for element in self.Elements:
             if isinstance(element, gdspy.Polygon):            
                 if element.layer == self.Params['TERM']['gds']:
-                    create_terminal(self.Labels, element, terms)
+                    create_terminal(self.Labels, element, self.Terms)
                 else:
-                    from_polygon_object(confselfig.Layers, element)
+                    self.from_polygon_object(element)
             elif isinstance(element, gdspy.PolygonSet):
-                from_polygonset_object(self.Layers, element)   
+                self.from_polygonset_object(element)   
                 
     def from_polygon_object(self, element):
         """ Add the polygon to the 'result'
@@ -179,28 +180,35 @@ class Process:
 
         tools.green_print('Running Atom:')
 
-        if config.Atom['vias']:
-            self.calculate_vias(Atom['vias'])
-        if config.Atom['jjs']:
-            junc.fill_jj_list(self.config, config.Atom['jjs'], self.basedir, self.jjs)
+        if self.config.Atom['vias']:
+            self.calculate_vias(self.config.Atom['vias'])
+        if self.config.Atom['jjs']:
+            junctions.fill_jj_list(self.config, self.basedir, self.jjs)
         
         wires.fill_wiresets(self.config.Layers, self.wiresets, union)
-        connect_term_to_wire(self.terms, self.wiresets)
+        connect_term_to_wire(self.config.Terms, self.wiresets)
 
         # Find the differene between the via, jjs and wires.
         for key, wireset in self.wiresets.items():
             for wire in wireset.wires:
-                if config.Atom['vias']:
+                if self.config.Atom['vias']:
                     wire.update_with_via_diff(self.vias)
-                if config.Atom['jjs']:
+                if self.config.Atom['jjs']:
                     wire.update_with_jj_diff(self.jjs)
 
-        # Connect the wires and via objects.
-        if config.Atom['vias']:
+        # Connect the wires with via objects.
+        if self.config.Atom['vias']:
             for via in self.vias:
                 for key, wireset in self.wiresets.items():
                     for wire in wireset.wires:
                         via.connect_wires(wire)
+            
+        # Connect the wires with jj objects.            
+        if self.config.Atom['jjs']:
+            for jj in self.jjs:
+                for key, wireset in self.wiresets.items():
+                    for wire in wireset.wires:
+                        jj.connect_wires(wire)
             
         # cParams = params.Params()
         # cParams.calculate_area(self.Elements, Layers)
@@ -210,14 +218,6 @@ class Process:
             for wires in wireset.wires:
                 wires.polygon = shrink_touching_layers(wires.polygon)        
         
-        
-        
-        
-        
-
-    def copy_module_to_subatom(self, subatom):
-        subatom['result'] = subatom['Module'][-1]['result']
-
     def calculate_vias(self, atom):
         """ 
         * Read the Module data file in
@@ -231,10 +231,12 @@ class Process:
 
         for subatom in atom['Subatom']:
             tools.read_module(self.basedir, atom, subatom)
+            
             for module in subatom['Module']:
                 self.calculate_module(atom, subatom, module)
-            self.copy_module_to_subatom(subatom)
-            
+                
+            subatom['result'] = subatom['Module'][-1]['result']
+
         vias.fill_via_list(self.vias, atom)
 
     def calculate_module(self, atom, subatom, module):

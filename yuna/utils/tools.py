@@ -121,7 +121,7 @@ def angusj_offset(layer, size):
     return solution
 
 
-def union_wire(Layers, layer, config_save):
+def union_wire(Layers, layer):
     """ This function saves the union of each
     individual layer polygon. The result
     is saved in the 'result' variable
@@ -133,7 +133,7 @@ def union_wire(Layers, layer, config_save):
     count = [0]
     union_poly = defaultdict(list)
 
-    cell_layer = Layers[layer][config_save]
+    cell_layer = Layers[layer]['result']
 
     for poly in cell_layer:
         if (count[0] == 0):
@@ -151,7 +151,7 @@ def union_wire(Layers, layer, config_save):
 
         count[0] += 1
 
-    Layers[layer][config_save] = union_poly[layer]
+    Layers[layer]['result'] = union_poly[layer]
     Layers[layer]['active'] = True
 
 

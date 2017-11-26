@@ -13,7 +13,7 @@ def union_polygons(Layers):
 
     tools.green_print('Union Layer:')
     for key, layer in Layers.items():
-        tools.union_wire(Layers, key, 'result')
+        tools.union_wire(Layers, key)
 
 
 class WireSet:
@@ -23,7 +23,7 @@ class WireSet:
         self.active = active
         self.gds = gds
         self.wires = []
-        self.mesh = None
+        self.mesh = []
         self.graph = []
 
     def set_mesh(self, mesh):
@@ -47,13 +47,21 @@ def fill_wiresets(Layers, wiresets, union):
     else:
         print('Note: UNION wires is not set')
 
+    tools.green_print('Ative layers:')
+    
     for name, layers in Layers.items():
         if (layers['type'] == 'wire') or (layers['type'] == 'resistance') or (layers['type'] == 'shunt'):
             wireset = WireSet(layers['gds'])
 
             for layer in layers['result']:
                 view = json.loads(layers['view'])
-                wire = Wire([layer], active=view)
+                print(name)
+
+                # If it's a 2D list, make it a 3D list.
+                if not isinstance(layer[0][0], list):
+                    layer = [layer]
+
+                wire = Wire(layer, active=view)
                 wireset.add_wire_object(wire)
 
             wiresets[name] = wireset

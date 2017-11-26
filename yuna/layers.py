@@ -9,22 +9,7 @@ import json
 import gdspy
 import yuna.utils.tools as tools
 import pyclipper
-
-
-def filter_base(baselayer, jjlayer):
-    """ If the junction object has more than
-    one M0 polygon, then we have to find the
-    one with the JJ layer inside it. """
-
-    subj = jjlayer
-    clip = baselayer
-
-    baselayer = None
-    for poly in clip:
-        if does_layers_intersect([poly], subj):
-            baselayer = poly
-
-    return baselayer
+from pprint import pprint 
 
 
 def junction_inside_res(Layers, jj, res_layer):
@@ -58,6 +43,7 @@ def get_res_layer(Layers):
 
 def get_junction_layer(Layers):
     layerjj = None
+    pprint(Layers)
     for key, layer in Layers.items():
         if layer['type'] == 'junction':
             layerjj = key

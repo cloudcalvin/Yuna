@@ -56,7 +56,7 @@ def connect_term_to_wire(terms, wiresets):
 
                     cp = midpoint(x1, y1, x2, y2)
                     term.connect_wire_edge(i, wire, cp)
-                    
+
         # TODO: Add verbose parameter
         # for wire in wireset.wires:
         #     for edge in wire.edgelabels:

@@ -106,7 +106,7 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
 
     proc = process.Process(examdir, config)
     proc.circuit_layout(union)
-    proc.update_wire_offset()
+    # proc.update_wire_offset()
     
     jjs = proc.jjs
     vias = proc.vias

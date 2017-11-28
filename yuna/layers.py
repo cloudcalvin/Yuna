@@ -110,8 +110,7 @@ class Term:
         inside = pyclipper.PointInPolygon(point, self.polygon)
 
         if inside != 0:
-            if wire.edgelabels[i] == None:
-                wire.edgelabels[i] = self.label
+            wire.edgelabels.append(self.label)
 
 # def path_result(Layers, element):
 #     """ Add the path to the 'result' key in the 'Layers' object """

@@ -6,9 +6,7 @@ import gdspy
 
 
 class Params:
-    """
-
-    """
+    """  """
 
     def __init__(self):
         """ """
@@ -48,11 +46,11 @@ class Params:
 
     def resistance_area(self, Layers):
         """
-            * We have to get the center of each resistance polygon.
-            * Test if the center of each polygon is inside
-              layer 9. If so, then remove that polygon. 
-            * Finally, we should be left with just the 
-              resistance branch polygon.
+        * We have to get the center of each resistance polygon.
+        * Test if the center of each polygon is inside
+          layer 9. If so, then remove that polygon. 
+        * Finally, we should be left with just the 
+          resistance branch polygon.
         """
         
         print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')

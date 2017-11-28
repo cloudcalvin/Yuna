@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import absolute_import
 
 from termcolor import colored
 from .utils import tools
@@ -6,6 +7,7 @@ from .utils import tools
 import json
 import gdspy
 import networkx as nx
+import yuna.layers as layers
 
 
 def union_polygons(Layers):
@@ -47,16 +49,17 @@ def fill_wiresets(Layers, wiresets, union):
     else:
         print('Note: UNION wires is not set')
 
-    tools.green_print('Ative layers:')
+    tools.magenta_print('Active layers:')
+    print('')
     
     for name, layers in Layers.items():
         if (layers['type'] == 'wire') or (layers['type'] == 'resistance') or (layers['type'] == 'shunt'):
             wireset = WireSet(layers['gds'])
 
+            view = json.loads(layers['view'])
+            print('  ' + name)
+                
             for layer in layers['result']:
-                view = json.loads(layers['view'])
-                print(name)
-
                 # If it's a 2D list, make it a 3D list.
                 if not isinstance(layer[0][0], list):
                     layer = [layer]
@@ -75,20 +78,32 @@ class Wire:
 
         self.active = active
         self.polygon = polygon
-        self.edgelabels = [None] * len(polygon[0])
+        self.edgelabels = []
 
     def update_with_via_diff(self, vias):
         """ Connect vias and wires by finding
         their difference and not letting the overlap. """
-
-        subj = self.polygon
-
+        
         clip = []
         for via in vias:
             clip.append(via.polygon)
 
-        if clip and subj:
-            self.polygon = tools.angusj(clip, subj, 'difference')
+        wireoffset = tools.angusj_offset(clip, 'down')
+
+        if layers.does_layers_intersect(self.polygon, wireoffset):
+            return True
+        else:
+            return False
+
+        # subj = self.polygon
+        # 
+        # clip = []
+        # for via in vias:
+        #     clip.append(via.polygon)
+        # 
+        # if clip and subj:
+        #     self.polygon = tools.angusj(clip, subj, 'difference')
+        #     print(self.polygon)
 
     def update_with_jj_diff(self, jjs):
         """ Find the difference between the wiring
@@ -102,27 +117,18 @@ class Wire:
 
         if clip and subj:
             self.polygon = tools.angusj(clip, subj, 'difference')
-
-    # def generate_graph(self):
-    #     for poly in self.layer:
-    #         g = nx.Graph()
-    #         num_nodes = len(poly)
-    #
-    #         for i, node in enumerate(poly):
-    #             g.add_node(i, pos=node)
-    #
-    #             if i < num_nodes-1:
-    #                 g.add_edge(i, i+1)
-    #             else:
-    #                 g.add_edge(i, 0)
-    #
-    #         for n, p in g.nodes(data=True):
-    #             print(p['pos'])
-    #
-    #         pos = nx.get_node_attributes(g,'pos')
-    #         nx.draw(g, pos, node_size=30)
+            print(self.polygon)
 
     def plot_wire(self, cell, gds):
         if self.active:
             for poly in self.polygon:
                 cell.add(gdspy.Polygon(poly, gds))
+                
+                
+                
+                
+                
+                
+                
+                
+                

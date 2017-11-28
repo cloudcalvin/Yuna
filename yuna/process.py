@@ -46,11 +46,14 @@ def midpoint(x1, y1, x2, y2):
             
 
 def connect_term_to_wire(terms, wiresets):
+    print('wenfnwieufbewe')
     for term in terms:
+        print(term.labels)
         wireset = wiresets[term.layer]
         for wire in wireset.wires:
             for poly in wire.polygon:
                 for i in range(len(poly) - 1):
+                    print(i)
                     x1, y1 = poly[i][0], poly[i][1]
                     x2, y2 = poly[i+1][0], poly[i+1][1]
 
@@ -192,23 +195,28 @@ class Process:
         for key, wireset in self.wiresets.items():
             for wire in wireset.wires:
                 if self.config.Atom['vias']:
-                    wire.update_with_via_diff(self.vias)
+                    remove = wire.update_with_via_diff(self.vias)
+                    
+                    if remove:
+                        wireset.wires.remove(wire)
+                    
                 if self.config.Atom['jjs']:
                     wire.update_with_jj_diff(self.jjs)
 
-        # Connect the wires with via objects.
-        if self.config.Atom['vias']:
-            for via in self.vias:
-                for key, wireset in self.wiresets.items():
-                    for wire in wireset.wires:
-                        via.connect_wires(wire)
-            
-        # Connect the wires with jj objects.            
-        if self.config.Atom['jjs']:
-            for jj in self.jjs:
-                for key, wireset in self.wiresets.items():
-                    for wire in wireset.wires:
-                        jj.connect_wires(wire)
+        # # Connect the wires with via objects.
+        # if self.config.Atom['vias']:
+        #     for via in self.vias:
+        #         for key, wireset in self.wiresets.items():
+        #             tools.green_print(key)
+        #             for wire in wireset.wires:
+        #                 via.connect_wires(wire)
+        #     
+        # # Connect the wires with jj objects.            
+        # if self.config.Atom['jjs']:
+        #     for jj in self.jjs:
+        #         for key, wireset in self.wiresets.items():
+        #             for wire in wireset.wires:
+        #                 jj.connect_wires(wire)
             
         # cParams = params.Params()
         # cParams.calculate_area(self.Elements, Layers)

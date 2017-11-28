@@ -48,11 +48,11 @@ def get_layercross(Layers, Modules, value):
     return layercross
 
 
-def add_layers(base, wire):
-    """ Add the wire layers that are connected to the via. """
-
-    wireoffset = tools.angusj_offset(wire.layer, 'up')
-    return layers.does_layers_intersect([base], wireoffset)
+# def add_layers(base, wire):
+#     """ Add the wire layers that are connected to the via. """
+# 
+#     wireoffset = tools.angusj_offset(wire.layer, 'up')
+#     return layers.does_layers_intersect([base], wireoffset)
 
 
 def get_viacross(Layers, Modules, value, subj):
@@ -70,7 +70,8 @@ def get_viacross(Layers, Modules, value, subj):
 
 
 def reverse_via(Layers, Modules, value, subj):
-    """ This method is called when we have
+    """ 
+    This method is called when we have
     to save the via as the first layer below
     it. This is needed when the crossings
     of the two wiring layers are not equally large.
@@ -112,7 +113,8 @@ def update_wire_object(wire, i, _id):
     """ V1 labeled edge is connected to Via 1.
     P1 is connected to Port 1. """
     
-    wire.edgelabels[i] = 'V' + str(_id)
+    label = 'V' + str(_id)
+    wire.edgelabels.append(label)
 
 
 def fill_via_list(vias, atom):
@@ -167,6 +169,7 @@ class Via:
     def connect_edges(self, wire):
         for i, polygon in enumerate(wire.polygon):
             for point in polygon:
+                print(polygon)
                 inside = pyclipper.PointInPolygon(point, self.polygon)
 
                 if inside != 0:

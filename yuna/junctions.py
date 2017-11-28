@@ -116,7 +116,8 @@ def update_wire_object(wire, i, _id):
     """ V1 labeled edge is connected to Via 1.
     P1 is connected to Port 1. """
     
-    wire.edgelabels[i] = 'J' + str(_id)
+    label = 'J' + str(_id)
+    wire.edgelabels.append(label)
 
 
 class Junction:

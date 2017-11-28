@@ -9,22 +9,7 @@ import json
 import gdspy
 import yuna.utils.tools as tools
 import pyclipper
-
-
-def filter_base(baselayer, jjlayer):
-    """ If the junction object has more than
-    one M0 polygon, then we have to find the
-    one with the JJ layer inside it. """
-
-    subj = jjlayer
-    clip = baselayer
-
-    baselayer = None
-    for poly in clip:
-        if does_layers_intersect([poly], subj):
-            baselayer = poly
-
-    return baselayer
+from pprint import pprint 
 
 
 def junction_inside_res(Layers, jj, res_layer):
@@ -58,6 +43,7 @@ def get_res_layer(Layers):
 
 def get_junction_layer(Layers):
     layerjj = None
+    pprint(Layers)
     for key, layer in Layers.items():
         if layer['type'] == 'junction':
             layerjj = key
@@ -89,52 +75,42 @@ def union_wires(Layers, layer):
     return unionlayer
 
 
-def fill_layers_object(Layers, Elements):
-    """
-        Add the elements read from GDSPY to the
-        corresponding Layers in the JSON object.
-    """
+class Term:
+    def __init__(self, polygon):
+        """
+        Parameters
+        ----------
+        Polygon : list
+            List of points that defines the polygon
+            of the terminal layer.
+        Label : string
+            The unique TEXT string name. This Labels
+            the polygon for later use in the meshing.
+        Layer : string
+            The layer that the terminal is connected to.
+        """
 
-    tools.green_print('Elements:')
+        self.polygon = polygon
+        self.label = ''
+        self.layer = ''
+        
+    def connect_label(self, Labels):
+        for label in Labels:                        
+            inside = pyclipper.PointInPolygon(label.position, self.polygon)
 
-    for element in Elements:
-        if isinstance(element, gdspy.Polygon):
-            polygon_result(Layers, element)
-        elif isinstance(element, gdspy.PolygonSet):
-            polygonset_result(Layers, element)
-        elif isinstance(element, gdspy.PolyPath):
-            print('Paths not yet supported')
-            # layers.path_result(Layers, element)
-#         elif isinstance(element, gdspy.CellReference):
-#             polygon_jj(Layers, element)
+            if inside != 0:
+                # label.text : "P1 M2 M0"
+                self.label = label.text.split()[0]
+                self.layer = label.text.split()[1]
+                
+    def connect_wire_edge(self, i, wire, point):
+        """ V1 labeled edge is connected to Via 1.
+        P1 is connected to Port 1. """
+            
+        inside = pyclipper.PointInPolygon(point, self.polygon)
 
-
-def polygon_result(Layers, element):
-    """ Add the polygon to the 'result'
-    key in the 'Layers' object """
-
-    print('      Polygons: ', end='')
-    print(element)
-
-    for layer, lay_data in Layers.items():
-        if lay_data['gds'] == element.layer:
-            Layers[layer]['result'].append(element.points.tolist())
-
-
-def polygonset_result(Layers, element):
-    """
-    Add the polygons from the PolygonSet to
-    the 'result' key in the 'Layers' object.
-    """
-
-    print('      PolygonSet: ', end='')
-    print(element)
-
-    for layer, lay_data in Layers.items():
-        if lay_data['gds'] == element.layers[0]:
-            for poly in element.polygons:
-                Layers[layer]['result'].append(poly.tolist())
-
+        if inside != 0:
+            wire.edgelabels.append(self.label)
 
 # def path_result(Layers, element):
 #     """ Add the path to the 'result' key in the 'Layers' object """

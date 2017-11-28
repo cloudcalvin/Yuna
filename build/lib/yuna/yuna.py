@@ -1,7 +1,7 @@
 """
 
 Usage:
-    yuna <process> <testname> <ldf> [--cell=<cellname>] [(<atom_num> <subatom_num>)]
+    yuna <process> <testname> <ldf> [--cell=<cellname>] [--union] [--model]
     yuna (-h | --help)
     yuna (-V | --version)
 
@@ -25,11 +25,13 @@ import os
 import json
 import gdspy
 
-import yuna.process as proc
+import yuna.process as process
 import yuna.read as read
 
-from utils import write
+from yuna.utils import write
 from yuna.utils import tools
+
+from pprint import pprint
 
 
 def main():
@@ -50,12 +52,12 @@ def main():
     else:
         cellref = ""
 
-    machina(process, testname, ldf, cellref, '')
+    machina(process, testname, ldf, cellref, '', False)
 
     tools.red_print('Auron. Done.')
 
 
-def machina(process, testname, ldf, cellref, cwd):
+def machina(process, testname, ldf, cellref, cwd, union):
     """  """
 
     tools.cyan_print('Running Yuna...')
@@ -76,38 +78,53 @@ def machina(process, testname, ldf, cellref, cwd):
     if cellref == 'list':
         tools.list_layout_cells(gds_file)
     else:
-        wires = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref)
+        wireset, Params, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
 
     tools.cyan_print('Yuna. Done.')
 
-    return wires
+    return wireset, Params, Layers
 
 
-def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref):
+def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
 
     config_data = read.config(config_file)
-
+    
     tools.magenta_print('Process Layers')
-    cProcess = proc.Process(examdir, gds_file, config_data)
-    cProcess.config_layers(cellref)
 
-    jjs = cProcess.jjs
-    vias = cProcess.vias
-    wires = cProcess.wires
+    config = process.Config(config_data)
+    config.set_gds(gds_file)
+    
+    if cellref:
+        config.read_usercell_reference(cellref)
+    else:
+        config.read_topcell_reference()
 
+    config.parse_gdspy_elements()
+
+    proc = process.Process(examdir, config)
+    proc.circuit_layout(union)
+    # proc.update_wire_offset()
+    
+    jjs = proc.jjs
+    vias = proc.vias
+    wireset = proc.wiresets
+    
     tools.magenta_print('Write Layers')
     cWrite = write.Write(True)
-    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wires)
+    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
 
-    return wires
+    return wireset, config_data['Params'], config_data['Layers']
 
 
 if __name__ == '__main__':
     main()
-
-
-
-
+    
+    
+    
+    
+    
+    
+    

@@ -112,9 +112,9 @@ def angusj_offset(layer, size):
         pco.AddPath(poly, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
         if size == 'down':
-            solution.append(pco.Execute(-1)[0])
+            solution.append(pco.Execute(-1000000)[0])
         elif size == 'up':
-            solution.append(pco.Execute(100)[0])
+            solution.append(pco.Execute(10)[0])
         elif size == 'label':
             solution.append(pco.Execute(2000)[0])
 

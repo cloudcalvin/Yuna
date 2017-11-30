@@ -118,6 +118,10 @@ class Config:
         self.Labels = flatcell.labels                
         self.Elements = flatcell.elements
         
+    def read_via_cells(self, viacell):
+        cell = self.gdsii.extract(viacell)
+        
+        
     def parse_gdspy_elements(self):
         """ Add the elements read from GDSPY to the
         corresponding Layers in the JSON object. """

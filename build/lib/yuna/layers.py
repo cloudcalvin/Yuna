@@ -43,7 +43,6 @@ def get_res_layer(Layers):
 
 def get_junction_layer(Layers):
     layerjj = None
-    pprint(Layers)
     for key, layer in Layers.items():
         if layer['type'] == 'junction':
             layerjj = key

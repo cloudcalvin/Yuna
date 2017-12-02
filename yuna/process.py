@@ -46,7 +46,6 @@ def midpoint(x1, y1, x2, y2):
             
 
 def connect_term_to_wire(terms, wiresets):
-    print('wenfnwieufbewe')
     for term in terms:
         print(term.labels)
         wireset = wiresets[term.layer]
@@ -134,8 +133,8 @@ class Config:
                 else:
                     self.from_polygon_object(element)
             elif isinstance(element, gdspy.PolygonSet):
-                self.from_polygonset_object(element)   
-                
+                self.from_polygonset_object(element)
+
     def from_polygon_object(self, element):
         """ Add the polygon to the 'result'
         key in the 'Layers' object """
@@ -188,7 +187,7 @@ class Process:
         tools.green_print('Running Atom:')
 
         if self.config.Atom['vias']:
-            self.calculate_vias(self.config.Atom['vias'])
+            self.calculate_vias(self.config)
         if self.config.Atom['jjs']:
             junctions.fill_jj_list(self.config, self.basedir, self.jjs)
         
@@ -198,23 +197,23 @@ class Process:
         # Find the differene between the via, jjs and wires.
         for key, wireset in self.wiresets.items():
             for wire in wireset.wires:
-                if self.config.Atom['vias']:
-                    remove = wire.update_with_via_diff(self.vias)
-                    
-                    if remove:
+                if self.config.Atom['vias']:                    
+                    if wire.update_with_via_diff(self.vias):
                         wireset.wires.remove(wire)
-                    
-                if self.config.Atom['jjs']:
-                    wire.update_with_jj_diff(self.jjs)
+                # if self.config.Atom['jjs']:
+                #     wire.update_with_jj_diff(self.jjs)
 
-        # # Connect the wires with via objects.
-        # if self.config.Atom['vias']:
-        #     for via in self.vias:
-        #         for key, wireset in self.wiresets.items():
-        #             tools.green_print(key)
-        #             for wire in wireset.wires:
-        #                 via.connect_wires(wire)
-        #     
+        # Connect the wires with via objects.
+        tools.magenta_print('Edgelabels')
+        if self.config.Atom['vias']:
+            for via in self.vias:
+                for key, wireset in self.wiresets.items():
+                    for wire in wireset.wires:
+                        via.connect_wires(wire)
+
+                        if wire.polygon:
+                            print(wire.edgelabels)
+            
         # # Connect the wires with jj objects.            
         # if self.config.Atom['jjs']:
         #     for jj in self.jjs:
@@ -230,7 +229,7 @@ class Process:
             for wires in wireset.wires:
                 wires.polygon = shrink_touching_layers(wires.polygon)        
         
-    def calculate_vias(self, atom):
+    def calculate_vias(self, config):
         """ 
         * Read the Module data file in
           and save it in the 'Module'
@@ -238,6 +237,8 @@ class Process:
         * Loop through the modules and calculate
           the result of the Subatom struct.
         """
+
+        atom = config.Atom['vias']
 
         print('      Num: ' + str(atom['id']))
 

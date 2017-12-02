@@ -46,7 +46,6 @@ def midpoint(x1, y1, x2, y2):
             
 
 def connect_term_to_wire(terms, wiresets):
-    print('wenfnwieufbewe')
     for term in terms:
         print(term.labels)
         wireset = wiresets[term.layer]

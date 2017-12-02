@@ -15,6 +15,7 @@ import networkx as nx
 import gdspy
 import yuna.layers as layers
 import pyclipper
+import yuna.wires as wires
 
 
 def get_polygon(Layers, Modules, poly):
@@ -46,13 +47,6 @@ def get_layercross(Layers, Modules, value):
             print('Clipping is zero.')
 
     return layercross
-
-
-# def add_layers(base, wire):
-#     """ Add the wire layers that are connected to the via. """
-# 
-#     wireoffset = tools.angusj_offset(wire.layer, 'up')
-#     return layers.does_layers_intersect([base], wireoffset)
 
 
 def get_viacross(Layers, Modules, value, subj):
@@ -109,12 +103,66 @@ def remove_viacross(Layers, Modules, value):
     return viacross
 
 
-def update_wire_object(wire, i, _id):
+def update_edgelabels(wire, i, _id):
     """ V1 labeled edge is connected to Via 1.
     P1 is connected to Port 1. """
     
     label = 'V' + str(_id)
     wire.edgelabels.append(label)
+
+
+# def is_via_cell(element):
+#     """  """
+
+#     viabool = False
+    
+#     if isinstance(element, gdspy.CellReference):
+#         print('      CellReference: ', end='')
+#         print(element)
+#         refname = element.ref_cell.name
+#         if refname[:2] == 'JJ':
+#             viabool = True
+
+#     return viabool
+
+
+# def fill_via_list(config, basedir, vias):
+#     """ Loop over all elements, such as
+#     polygons, polgyonsets, cellrefences, etc
+#     and find the CellRefences. CellRefs
+#     which is a junction has to start with JJ. """
+    
+#     atom = config.Atom['vias']
+
+#     via_id = 0
+#     for element in config.Elements:
+#         if is_via_cell(element):
+#             layers = transpose_cell(config.gdsii, config.Layers, element)
+
+#             via = Junction(basedir, jj_id, config.Layers)
+#             via.set_layers(layers)
+#             via.detect_jj(atom)
+#             vias.append(jj)
+#             via_id += 1
+
+
+# https://stackoverflow.com/questions/20677795/how-do-i-compute-the-intersection-point-of-two-lines-in-python
+def line_intersection(line1, line2):    
+    xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
+    ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1]) #Typo was here
+
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = det(xdiff, ydiff)
+    if div == 0:
+       raise Exception('lines do not intersect')
+
+    d = (det(*line1), det(*line2))
+    x = det(d, xdiff) / div
+    y = det(d, ydiff) / div
+
+    return x, y
 
 
 def fill_via_list(vias, atom):
@@ -126,8 +174,59 @@ def fill_via_list(vias, atom):
     for subatom in atom['Subatom']:
         for poly in subatom['result']:
             via = Via(via_id, poly, subatom['gds'])
+            via.convert_polygon_to_lines()
+
             vias.append(via)
             via_id += 1
+
+
+def get_line_orientation(p1, p2):
+    if p1[0] - p2[0] == 0.0:
+        return 'y'
+    if p1[1] - p2[1] == 0.0:
+        return 'x'
+
+
+def make_edge_polygon(p1, p2):
+    if get_line_orientation(p1, p2) == 'x':
+        pt1 = [None] * 2
+        pt2 = [None] * 2
+        pb1 = [None] * 2
+        pb2 = [None] * 2
+
+        pt1[0] = p1[0]
+        pt1[1] = p1[1] + 10
+
+        pt2[0] = p2[0]
+        pt2[1] = p2[1] + 10
+
+        pb1[0] = p1[0]
+        pb1[1] = p1[1] - 10
+
+        pb2[0] = p2[0]
+        pb2[1] = p2[1] - 10
+
+        return [pt1, pt2, pb2, pb1]
+
+    elif get_line_orientation(p1, p2) == 'y':
+        pt1 = [None] * 2
+        pt2 = [None] * 2
+        pb1 = [None] * 2
+        pb2 = [None] * 2
+
+        pt1[0] = p1[0] + 10
+        pt1[1] = p1[1]
+
+        pt2[0] = p2[0] + 10
+        pt2[1] = p2[1]
+
+        pb1[0] = p1[0] - 10
+        pb1[1] = p1[1]
+
+        pb2[0] = p2[0] - 10
+        pb2[1] = p2[1]
+
+        return [pt1, pt2, pb2, pb1]
             
 
 class Via:
@@ -157,8 +256,20 @@ class Via:
 
         self.id = via_id
         self.polygon = polygon
+        self.lines = []
         self.gds = gds
         self.edges = []
+
+    def convert_polygon_to_lines(self):
+        for i in range(len(self.polygon) - 1):
+            p1 = wires.Point(self.polygon[i][0], self.polygon[i][1])
+            p2 = wires.Point(self.polygon[i+1][0], self.polygon[i+1][1])
+
+            line = wires.Line()
+
+            line.add_point(p1)
+            line.add_point(p2)
+
 
     def connect_wires(self, wire):
         if wire.active and wire.polygon:
@@ -167,14 +278,44 @@ class Via:
                 self.connect_edges(wire)
 
     def connect_edges(self, wire):
-        for i, polygon in enumerate(wire.polygon):
-            for point in polygon:
-                print(polygon)
-                inside = pyclipper.PointInPolygon(point, self.polygon)
+        tools.green_print('edges:')
 
-                if inside != 0:
-                    self.edges.append(point)
-                    update_wire_object(wire, i, self.id)
+        for i in range(len(self.polygon) - 1):
+            pw1 = self.polygon[i]
+            pw2 = self.polygon[i+1]
+
+            edgepoly = make_edge_polygon(pw1, pw2)
+            print('poly')
+            print(edgepoly)
+
+            for j, wirepoly in enumerate(wire.polygon):
+                if layers.does_layers_intersect([edgepoly], [wirepoly]):
+                    update_edgelabels(wire, j, self.id)
+
+        pw1 = self.polygon[-1]
+        pw2 = self.polygon[0]
+
+        edgepoly = make_edge_polygon(pw1, pw2)
+        print('poly')
+        print(edgepoly)
+
+        for j, wirepoly in enumerate(wire.polygon):
+            if layers.does_layers_intersect([edgepoly], [wirepoly]):
+                update_edgelabels(wire, j, self.id)
+
+
+
+            # for j in range(len(wire.polygon) - 1):
+            #     pp1 = wire.polygon[j]
+            #     pp2 = wire.polygon[j+1]
+
+
+            # for point in polygon:
+            #     inside = pyclipper.PointInPolygon(point, self.polygon)
+
+            #     if inside != 0:
+            #         self.edges.append(point)
+            #         update_edgelabels(wire, i, self.id)
 
     def plot_via(self, cell):
         cell.add(gdspy.Polygon(self.polygon, self.gds))

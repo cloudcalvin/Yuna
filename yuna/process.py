@@ -107,6 +107,7 @@ class Config:
         
     def read_topcell_reference(self):
         topcell = self.gdsii.top_level()[0]
+        # TODO: Add flattening?
         self.gdsii.extract(topcell)
         self.Labels = self.gdsii.top_level()[0].labels
         self.Elements = self.gdsii.top_level()[0].elements
@@ -119,7 +120,6 @@ class Config:
         
     def read_via_cells(self, viacell):
         cell = self.gdsii.extract(viacell)
-        
         
     def parse_gdspy_elements(self):
         """ Add the elements read from GDSPY to the
@@ -194,25 +194,25 @@ class Process:
         wires.fill_wiresets(self.config.Layers, self.wiresets, union)
         connect_term_to_wire(self.config.Terms, self.wiresets)
 
-        # Find the differene between the via, jjs and wires.
-        for key, wireset in self.wiresets.items():
-            for wire in wireset.wires:
-                if self.config.Atom['vias']:                    
-                    if wire.update_with_via_diff(self.vias):
-                        wireset.wires.remove(wire)
-                # if self.config.Atom['jjs']:
-                #     wire.update_with_jj_diff(self.jjs)
+#         # Find the differene between the via, jjs and wires.
+#         for key, wireset in self.wiresets.items():
+#             for wire in wireset.wires:
+#                 if self.config.Atom['vias']:                    
+#                     if wire.update_with_via_diff(self.vias):
+#                         wireset.wires.remove(wire)
+#                 # if self.config.Atom['jjs']:
+#                 #     wire.update_with_jj_diff(self.jjs)
 
-        # Connect the wires with via objects.
-        tools.magenta_print('Edgelabels')
-        if self.config.Atom['vias']:
-            for via in self.vias:
-                for key, wireset in self.wiresets.items():
-                    for wire in wireset.wires:
-                        via.connect_wires(wire)
-
-                        if wire.polygon:
-                            print(wire.edgelabels)
+#         # Connect the wires with via objects.
+#         tools.magenta_print('Edgelabels')
+#         if self.config.Atom['vias']:
+#             for via in self.vias:
+#                 for key, wireset in self.wiresets.items():
+#                     for wire in wireset.wires:
+#                         via.connect_wires(wire)
+# 
+#                         if wire.polygon:
+#                             print(wire.edgelabels)
             
         # # Connect the wires with jj objects.            
         # if self.config.Atom['jjs']:
@@ -276,3 +276,10 @@ class Process:
             elif key == 'via_remove':
                 viacross = vias.remove_viacross(self.config.Layers, subatom['Module'], value)
                 module['result'] = viacross
+
+
+
+
+
+
+

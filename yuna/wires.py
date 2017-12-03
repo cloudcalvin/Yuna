@@ -99,32 +99,35 @@ class Wire:
 
     def update_with_via_diff(self, vias):
         """ Connect vias and wires by finding
-        their difference and not letting the overlap. """
-        
-        # clip = []
-        # for via in vias:
-        #     clip.append(via.polygon)
+        their difference and not letting 
+        the overlap. """
 
-        # wireoffset = tools.angusj_offset(clip, 'down')
-
-        # if layers.does_layers_intersect(self.polygon, wireoffset):
-        #     return True
-        # else:
-        #     return False
-
-        subj = self.polygon
-        
         clip = []
         for via in vias:
             clip.append(via.polygon)
-        
-        if clip and subj:
-            self.polygon = tools.angusj(clip, subj, 'difference')
 
-            if self.polygon:
-                self.edgelabels = [None] * len(self.polygon[0])
-                print(self.polygon)
-                print(len(self.polygon[0]))
+        wireoffset = tools.angusj_offset(clip, 'down')
+
+        if layers.does_layers_intersect(self.polygon, wireoffset):
+            return True
+        else:
+            return False
+
+#         subj = self.polygon
+# 
+#         clip = []
+#         for via in vias:
+#             clip.append(via.polygon)
+#         
+#         update = False
+#         if clip and subj:
+#             self.polygon = tools.angusj(clip, subj, 'difference')
+# 
+#             if self.polygon:
+#                 self.edgelabels = [None] * len(self.polygon[0])
+#                 update = True
+# 
+#         return update
 
     def update_with_jj_diff(self, jjs):
         """ Find the difference between the wiring

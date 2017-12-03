@@ -179,68 +179,36 @@ def flatten_cell(cell):
 
     flatcell = cell.copy('flatcell', deep_copy=True)
 
-    trans_cell = gdspy.Cell('TRANS')
-    rcells = flatcell.get_dependencies(recursive=True)
+    for newcell in flatcell.get_dependencies(recursive=True):
+        if newcell.name == 'via_mm_tv00_rv22_70x70':
+            gdspy.Cell(newcell.name, exclude_from_current = True)
 
-    for i, newcell in enumerate(rcells):
-        print(newcell.name)
-        if newcell.name[:2] == 'JJ':
-#             print(str(i) + ' - Detected JJ: ' + newcell.name)
-            jj_list.append(newcell)
-        elif newcell.name[:3] == 'via':
-#             print(str(i) + ' - Detected VIA: ' + newcell.name)
-            via_list.append(newcell)
-        else:
-            print(newcell)
-            trans_cell.add(newcell)
-
-    for i, element in enumerate(flatcell.elements):
-        if not isinstance(element, gdspy.CellReference):
-            trans_cell.add(element)
-
-    print('')
-    print('eufbwbiebeifebi')
-    tcells = trans_cell.get_dependencies(recursive=False)
-    print(tcells)
-
-    for i, newcell in enumerate(tcells):
         print(newcell.name)
 
-
-#     for jj in jj_list:
-#         flatcell.remove(jj)
-#     for via in via_list:
-#         flatcell.remove(via)
-
-    print(trans_cell.elements)
-#     for newcell in trans_cell:
-#         print(newcell.name)
-
-#             indices.append(i)
-#             jj_list.append(element)
-#         if newcell.name[:3] == 'via':
-#             print(str(i) + ' - Detected VIA: ' + newcell.name)
-#             indices.append(i)
-#             via_list.append(element)
+#         for element in newcell.elements:
+#             if isinstance(element, gdspy.CellReference):
+#                 print(element.ref_cell.name)
 
 #     for i, element in enumerate(flatcell.elements):
 #         if isinstance(element, gdspy.CellReference):
-#             name = element.ref_cell.name
-#             if name[:2] == 'JJ':
-#                 print(str(i) + ' - Detected JJ: ' + name)
-#                 indices.append(i)
-#                 jj_list.append(element)
-#             if name[:3] == 'via':
-#                 print(str(i) + ' - Detected VIA: ' + name)
-#                 indices.append(i)
-#                 via_list.append(element)
+    for newcell in flatcell.get_dependencies(recursive=True):
+            name = element.ref_cell.name
+            print(name)
+            if name[:2] == 'JJ':
+                print(str(i) + ' - Detected JJ: ' + name)
+                indices.append(i)
+                jj_list.append(element)
+            if name[:3] == 'via':
+                print(str(i) + ' - Detected VIA: ' + name)
+                indices.append(i)
+                via_list.append(element)
 
-#     remove_cells(flatcell, indices)
+    remove_cells(flatcell, indices)
 
     flatcell.flatten()
 
-#     readd_cells(flatcell, via_list)
-#     readd_cells(flatcell, jj_list)
+    readd_cells(flatcell, via_list)
+    readd_cells(flatcell, jj_list)
 
     return flatcell
 

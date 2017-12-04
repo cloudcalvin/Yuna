@@ -50,6 +50,15 @@ def get_junction_layer(Layers):
     return layerjj
 
 
+def get_junction_gds(Layers):
+    layerjj = None
+    for key, layer in Layers.items():
+        if layer['type'] == 'junction':
+            layerjj = layer['gds']
+
+    return layerjj
+
+
 def union_wires(Layers, layer):
     count = [0]
     unionlayer = defaultdict(list)

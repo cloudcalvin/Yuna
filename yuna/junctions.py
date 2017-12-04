@@ -195,14 +195,14 @@ class Junction:
         for subatom in atom['Subatom']:
             tools.read_module(self.basedir, atom, subatom)
 
-            polygon = subatom['Module']['base']['layer']
+            basename = subatom['Module']['base']['layer']
             res = subatom['Module']['res']['layer']
 
             # TODO: Where do we use the GDS numbers?
             self.gds_base = subatom['Module']['base']['gds']
             self.gds_res = subatom['Module']['res']['gds']
 
-            self.polygon = self.poly_with_jj_inside(polygon)
+            self.polygon = self.poly_with_jj_inside(basename)
             self.res = self.poly_connected_to_res(res)
 
     def poly_with_jj_inside(self, basename):

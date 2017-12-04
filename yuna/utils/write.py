@@ -27,8 +27,8 @@ class Write:
 
         # for via in vias:
         #     via.plot_via(cell)
-#         for jj in jjs:
-#             jj.plot_jj(cell)
+        # for jj in jjs:
+        #     jj.plot_jj(cell)
         for key, wireset in wiresets.items():
             for wire in wireset.wires:
                 wire.plot_wire(cell, wireset.gds)

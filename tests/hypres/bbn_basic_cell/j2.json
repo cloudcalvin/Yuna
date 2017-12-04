@@ -4,7 +4,7 @@
         "base": {
             "id": 0,
             "desc": "Get the base layer of the junction",
-	        "gds": 200,
+	        "gds": 6,
             "layer": "M2",
             "view": "true",
             "result": []
@@ -13,7 +13,7 @@
         "res": {
             "id": 1,
             "desc": "Get the base layer of the junction",
-            "gds": 201,
+            "gds": 9,
             "layer": "R2",
             "view": "true",
             "result": []

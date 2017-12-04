@@ -115,6 +115,9 @@ class Config:
     def read_usercell_reference(self, cellref):
         cell = self.gdsii.extract(cellref)
         flatcell = tools.flatten_cell(cell)
+
+        tools.my_cell_edits(cell, self.Layers, self.Atom)
+
         self.Labels = flatcell.labels                
         self.Elements = flatcell.elements
         

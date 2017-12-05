@@ -160,7 +160,7 @@ def remove_cells(flatcell, indices):
         del flatcell.elements[i]
 
 
-def readd_cells(flatcell, cell_list):
+def re_add_cells(flatcell, cell_list):
     for element in cell_list:
         flatcell.add(element)
 
@@ -179,28 +179,6 @@ def flatten_cell(cell):
 
     flatcell = cell.copy('flatcell_2', deep_copy=True)
 
-    rcells = flatcell.get_dependencies(recursive=True)
-
-    for i, newcell in enumerate(rcells):
-        print(newcell.name)
-        if newcell.name[:2] == 'JJ':
-            print(str(i) + ' - Detected JJ: ' + newcell.name)
-
-            # jj_list.append(newcell)
-        elif newcell.name[:3] == 'via':
-            print(str(i) + ' - Detected VIA: ' + newcell.name)
-            # via_list.append(newcell)
-        else:
-            print(newcell)
-            # trans_cell.add(newcell)
-
-#             indices.append(i)
-#             jj_list.append(element)
-#         if newcell.name[:3] == 'via':
-#             print(str(i) + ' - Detected VIA: ' + newcell.name)
-#             indices.append(i)
-#             via_list.append(element)
-
     for i, element in enumerate(flatcell.elements):
         if isinstance(element, gdspy.CellReference):
             name = element.ref_cell.name
@@ -208,17 +186,17 @@ def flatten_cell(cell):
                 print(str(i) + ' - Detected JJ: ' + name)
                 indices.append(i)
                 jj_list.append(element)
-            # if name[:3] == 'via':
-            #     print(str(i) + ' - Detected VIA: ' + name)
-            #     indices.append(i)
-            #     via_list.append(element)
+            if name[:3] == 'via':
+                print(str(i) + ' - Detected VIA: ' + name)
+                indices.append(i)
+                via_list.append(element)
 
     remove_cells(flatcell, indices)
 
     flatcell.flatten()
 
-#     readd_cells(flatcell, via_list)
-    readd_cells(flatcell, jj_list)
+    re_add_cells(flatcell, via_list)
+    re_add_cells(flatcell, jj_list)
 
     return flatcell
 
@@ -228,113 +206,60 @@ def read_module(basedir, atom, subatom):
     it in the Subatom 'Module' variable. """
 
     green_print('Reading Module:')
-
     config_file = basedir + '/' + subatom['module'] + '.json'
     print('        Subatom: ' + subatom['module'])
-
     with open(config_file) as data_file:
         subatom['Module'] = json.load(data_file)['Module']
 
 
-def is_jj_layer(gds):
-    if gds == 21:
-        return True
-    else:
-        return False
+# def my_cell_edits(cell, Layers, Atom):
+#     """ This function does a deep copy of the current
+#     working cell, without the JJs. It then flattens
+#     this cell and afterwards adds the JJs. """
+# 
+#     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+#     print('Deep copying mycell for Flattening:')
+# 
+#     indices = []
+#     jj_list = []
+#     via_list = []
+# 
+#     atom = Atom['jjs']
+# 
+#     mycells = cell.copy('mycells', deep_copy=True)
+#     emergecell = gdspy.Cell('emerge')
+# 
+#     for i, element in enumerate(mycells.elements):
+#         if isinstance(element, gdspy.CellReference):
+#             name = element.ref_cell.name
+#             if name[:2] == 'JJ':
+#                 print(str(i) + ' - Detected JJ: ' + name)
+#                 indices.append(i)
+#                 jj_list.append(element)
+# 
+#                 cellpolygons = element.ref_cell.get_polygons(True)
+# 
+#                 jj_cell = element.ref_cell.flatten()
+#                 for key, poly in cellpolygons.items():
+#                     if key == (21, 0):
+# #                         print(poly)
+#                         for p in poly:
+#                             jj_cell.remove_polygon_by_layer(key[0], p)
+#                         
+# #     print(mycells.elements)
+# #     mycells.remove(indices)
+# #     print('\nAfter')
+# #     print(mycells.elements)
+# 
+#     mycells.flatten()
+# 
+#     # readd_cells(flatcell, via_list)
+#     # readd_cells(flatcell, jj_list)
 
 
-def my_cell_edits(cell, Layers, Atom):
-    """ This function does a deep copy of the current
-    working cell, without the JJs. It then flattens
-    this cell and afterwards adds the JJs. """
-
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Deep copying mycell for Flattening:')
-
-    indices = []
-    jj_list = []
-    via_list = []
-
-    atom = Atom['jjs']
-
-    mycells = cell.copy('mycells', deep_copy=True)
-    emergecell = gdspy.Cell('emerge')
-
-    # for subatom in atom['Subatom']:
-    #     tools.read_module(self.basedir, atom, subatom)
-
-    #     basename = subatom['Module']['base']['layer']
-    #     res = subatom['Module']['res']['layer']
-
-    #     name = layers.get_junction_layer(self.Layers)
-    #     baselayer = self.layers[basename]
-    #     jjlayer = self.layers[name]
-    #     self.polygon = filter_multiple_jj_polygons(baselayer, jjlayer)
-    print(mycells.name)
-    mycells.name = 'thedon'
-    emergecell.name = 'godoff'
-
-    print(mycells.elements[0])
-
-    # del mycells.elements[i]
-
-    for i in range(len(mycells.elements)):
-        element = mycells.elements[i]
-
-        if isinstance(element, gdspy.CellReference):
-            name = element.ref_cell.name
 
 
-            remove_list = []
 
-            if name[:2] == 'JJ':
-                print(str(i) + ' - Detected JJ: ' + name)
-
-                cellpolygons = mycells.elements[i].ref_cell.get_polygons()
-
-                print(len(cellpolygons))
-
-                del cellpolygons[0]
-                del cellpolygons[1]
-                del cellpolygons[2]
-
-                print(len(cellpolygons))
-
-                mycells.elements[i].ref_cell.get_polygons() = cellpolygons
-
-                # for key, polygons in cellpolygons.items():
-                #     print(key)
-                #     if is_jj_layer(key[0]):
-                #         del mycells.elements[i].ref_cell.get_polygons(True).pop(key, None)
-                #         # remove_list.append()
-                #         print('JJ layer found')
-                
-                # print('webfibip')
-                # for key, polygons in cellpolygons.items():
-                #     print(key)
-                
-    for i in range(len(mycells.elements)):
-        element = mycells.elements[i]
-
-        if isinstance(element, gdspy.CellReference):
-            name = element.ref_cell.name
-
-
-            remove_list = []
-
-            if name[:2] == 'JJ':
-                print(str(i) + ' - Detected JJ: ' + name)
-
-                cellpolygons = mycells.elements[i].ref_cell.get_polygons()
-
-                print(len(cellpolygons))
-
-    # remove_cells(flatcell, indices)
-
-    mycells.flatten()
-
-    # readd_cells(flatcell, via_list)
-    # readd_cells(flatcell, jj_list)
 
 
 

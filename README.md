@@ -136,3 +136,11 @@ git checkout .
 
 To get the Tkinter UI working in Mac, add the following file in `~/.matplotlib`:
 https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python
+
+# About setup.py
+
+python setup.py install is used to install (typically third party) packages that you're not going to be developing/editing/debugging yourself.
+
+For your own stuff, you want to get your package installed and then be able to frequently edit your code and not have to re-install your package—this is exactly what python setup.py develop does: installs the package (typically just a source folder) in a way that allows you to conveniently edit your code after its installed to the (virtual) environment and have the changes take effect immediately.
+
+Note that it is highly recommended to use pip install . (install) and pip install -e . (developer install) to install packages, as invoking setup.py directly will do the wrong things for many dependencies like pulling prereleases and incompatible packages versions and make the package hard to uninstall with pip.

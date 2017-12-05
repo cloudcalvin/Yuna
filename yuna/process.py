@@ -59,11 +59,6 @@ def connect_term_to_wire(terms, wiresets):
                     cp = midpoint(x1, y1, x2, y2)
                     term.connect_wire_edge(i, wire, cp)
 
-        # TODO: Add verbose parameter
-        # for wire in wireset.wires:
-        #     for edge in wire.edgelabels:
-        #         print(edge)
-            
             
 def create_terminal(Labels, element, terms):
     poly = element.points.tolist()
@@ -116,13 +111,8 @@ class Config:
         cell = self.gdsii.extract(cellref)
         flatcell = tools.flatten_cell(cell)
 
-        tools.my_cell_edits(cell, self.Layers, self.Atom)
-
-        self.Labels = flatcell.labels                
+        self.Labels = flatcell.labels
         self.Elements = flatcell.elements
-        
-    def read_via_cells(self, viacell):
-        cell = self.gdsii.extract(viacell)
         
     def parse_gdspy_elements(self):
         """ Add the elements read from GDSPY to the

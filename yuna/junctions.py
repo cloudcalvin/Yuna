@@ -10,7 +10,7 @@ import yuna.layers as layers
 import pyclipper
 
 
-def filter_multiple_jj_polygons(clip, subj):
+def get_base_wire(clip, subj):
     """ If the junction object has more than
     one M0 polygon, then we have to find the
     one with the JJ layer inside it. """
@@ -19,11 +19,10 @@ def filter_multiple_jj_polygons(clip, subj):
     for poly in clip:
         if layers.does_layers_intersect([poly], subj):
             baselayer = poly
-
     return baselayer
 
 
-def transpose_cell(gdsii, Layers, element):
+def transpose_cell(Layers, element):
     """
     The cells are centered in the middle of the gds
     file canvas. To include this cell into the main
@@ -34,21 +33,17 @@ def transpose_cell(gdsii, Layers, element):
     'result' a {} and not a [].
     """
 
-    refname = element.ref_cell.name
-    tools.green_print('Detecting ' + refname)
-    cell = gdsii.extract(refname)
-    cellpolygons = cell.get_polygons(True)
+    cellpolygons = element.ref_cell.get_polygons(True)
 
     layers = {}
     for key, polygons in cellpolygons.items():
         for layername, layerdata in Layers.items():
             if layerdata['gds'] == key[0]:
-                layers[layername] = save_transposed_coords(polygons, element)
-
+                layers[layername] = save_coords(polygons, element)
     return layers
 
 
-def save_transposed_coords(polygons, element):
+def save_coords(polygons, element):
     """ Transpose each layer in the Junction reference
     and save it by layername in a dict. """
 
@@ -57,9 +52,7 @@ def save_transposed_coords(polygons, element):
         for coord in poly:
             coord[0] = coord[0] + element.origin[0]
             coord[1] = coord[1] + element.origin[1]
-
         poly_list.append(poly.tolist())
-
     return poly_list
 
 
@@ -73,7 +66,6 @@ def clipping(subj, clip, operation):
             layercross = tools.angusj(clip, subj, 'intersection')
         elif operation == 'difference':
             layercross = tools.angusj(clip, subj, 'difference')
-
     return layercross
 
 
@@ -103,15 +95,14 @@ def fill_jj_list(config, basedir, jjs):
     jj_id = 0
     for element in config.Elements:
         if is_jj_cell(element):
-            layers = transpose_cell(config.gdsii, config.Layers, element)
+            jj = Junction(jj_id, config.Layers)
 
-            jj = Junction(basedir, jj_id, config.Layers)
-            jj.set_layers(layers)
-            jj.detect_jj(atom)
+            jj.set_layers(element)
+            jj.config_junction(basedir, atom)
             jjs.append(jj)
             jj_id += 1
-            
-            
+
+
 def update_wire_object(wire, i, _id):
     """ V1 labeled edge is connected to Via 1.
     P1 is connected to Port 1. """
@@ -128,7 +119,7 @@ class Junction:
     Variables
     ---------
     layers : list
-        Original layers of the junction CellRefence.
+        Original layers of the junction CellReference.
     edges : list
         Edges of the wire polygons that connect
         to the 'base' of this junction.
@@ -149,12 +140,8 @@ class Junction:
       'base' and one 'res' layer, each.
     """
 
-    def __init__(self, basedir, jj_id, Layers):
-        self.basedir = basedir
+    def __init__(self, jj_id, Layers):
         self.Layers = Layers
-
-        self.shunt_value = None
-        self.area_value = None
 
         self.id = jj_id
         self.layers = {}
@@ -164,12 +151,60 @@ class Junction:
         self.gds_base = 0
         self.gds_res = 0
 
-    def set_layers(self, layers):
-        self.layers = layers
+        self.shunt_value = None
+        self.area_value = None
 
-    def set_gds(num):
-        self.gds = num
-        
+    def set_layers(self, element):
+        self.layers = transpose_cell(self.Layers, element)
+
+    def config_junction(self, basedir, atom):
+        """ The 'JJ' key means that we have to
+        access the corresponding layer from
+        the Junction Object List. """
+
+        tools.magenta_print('Calculating junctions json:')
+
+        for subatom in atom['Subatom']:
+            tools.read_module(basedir, atom, subatom)
+
+            basename = subatom['Module']['base']['layer']
+            res = subatom['Module']['res']['layer']
+
+            # TODO: Where do we use the GDS numbers?
+            self.gds_base = subatom['Module']['base']['gds']
+            self.gds_res = subatom['Module']['res']['gds']
+
+            self.polygon = self.poly_with_jj_inside(basename)
+            self.res = self.get_shunt_branch(res)
+
+    def poly_with_jj_inside(self, basename):
+        """ Get the base layer (M0) polygon in the Junction
+        objects that has a JJ layer inside them. """
+
+        name = layers.get_junction_layer(self.Layers)
+
+        baselayer = self.layers[basename]
+        jjlayer = self.layers[name]
+
+        return get_base_wire(baselayer, jjlayer)
+
+    def get_shunt_branch(self, res):
+        """ Get the shunt resistance branch
+        in the junction CellRefence. """
+
+        res_name = layers.get_res_layer(self.Layers)
+        jj_name = layers.get_junction_layer(self.Layers)
+
+        res_layer = self.layers[res_name]
+        jj_layer = self.layers[jj_name]
+
+        all_reslayers = []
+        for poly in res_layer:
+            if not layers.does_layers_intersect([poly], jj_layer):
+                all_reslayers.append(poly)
+
+        return clipping(all_reslayers, [self.polygon], 'difference')
+
     def connect_wires(self, wire):
         if wire.active and wire.polygon:
             wireoffset = tools.angusj_offset(wire.polygon, 'up')
@@ -185,51 +220,6 @@ class Junction:
                     self.edges.append(point)
                     update_wire_object(wire, i, self.id)
 
-    def detect_jj(self, atom):
-        """ The 'JJ' key means that we have to
-        access the corresponding layer from
-        the Junction Object List. """
-
-        tools.magenta_print('Calculating junctions json:')
-
-        for subatom in atom['Subatom']:
-            tools.read_module(self.basedir, atom, subatom)
-
-            basename = subatom['Module']['base']['layer']
-            res = subatom['Module']['res']['layer']
-
-            # TODO: Where do we use the GDS numbers?
-            self.gds_base = subatom['Module']['base']['gds']
-            self.gds_res = subatom['Module']['res']['gds']
-
-            self.polygon = self.poly_with_jj_inside(basename)
-            self.res = self.poly_connected_to_res(res)
-
-    def poly_with_jj_inside(self, basename):
-        """ Get the base layer (M0) polygon in the Junction
-        objects that has a JJ layer inside them. """
-
-        name = layers.get_junction_layer(self.Layers)
-
-        baselayer = self.layers[basename]
-        jjlayer = self.layers[name]
-
-        return filter_multiple_jj_polygons(baselayer, jjlayer)
-
-    def poly_connected_to_res(self, res):
-        """ Get the shunt resistance branch
-        in the junction CellRefence. """
-
-        name = layers.get_res_layer(self.Layers)
-        reslayer = self.layers[name]
-
-        all_reslayers = []
-        for poly in reslayer:
-            if not layers.junction_inside_res(self.Layers, self.layers, poly):
-                all_reslayers.append(poly)
-
-        return clipping(all_reslayers, [self.polygon], 'difference')
-
     def calculate_shunt_value(self):
         pass
 
@@ -239,3 +229,11 @@ class Junction:
     def plot_jj(self, cell):
         cell.add(gdspy.Polygon(self.polygon, self.gds_base))
         cell.add(gdspy.Polygon(self.res, self.gds_res))
+
+
+
+
+
+
+
+

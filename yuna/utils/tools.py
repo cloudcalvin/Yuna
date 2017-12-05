@@ -172,14 +172,15 @@ def flatten_cell(cell):
 
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Deep copying cell for Flattening:')
+    print(cell.name)
 
     indices = []
     jj_list = []
     via_list = []
 
-    flatcell = cell.copy('flatcell_2', deep_copy=True)
+    # flatcell = cell.copy('flatcell', deep_copy=True)
 
-    for i, element in enumerate(flatcell.elements):
+    for i, element in enumerate(cell.elements):
         if isinstance(element, gdspy.CellReference):
             name = element.ref_cell.name
             if name[:2] == 'JJ':
@@ -191,14 +192,14 @@ def flatten_cell(cell):
                 indices.append(i)
                 via_list.append(element)
 
-    remove_cells(flatcell, indices)
+    remove_cells(cell, indices)
 
-    flatcell.flatten()
+    # cell.flatten()
 
-    re_add_cells(flatcell, via_list)
-    re_add_cells(flatcell, jj_list)
+    # re_add_cells(flatcell, via_list)
+    # re_add_cells(flatcell, jj_list)
 
-    return flatcell
+    # return cell
 
 
 def read_module(basedir, atom, subatom):

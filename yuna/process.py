@@ -37,10 +37,6 @@ union result and the moat layer.
 """
 
 
-def shrink_touching_layers(layer):
-    return tools.angusj_offset(layer, 'down')
-
-
 def midpoint(x1, y1, x2, y2):
     return ((x1 + x2)/2, (y1 + y2)/2)
             
@@ -67,6 +63,18 @@ def create_terminal(Labels, element, terms):
     terms.append(term)
             
             
+def remove_device_cells_recursively(cell):
+    for i, element in enumerate(cell.elements):
+        if isinstance(element, gdspy.CellReference):
+
+            print(element)
+            mycell = tools.flatten_cell(element.ref_cell)
+
+            # if mycell.get_dependencies():
+            #     mycell = remove_device_cells_recursively(mycell)
+            return mycell
+
+
 class Config:
     """
     Read the data from the GDS file, either from
@@ -109,10 +117,30 @@ class Config:
         
     def read_usercell_reference(self, cellref):
         cell = self.gdsii.extract(cellref)
-        flatcell = tools.flatten_cell(cell)
 
-        self.Labels = flatcell.labels
-        self.Elements = flatcell.elements
+        # print(cell.get_dependencies())
+        # print('')
+        tools.flatten_cell(cell)
+
+        for mycell in cell.get_dependencies():
+            tools.flatten_cell(mycell)
+
+        print('final cells:')
+        print(cell.get_dependencies())
+        print('')
+        # flatcell_2 = tools.flatten_cell(flatcell)
+        # print(flatcell_2.get_dependencies())
+        # print('')
+
+        # if cell.get_dependencies():
+        #     cell = remove_device_cells_recursively(flatcell)
+
+        print('end:')
+        cell.flatten()
+        print(cell.elements)
+
+        self.Labels = cell.labels
+        self.Elements = cell.elements
         
     def parse_gdspy_elements(self):
         """ Add the elements read from GDSPY to the
@@ -179,13 +207,13 @@ class Process:
 
         tools.green_print('Running Atom:')
 
-        if self.config.Atom['vias']:
-            self.calculate_vias(self.config)
-        if self.config.Atom['jjs']:
-            junctions.fill_jj_list(self.config, self.basedir, self.jjs)
+        # if self.config.Atom['vias']:
+        #     self.calculate_vias(self.config)
+        # if self.config.Atom['jjs']:
+        #     junctions.fill_jj_list(self.config, self.basedir, self.jjs)
         
-        wires.fill_wiresets(self.config.Layers, self.wiresets, union)
-        connect_term_to_wire(self.config.Terms, self.wiresets)
+        # wires.fill_wiresets(self.config.Layers, self.wiresets, union)
+        # connect_term_to_wire(self.config.Terms, self.wiresets)
 
 #         # Find the differene between the via, jjs and wires.
 #         for key, wireset in self.wiresets.items():
@@ -220,7 +248,7 @@ class Process:
     def update_wire_offset(self):
         for name, wireset in self.wiresets.items():
             for wires in wireset.wires:
-                wires.polygon = shrink_touching_layers(wires.polygon)        
+                wires.polygon = tools.angusj_offset(wires.polygon, 'down')      
         
     def calculate_vias(self, config):
         """ 

@@ -37,6 +37,38 @@ union result and the moat layer.
 """
 
 
+def get_via_wire_connections(Layers, layer):
+
+    for w1 in layer['wire1']:
+        wire1 = Layers[w1]['result']
+
+        for w2 in layer['wire2']:
+            wire2 = Layers[w2]['result']
+
+            cross = tools.angusj(wire1, wire2, "intersection")
+
+            viacross = []
+            for subj in cross:
+                if tools.angusj([subj], layer['result'], "intersection"):
+                    viacross.append(subj)
+            return viacross
+
+
+
+def get_viacross(Layers, Modules, value, subj):
+    """  """
+
+    clip = get_polygon(Layers, Modules, value['via_layer'])
+
+    result_list = []
+    viacross = []
+    for poly in subj:
+        if tools.angusj([poly], clip, "intersection"):
+            viacross.append(poly)
+
+    return viacross
+
+
 def midpoint(x1, y1, x2, y2):
     return ((x1 + x2)/2, (y1 + y2)/2)
             
@@ -62,18 +94,6 @@ def create_terminal(Labels, element, terms):
     term.connect_label(Labels)
     terms.append(term)
             
-            
-def remove_device_cells_recursively(cell):
-    for i, element in enumerate(cell.elements):
-        if isinstance(element, gdspy.CellReference):
-
-            print(element)
-            mycell = tools.flatten_cell(element.ref_cell)
-
-            # if mycell.get_dependencies():
-            #     mycell = remove_device_cells_recursively(mycell)
-            return mycell
-
 
 class Config:
     """
@@ -116,28 +136,16 @@ class Config:
         self.Elements = self.gdsii.top_level()[0].elements
         
     def read_usercell_reference(self, cellref):
-        cell = self.gdsii.extract(cellref)
+        gdspycell = self.gdsii.extract(cellref)
 
-        # print(cell.get_dependencies())
-        # print('')
-        tools.flatten_cell(cell)
-
-        for mycell in cell.get_dependencies():
-            tools.flatten_cell(mycell)
-
-        print('final cells:')
-        print(cell.get_dependencies())
-        print('')
-        # flatcell_2 = tools.flatten_cell(flatcell)
-        # print(flatcell_2.get_dependencies())
-        # print('')
-
-        # if cell.get_dependencies():
-        #     cell = remove_device_cells_recursively(flatcell)
-
-        print('end:')
-        cell.flatten()
-        print(cell.elements)
+        # # Remove cell references recursively.
+        # tools.remove_cells(gdspycell)
+        # for cell in gdspycell.get_dependencies():
+        #     tools.remove_cells(cell)
+        # gdspycell.flatten()
+        
+        # cell = tools.flatten_cell(gdspycell)
+        cell = gdspycell.flatten()
 
         self.Labels = cell.labels
         self.Elements = cell.elements
@@ -194,7 +202,7 @@ class Process:
     def __init__(self, basedir, config):
         self.basedir = basedir
         self.config = config
-        
+
         self.wiresets = {}
         self.terms = []
         self.vias = []
@@ -207,18 +215,23 @@ class Process:
 
         tools.green_print('Running Atom:')
 
-        # if self.config.Atom['vias']:
-        #     self.calculate_vias(self.config)
-        # if self.config.Atom['jjs']:
-        #     junctions.fill_jj_list(self.config, self.basedir, self.jjs)
+        if self.config.Atom['vias']:
+            self.calculate_vias(self.config)
+        if self.config.Atom['jjs']:
+            junctions.fill_jj_list(self.config, self.basedir, self.jjs)
         
-        # wires.fill_wiresets(self.config.Layers, self.wiresets, union)
-        # connect_term_to_wire(self.config.Terms, self.wiresets)
+        wires.fill_wiresets(self.config.Layers, self.wiresets, union)
+#         connect_term_to_wire(self.config.Terms, self.wiresets)
+#         self.connect_vias()
+
+        cell = gdspy.Cell('via_I1BU')
+        for via in self.vias:
+            cell.add(gdspy.Polygon(via.polygon, 300))
 
 #         # Find the differene between the via, jjs and wires.
 #         for key, wireset in self.wiresets.items():
 #             for wire in wireset.wires:
-#                 if self.config.Atom['vias']:                    
+#                 if self.config.Atom['vias']:
 #                     if wire.update_with_via_diff(self.vias):
 #                         wireset.wires.remove(wire)
 #                 # if self.config.Atom['jjs']:
@@ -245,10 +258,27 @@ class Process:
         # cParams = params.Params()
         # cParams.calculate_area(self.Elements, Layers)
 
-    def update_wire_offset(self):
-        for name, wireset in self.wiresets.items():
-            for wires in wireset.wires:
-                wires.polygon = tools.angusj_offset(wires.polygon, 'down')      
+
+
+
+    # def connect_vias(self):
+    #     for key, layer in self.config.Layers.items():
+    #         if layer['type'] == 'via':
+    #             if key == 'I1BU':
+    #                 tools.magenta_print('Via detection: ' + key)
+    # 
+    #                 via_blocks = get_via_wire_connections(self.config.Layers, layer)
+    # 
+    #                 cell = gdspy.Cell('via_I1BU')
+    #                 for poly in via_blocks:
+    #                     cell.add(gdspy.Polygon(poly, 300))
+
+
+
+    # def update_wire_offset(self):
+    #     for name, wireset in self.wiresets.items():
+    #         for wires in wireset.wires:
+    #             wires.polygon = tools.angusj_offset(wires.polygon, 'down')      
         
     def calculate_vias(self, config):
         """ 

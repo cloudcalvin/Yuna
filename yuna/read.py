@@ -13,10 +13,6 @@ from pprint import pprint
 from itertools import chain
 
 
-# def shrink_touching_layers(layer):
-#     return tools.angusj_offset(layer, 'down')
-
-
 def config(config_file):
     """ Reads the config file that is written in
     JSON. This file contains the logic of how

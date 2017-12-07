@@ -18,23 +18,6 @@ def union_polygons(Layers):
         tools.union_wire(Layers, key)
 
 
-class Point:
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-
-class Line:
-
-    def __init__(self):
-        self.Points = []
-        self.label = ''
-
-    def add_point(self, point):
-        self.Points.append(point)
-
-
 class WireSet:
     """  """
 
@@ -63,8 +46,6 @@ def fill_wiresets(Layers, wiresets, union):
 
     if union:
         union_polygons(Layers)
-    else:
-        print('Note: UNION wires is not set')
 
     tools.magenta_print('Active layers:')    
     for name, layers in Layers.items():
@@ -95,38 +76,37 @@ class Wire:
         self.active = active
         self.polygon = polygon
         self.lines = []
-        self.edgelabels = [None] * len(polygon[0])
 
     def update_with_via_diff(self, vias):
         """ Connect vias and wires by finding
         their difference and not letting 
         the overlap. """
 
-        clip = []
-        for via in vias:
-            clip.append(via.polygon)
-
-        wireoffset = tools.angusj_offset(clip, 'down')
-
-        if layers.does_layers_intersect(self.polygon, wireoffset):
-            return True
-        else:
-            return False
-
-#         subj = self.polygon
-# 
 #         clip = []
 #         for via in vias:
 #             clip.append(via.polygon)
-#         
-#         update = False
-#         if clip and subj:
-#             self.polygon = tools.angusj(clip, subj, 'difference')
 # 
-#             if self.polygon:
-#                 self.edgelabels = [None] * len(self.polygon[0])
-#                 update = True
+#         wireoffset = tools.angusj_offset(clip, 'down')
 # 
+#         if layers.does_layers_intersect(self.polygon, wireoffset):
+#             return True
+#         else:
+#             return False
+
+        subj = self.polygon
+
+        clip = []
+        for via in vias:
+            clip.append(via.polygon)
+        
+        update = False
+        if clip and subj:
+            self.polygon = tools.angusj(clip, subj, 'difference')
+
+            if self.polygon:
+                self.edgelabels = [None] * len(self.polygon[0])
+                update = True
+
 #         return update
 
     def update_with_jj_diff(self, jjs):

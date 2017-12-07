@@ -155,14 +155,38 @@ def union_wire(Layers, layer):
     Layers[layer]['active'] = True
 
 
-def remove_cells(flatcell, indices):
-    for i in sorted(indices, reverse=True):
-        del flatcell.elements[i]
-
-
 def re_add_cells(flatcell, cell_list):
     for element in cell_list:
         flatcell.add(element)
+
+
+def remove_cells(cell):
+    """ This function does a deep copy of the current
+    working cell, without the JJs. It then flattens
+    this cell and afterwards adds the JJs. """
+
+    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print('Deep copying cell for Flattening:')
+    print(cell.name)
+
+    indices = []
+    jj_list = []
+    via_list = []
+
+    for i, element in enumerate(cell.elements):
+        if isinstance(element, gdspy.CellReference):
+            name = element.ref_cell.name
+            if name[:2] == 'JJ':
+                print(str(i) + ' - Detected JJ: ' + name)
+                indices.append(i)
+                jj_list.append(element)
+            if name[:3] == 'via':
+                print(str(i) + ' - Detected VIA: ' + name)
+                indices.append(i)
+                via_list.append(element)
+
+    for i in sorted(indices, reverse=True):
+        del flatcell.elements[i]
 
 
 def flatten_cell(cell):
@@ -178,9 +202,9 @@ def flatten_cell(cell):
     jj_list = []
     via_list = []
 
-    # flatcell = cell.copy('flatcell', deep_copy=True)
+    flatcell = cell.copy('flatcell', deep_copy=True)
 
-    for i, element in enumerate(cell.elements):
+    for i, element in enumerate(flatcell.elements):
         if isinstance(element, gdspy.CellReference):
             name = element.ref_cell.name
             if name[:2] == 'JJ':
@@ -192,15 +216,15 @@ def flatten_cell(cell):
                 indices.append(i)
                 via_list.append(element)
 
-    remove_cells(cell, indices)
+    for i in sorted(indices, reverse=True):
+        del flatcell.elements[i]
 
-    # cell.flatten()
+    flatcell.flatten()
 
-    # re_add_cells(flatcell, via_list)
-    # re_add_cells(flatcell, jj_list)
+    re_add_cells(flatcell, via_list)
+    re_add_cells(flatcell, jj_list)
 
-    # return cell
-
+    return cell
 
 def read_module(basedir, atom, subatom):
     """ Read the Module json file and save

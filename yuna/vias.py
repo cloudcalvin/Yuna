@@ -29,7 +29,6 @@ def get_polygon(Layers, Modules, poly):
         subjclip = Layers[polylayer]['result']
     elif polyclass == 'Module':
         subjclip = Modules[polylayer]['result']
-
     return subjclip
 
 
@@ -43,9 +42,6 @@ def get_layercross(Layers, Modules, value):
     layercross = []
     if subj and clip:
         layercross = tools.angusj(clip, subj, 'intersection')
-        if not layercross:
-            print('Clipping is zero.')
-
     return layercross
 
 
@@ -54,12 +50,10 @@ def get_viacross(Layers, Modules, value, subj):
 
     clip = get_polygon(Layers, Modules, value['via_layer'])
 
-    result_list = []
     viacross = []
     for poly in subj:
         if tools.angusj([poly], clip, "intersection"):
             viacross.append(poly)
-
     return viacross
 
 
@@ -83,7 +77,6 @@ def reverse_via(Layers, Modules, value, subj):
         result_list = tools.angusj([poly], subj, 'intersection')
         if result_list:
             wireconnect.append(poly)
-
     return wireconnect
 
 
@@ -95,11 +88,11 @@ def remove_viacross(Layers, Modules, value):
 
     result_list = []
     viacross = []
+
     for poly in subj:
         result_list = tools.angusj([poly], clip, "intersection")
         if not result_list:
             viacross.append(poly)
-
     return viacross
 
 
@@ -124,9 +117,10 @@ def fill_via_list(vias, atom):
     for subatom in atom['Subatom']:
         for poly in subatom['result']:
             via = Via(via_id, poly, subatom['gds'])
-            via.convert_polygon_to_lines()
-
+#             via.convert_polygon_to_lines()
+            via.add_label(subatom)
             vias.append(via)
+
             via_id += 1
 
 
@@ -205,10 +199,33 @@ class Via:
         """
 
         self.id = via_id
+        self.label = ''
+        self.gds = gds
+        self.wire1 = None
+        self.wire2 = None
+
         self.polygon = polygon
         self.lines = []
-        self.gds = gds
         self.edges = []
+
+    def add_label(self, subatom):
+        self.wire1 = subatom['wire1']
+        self.wire2 = subatom['wire2']
+        self.label = subatom['wire1'] + '_' + subatom['wire2']
+
+    def get_via_center(self):
+        x1 = self.polygon[0][0]
+        x2 = self.polygon[2][0]
+
+        y1 = self.polygon[0][1]
+        y2 = self.polygon[2][1]
+        
+        # print((x1,y1), (x2,y2))
+
+        mx = (x1 + x2) / 2.0
+        my = (y1 + y2) / 2.0
+
+        return [mx, my]
 
     def convert_polygon_to_lines(self):
         for i in range(len(self.polygon) - 1):
@@ -245,6 +262,18 @@ class Via:
         for gds, layers in self.wires.items():
             for poly in layers:
                 cell.add(gdspy.Polygon(poly, gds))
+                
+                
+# class Via:
+# 
+#     def __init__(self, point, wire_base, wire_connect):
+#         self.point = point
+#         self.wire_base = wire_base
+#         self.wire_connect = wire_connect
+#         self.label = ''
+# 
+#     def set_label(self):
+#         self.label = self.wire_base + '_' + self.wire_connect
                 
                 
                 

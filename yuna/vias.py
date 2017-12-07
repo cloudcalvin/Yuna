@@ -222,8 +222,8 @@ class Via:
         
         # print((x1,y1), (x2,y2))
 
-        mx = (x1 + x2) / 2.0
-        my = (y1 + y2) / 2.0
+        mx = (x1 + x2) / 2.01
+        my = (y1 + y2) / 2.01
 
         return [mx, my]
 

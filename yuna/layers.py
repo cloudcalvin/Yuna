@@ -81,16 +81,19 @@ class Term:
         """
 
         self.polygon = polygon
+        self.label_pos = None
         self.label = ''
         self.layer = ''
-        
+
     def connect_label(self, Labels):
         for label in Labels:
+            print(label.position)
             inside = pyclipper.PointInPolygon(label.position, self.polygon)
             if inside != 0:
                 """ label.text : "P1 M2 M0" """
                 self.label = label.text.split()[0]
                 self.layer = label.text.split()[1]
+                self.label_pos = label.position
                 
     def connect_wire_edge(self, i, wire, point):
         """ V1 labeled edge is connected to Via 1.

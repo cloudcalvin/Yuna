@@ -78,11 +78,11 @@ def machina(process, testname, ldf, cellref, cwd, union):
     if cellref == 'list':
         tools.list_layout_cells(gds_file)
     else:
-        wireset, vias, Params, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
+        wireset, vias, terms, Params, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
 
     tools.cyan_print('Yuna. Done.')
 
-    return wireset, vias, Params, Layers
+    return wireset, vias, terms, Params, Layers
 
 
 def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
@@ -104,19 +104,21 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
 
     config.parse_gdspy_elements()
 
+
     proc = process.Process(examdir, config)
     proc.circuit_layout(union)
     # proc.update_wire_offset()
-    
+
     jjs = proc.jjs
     vias = proc.vias
     wireset = proc.wiresets
-    
+    terms = config.Terms
+
     tools.magenta_print('Write Layers')
     cWrite = write.Write(True)
     gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
 
-    return wireset, vias, config_data['Params'], config_data['Layers']
+    return wireset, vias, terms, config_data['Params'], config_data['Layers']
 
 
 if __name__ == '__main__':

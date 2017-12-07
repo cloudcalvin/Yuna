@@ -88,11 +88,21 @@ def connect_term_to_wire(terms, wiresets):
                     term.connect_wire_edge(i, wire, cp)
 
             
-def create_terminal(Labels, element, terms):
-    poly = element.points.tolist()
-    term = layers.Term(poly)
-    term.connect_label(Labels)
-    terms.append(term)
+def create_terminal(Labels, element, terms, mtype):
+    if mtype == 'PolygonSet':
+        print('my terminals PolySet:')
+        for poly in element.polygons:
+            term = layers.Term(poly.tolist())
+            term.connect_label(Labels)
+            terms.append(term)
+            print(term.label)
+    elif mtype == 'Polygon':
+        print('my terminals Poly:')
+        term = layers.Term(element.points.tolist())
+        term.connect_label(Labels)
+        terms.append(term)
+
+        print(terms)
             
 
 class Config:
@@ -156,19 +166,22 @@ class Config:
 
         tools.green_print('Elements:')
         for element in self.Elements:
+            print(element)
             if isinstance(element, gdspy.Polygon):            
                 if element.layer == self.Params['TERM']['gds']:
-                    create_terminal(self.Labels, element, self.Terms)
+                    create_terminal(self.Labels, element, self.Terms, 'Polygon')
                 else:
                     self.from_polygon_object(element)
             elif isinstance(element, gdspy.PolygonSet):
-                self.from_polygonset_object(element)
+                if element.layers[0] == self.Params['TERM']['gds']:
+                    create_terminal(self.Labels, element, self.Terms, 'PolygonSet')
+                else:
+                    self.from_polygonset_object(element)
 
     def from_polygon_object(self, element):
         """ Add the polygon to the 'result'
         key in the 'Layers' object """
 
-        print(element)
         for layer, lay_data in self.Layers.items():
             if lay_data['gds'] == element.layer:
                 self.Layers[layer]['result'].append(element.points.tolist())
@@ -177,7 +190,6 @@ class Config:
         """ Add the polygons from the PolygonSet to
         the 'result' key in the 'Layers' object. """
 
-        print(element)
         for layer, lay_data in self.Layers.items():
             if lay_data['gds'] == element.layers[0]:
                 for poly in element.polygons:
@@ -204,7 +216,6 @@ class Process:
         self.config = config
 
         self.wiresets = {}
-        self.terms = []
         self.vias = []
         self.jjs = []
 

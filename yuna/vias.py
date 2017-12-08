@@ -24,6 +24,8 @@ def get_polygon(Layers, Modules, poly):
     polyclass = list(poly.keys())[0]
     polylayer = list(poly.values())[0]
 
+    print(polylayer)
+
     subjclip = None
     if polyclass == 'Layer':
         subjclip = Layers[polylayer]['result']
@@ -39,9 +41,26 @@ def get_layercross(Layers, Modules, value):
     subj = get_polygon(Layers, Modules, value['wire_1'])
     clip = get_polygon(Layers, Modules, value['wire_2'])
 
+    # if value['wire_2']['Layer'] == 'MN3':
+    #     clip = tools.angusj(clip, clip, 'union')
+    #     # clip = [clip[2]]
+
+    print('sub')
+    print(subj)
+    print('clip')
+    print(clip)
+
+    # if not isinstance(clip[0][0], list):
+    #     clip = [clip]
+
     layercross = []
     if subj and clip:
+    # for poly in clip:
         layercross = tools.angusj(clip, subj, 'intersection')
+
+    # if value['wire_2']['Layer'] == 'MN3':
+    #     return clip[0]
+    # else:
     return layercross
 
 
@@ -113,8 +132,12 @@ def fill_via_list(vias, atom):
     Subatom to the self.vias list of
     via objects. """
 
+    tools.magenta_print('Vias')
+
     via_id = 0
     for subatom in atom['Subatom']:
+        # print(subatom['id'])
+        # print(subatom['result'])
         for poly in subatom['result']:
             via = Via(via_id, poly, subatom['gds'])
 #             via.convert_polygon_to_lines()
@@ -212,6 +235,7 @@ class Via:
         self.wire1 = subatom['wire1']
         self.wire2 = subatom['wire2']
         self.label = subatom['wire1'] + '_' + subatom['wire2']
+        print(self.label)
 
     def get_via_center(self):
         x1 = self.polygon[0][0]
@@ -220,8 +244,6 @@ class Via:
         y1 = self.polygon[0][1]
         y2 = self.polygon[2][1]
         
-        # print((x1,y1), (x2,y2))
-
         mx = (x1 + x2) / 2.01
         my = (y1 + y2) / 2.01
 
@@ -261,24 +283,16 @@ class Via:
     def plot_connected_wires(self, cell):
         for gds, layers in self.wires.items():
             for poly in layers:
-                cell.add(gdspy.Polygon(poly, gds))
-                
-                
-# class Via:
-# 
-#     def __init__(self, point, wire_base, wire_connect):
-#         self.point = point
-#         self.wire_base = wire_base
-#         self.wire_connect = wire_connect
-#         self.label = ''
-# 
-#     def set_label(self):
-#         self.label = self.wire_base + '_' + self.wire_connect
+                cell.add(gdspy.Polygon(poly, gds))    
                 
                 
                 
                 
-                
-                
+
+
+
+
+
+
                 
                 

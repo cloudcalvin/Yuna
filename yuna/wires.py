@@ -47,7 +47,7 @@ def fill_wiresets(Layers, wiresets, union):
     if union:
         union_polygons(Layers)
 
-    tools.magenta_print('Active layers:')    
+    tools.magenta_print('Wires')    
     for name, layers in Layers.items():
         if (layers['type'] == 'wire') or (layers['type'] == 'resistance') or (layers['type'] == 'shunt'):
             wireset = WireSet(layers['gds'])
@@ -122,8 +122,6 @@ class Wire:
         if clip and subj:
             self.polygon = tools.angusj(clip, subj, 'difference')
             self.edgelabels = [None] * len(self.polygon)
-            print(self.polygon)
-            print(len(self.polygon))
 
     def plot_wire(self, cell, gds):
         if self.active:

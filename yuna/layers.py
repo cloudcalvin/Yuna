@@ -87,7 +87,6 @@ class Term:
 
     def connect_label(self, Labels):
         for label in Labels:
-            print(label.position)
             inside = pyclipper.PointInPolygon(label.position, self.polygon)
             if inside != 0:
                 """ label.text : "P1 M2 M0" """

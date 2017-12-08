@@ -90,8 +90,8 @@ def angusj(clip, subj, method):
                           pyclipper.PFT_EVENODD)
     elif method == 'intersection':
         subj = pc.Execute(pyclipper.CT_INTERSECTION,
-                          pyclipper.PFT_EVENODD,
-                          pyclipper.PFT_EVENODD)
+                          pyclipper.PFT_NONZERO,
+                          pyclipper.PFT_NONZERO)
 
     if len(subj) > 0:
         return subj

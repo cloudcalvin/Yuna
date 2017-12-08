@@ -90,19 +90,14 @@ def connect_term_to_wire(terms, wiresets):
             
 def create_terminal(Labels, element, terms, mtype):
     if mtype == 'PolygonSet':
-        print('my terminals PolySet:')
         for poly in element.polygons:
             term = layers.Term(poly.tolist())
             term.connect_label(Labels)
             terms.append(term)
-            print(term.label)
     elif mtype == 'Polygon':
-        print('my terminals Poly:')
         term = layers.Term(element.points.tolist())
         term.connect_label(Labels)
         terms.append(term)
-
-        print(terms)
             
 
 class Config:
@@ -329,6 +324,7 @@ class Process:
             if key == 'via_connect':
                 layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)
                 viacross = vias.get_viacross(self.config.Layers, subatom['Module'], value, layercross)
+                print(layercross)
                 module['result'] = viacross
             elif key == 'via_connect_reverse':
                 layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)

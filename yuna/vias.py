@@ -244,8 +244,8 @@ class Via:
         y1 = self.polygon[0][1]
         y2 = self.polygon[2][1]
         
-        mx = (x1 + x2) / 2.01
-        my = (y1 + y2) / 2.01
+        mx = ((x1 + x2) / 2.0) + 0.5
+        my = ((y1 + y2) / 2.0) + 0.5
 
         return [mx, my]
 

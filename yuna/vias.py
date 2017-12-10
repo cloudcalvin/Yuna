@@ -20,7 +20,7 @@ import yuna.wires as wires
 
 def get_polygon(Layers, Modules, poly):
     """  """
-
+    
     polyclass = list(poly.keys())[0]
     polylayer = list(poly.values())[0]
 
@@ -34,40 +34,23 @@ def get_polygon(Layers, Modules, poly):
     return subjclip
 
 
-def get_layercross(Layers, Modules, value):
+def get_layercross(config, Modules, value):
     """ Intersect the layers in the 'clip' object
     in the submodule. """
 
-    subj = get_polygon(Layers, Modules, value['wire_1'])
-    clip = get_polygon(Layers, Modules, value['wire_2'])
-
-    # if value['wire_2']['Layer'] == 'MN3':
-    #     clip = tools.angusj(clip, clip, 'union')
-    #     # clip = [clip[2]]
-
-    print('sub')
-    print(subj)
-    print('clip')
-    print(clip)
-
-    # if not isinstance(clip[0][0], list):
-    #     clip = [clip]
+    subj = get_polygon(config.Layers, Modules, value['wire_1'])
+    clip = get_polygon(config.Layers, Modules, value['wire_2'])
 
     layercross = []
     if subj and clip:
-    # for poly in clip:
         layercross = tools.angusj(clip, subj, 'intersection')
-
-    # if value['wire_2']['Layer'] == 'MN3':
-    #     return clip[0]
-    # else:
     return layercross
 
 
-def get_viacross(Layers, Modules, value, subj):
+def get_viacross(config, Modules, value, subj):
     """  """
 
-    clip = get_polygon(Layers, Modules, value['via_layer'])
+    clip = get_polygon(config.Layers, Modules, value['via_layer'])
 
     viacross = []
     for poly in subj:
@@ -76,7 +59,7 @@ def get_viacross(Layers, Modules, value, subj):
     return viacross
 
 
-def reverse_via(Layers, Modules, value, subj):
+def reverse_via(config, Modules, value, subj):
     """ 
     This method is called when we have
     to save the via as the first layer below
@@ -88,7 +71,7 @@ def reverse_via(Layers, Modules, value, subj):
     Note that wire_1 must be the largest polygon.
     """
 
-    clip = get_polygon(Layers, Modules, value['wire_1'])
+    clip = get_polygon(config.Layers, Modules, value['wire_1'])
 
     result_list = []
     wireconnect = []
@@ -99,11 +82,11 @@ def reverse_via(Layers, Modules, value, subj):
     return wireconnect
 
 
-def remove_viacross(Layers, Modules, value):
+def remove_viacross(config, Modules, value):
     """  """
 
-    subj = get_polygon(Layers, Modules, value['wire_1'])
-    clip = get_polygon(Layers, Modules, value['via_layer'])
+    subj = get_polygon(config.Layers, Modules, value['wire_1'])
+    clip = get_polygon(config.Layers, Modules, value['via_layer'])
 
     result_list = []
     viacross = []
@@ -136,8 +119,6 @@ def fill_via_list(vias, atom):
 
     via_id = 0
     for subatom in atom['Subatom']:
-        # print(subatom['id'])
-        # print(subatom['result'])
         for poly in subatom['result']:
             via = Via(via_id, poly, subatom['gds'])
 #             via.convert_polygon_to_lines()
@@ -197,7 +178,7 @@ def make_edge_polygon(p1, p2):
             
 
 class Via:
-    def __init__(self, via_id, polygon, gds):
+    def __init__(self, via_id):
         """
         Variables
         ---------
@@ -223,11 +204,10 @@ class Via:
 
         self.id = via_id
         self.label = ''
-        self.gds = gds
         self.wire1 = None
         self.wire2 = None
 
-        self.polygon = polygon
+        self.polygon = []
         self.lines = []
         self.edges = []
 
@@ -244,8 +224,8 @@ class Via:
         y1 = self.polygon[0][1]
         y2 = self.polygon[2][1]
         
-        mx = ((x1 + x2) / 2.0) + 0.5
-        my = ((y1 + y2) / 2.0) + 0.5
+        mx = ((x1 + x2) / 2.0) + 0.1
+        my = ((y1 + y2) / 2.0) + 0.1
 
         return [mx, my]
 

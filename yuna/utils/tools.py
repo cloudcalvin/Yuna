@@ -160,33 +160,83 @@ def re_add_cells(flatcell, cell_list):
         flatcell.add(element)
 
 
-def remove_cells(cell):
-    """ This function does a deep copy of the current
-    working cell, without the JJs. It then flattens
-    this cell and afterwards adds the JJs. """
+# def remove_cells(cell):
+#     """ This function does a deep copy of the current
+#     working cell, without the JJs. It then flattens
+#     this cell and afterwards adds the JJs. """
+# 
+#     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+#     print('Deep copying cell for Flattening:')
+#     print(cell.name)
+# 
+#     indices = []
+#     jj_list = []
+#     via_list = []
+# 
+#     for i, element in enumerate(cell.elements):
+#         if isinstance(element, gdspy.CellReference):
+#             name = element.ref_cell.name
+#             if name[:2] == 'JJ':
+#                 print(str(i) + ' - Detected JJ: ' + name)
+#                 indices.append(i)
+#                 jj_list.append(element)
+#             if name[:3] == 'via':
+#                 print(str(i) + ' - Detected VIA: ' + name)
+#                 indices.append(i)
+#                 via_list.append(element)
+# 
+#     for i in sorted(indices, reverse=True):
+#         del flatcell.elements[i]
 
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-    print('Deep copying cell for Flattening:')
-    print(cell.name)
 
+def get_all_cellreferences(yunacell, recursive=False):
+    """
+    Returns a list of the cells included in this cell as references.
+
+    Parameters
+    ----------
+    recursive : bool
+        If True returns cascading dependencies.
+
+    Returns
+    -------
+    out : set of ``Cell``
+        List of the cells referenced by this cell.
+    """
+    dependencies = set()
+    for element in yunacell.elements:
+        if isinstance(element, gdspy.CellReference) or isinstance(
+                element, gdspy.CellArray):
+            if recursive:
+                dependencies.update(
+                    get_all_cellreferences(element.ref_cell, True)
+                )
+            dependencies.add(element)
+    # print(element)
+    return dependencies
+
+
+def create_device_cell(device_cellrefs):
+    green_print('Create device cells:')
+    
     indices = []
-    jj_list = []
-    via_list = []
-
-    for i, element in enumerate(cell.elements):
-        if isinstance(element, gdspy.CellReference):
-            name = element.ref_cell.name
+    device_list = []
+    
+    for i, dev in enumerate(device_cellrefs):
+        if isinstance(dev, gdspy.CellReference):
+            name = dev.ref_cell.name
             if name[:2] == 'JJ':
                 print(str(i) + ' - Detected JJ: ' + name)
                 indices.append(i)
-                jj_list.append(element)
+                device_list.append(dev)
             if name[:3] == 'via':
                 print(str(i) + ' - Detected VIA: ' + name)
                 indices.append(i)
-                via_list.append(element)
-
-    for i in sorted(indices, reverse=True):
-        del flatcell.elements[i]
+                device_list.append(dev)
+        
+    device = gdspy.Cell('DeviceCells')
+    for dev in device_list:
+        device.add(dev) 
 
 
 def flatten_cell(cell):
@@ -199,32 +249,47 @@ def flatten_cell(cell):
     print(cell.name)
 
     indices = []
-    jj_list = []
-    via_list = []
+    device_list = []
 
     flatcell = cell.copy('flatcell', deep_copy=True)
 
-    for i, element in enumerate(flatcell.elements):
-        if isinstance(element, gdspy.CellReference):
-            name = element.ref_cell.name
-            if name[:2] == 'JJ':
-                print(str(i) + ' - Detected JJ: ' + name)
-                indices.append(i)
-                jj_list.append(element)
-            if name[:3] == 'via':
-                print(str(i) + ' - Detected VIA: ' + name)
-                indices.append(i)
-                via_list.append(element)
+    for i, mycell in enumerate(flatcell.get_dependencies()):
+        name = mycell.name 
+        print(name)
+        if name[:2] == 'JJ':
+            print(str(i) + ' - Detected JJ: ' + name)
+            indices.append(i)
+            device_list.append(mycell)
+        if name[:3] == 'via':
+            print(str(i) + ' - Detected VIA: ' + name)
+            indices.append(i)
+            device_list.append(mycell)
+            
+        # for i, element in enumerate(mycell.elements):
+        #     if isinstance(element, gdspy.CellReference):
+        #         name = element.ref_cell.name
+        #         if name[:2] == 'JJ':
+        #             print(str(i) + ' - Detected JJ: ' + name)
+        #             indices.append(i)
+        #             device_list.append(element)
+        #         if name[:3] == 'via':
+        #             print(str(i) + ' - Detected VIA: ' + name)
+        #             indices.append(i)
+        #             device_list.append(element)
+            
+    device = gdspy.Cell('Cells')
+    for dev in device_list:
+        device.add(dev) 
 
     for i in sorted(indices, reverse=True):
         del flatcell.elements[i]
 
     flatcell.flatten()
 
-    re_add_cells(flatcell, via_list)
-    re_add_cells(flatcell, jj_list)
+    # re_add_cells(flatcell, via_list)
+    re_add_cells(flatcell, device_list)
 
-    return cell
+    return flatcell
 
 def read_module(basedir, atom, subatom):
     """ Read the Module json file and save

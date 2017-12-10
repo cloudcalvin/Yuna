@@ -129,10 +129,12 @@ class Config:
         self.Labels = None
         self.gdsii = None
         
+        self.vias = []
+        
     def set_gds(self, gds_file):
         self.gdsii = gdspy.GdsLibrary()
         self.gdsii.read_gds(gds_file, unit=1.0e-12)
-        
+    
     def read_topcell_reference(self):
         topcell = self.gdsii.top_level()[0]
         # TODO: Add flattening?
@@ -141,7 +143,7 @@ class Config:
         self.Elements = self.gdsii.top_level()[0].elements
         
     def read_usercell_reference(self, cellref):
-        gdspycell = self.gdsii.extract(cellref)
+        yunacell = self.gdsii.extract(cellref)
 
         # # Remove cell references recursively.
         # tools.remove_cells(gdspycell)
@@ -150,10 +152,52 @@ class Config:
         # gdspycell.flatten()
         
         # cell = tools.flatten_cell(gdspycell)
-        cell = gdspycell.flatten()
+        
+        # tools.create_device_cell(all_cells)
+        
+        v_id = 0
+        j_id = 0
+        
+        for cell in yunacell.get_dependencies(True):
+            print(cell.name)
+            if cell.name[:3] == 'via':
+                bbox = cell.get_bounding_box()
+                
+                # Get the center of the cell.
+                cx = (bbox[0][0] + bbox[1][0]) / 2.0
+                cy = (bbox[0][1] + bbox[1][1]) / 2.0
+                
+                label = gdspy.Label(cell.name, (cx, cy), 'nw', layer=11)
+                # label = label.translate(2000000, 0)
+                cell.add(label)
+                
+                text = gdspy.Text('Sample text', 10e4, (cx, cy))
+                cell.add(text)
+                
+                via = vias.Via(v_id)
+                self.vias.append(via)
+                
+        for element in yunacell.elements:
+            if isinstance(element, gdspy.CellReference):
+                print(element)
+                print(element.get_labels(7))
+                
+        for cell in yunacell.get_dependencies(True):
+            cell.flatten()
+            
+        yunacell.flatten()
+        
+        print('----------------------')
+        for element in yunacell.elements:
+            if isinstance(element, gdspy.Label):
+                print(element)
+                
+        # tools.green_print('Flattened cell labels:')
+        # for labels in flatcell.labels:
+        #     print(labels)
 
-        self.Labels = cell.labels
-        self.Elements = cell.elements
+        self.Labels = yunacell.labels
+        self.Elements = yunacell.elements
         
     def parse_gdspy_elements(self):
         """ Add the elements read from GDSPY to the
@@ -162,7 +206,7 @@ class Config:
         tools.green_print('Elements:')
         for element in self.Elements:
             print(element)
-            if isinstance(element, gdspy.Polygon):            
+            if isinstance(element, gdspy.Polygon):
                 if element.layer == self.Params['TERM']['gds']:
                     create_terminal(self.Labels, element, self.Terms, 'Polygon')
                 else:
@@ -264,9 +308,6 @@ class Process:
         # cParams = params.Params()
         # cParams.calculate_area(self.Elements, Layers)
 
-
-
-
     # def connect_vias(self):
     #     for key, layer in self.config.Layers.items():
     #         if layer['type'] == 'via':
@@ -278,8 +319,6 @@ class Process:
     #                 cell = gdspy.Cell('via_I1BU')
     #                 for poly in via_blocks:
     #                     cell.add(gdspy.Polygon(poly, 300))
-
-
 
     # def update_wire_offset(self):
     #     for name, wireset in self.wiresets.items():
@@ -322,18 +361,14 @@ class Process:
 
         for key, value in list(module.items()):
             if key == 'via_connect':
-                layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)
-                viacross = vias.get_viacross(self.config.Layers, subatom['Module'], value, layercross)
-                print(layercross)
-                module['result'] = viacross
+                layercross = vias.get_layercross(self.config, subatom['Module'], value)
+                module['result'] = vias.get_viacross(self.config, subatom['Module'], value, layercross)
             elif key == 'via_connect_reverse':
-                layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)
-                viacross = vias.get_viacross(self.config.Layers, subatom['Module'], value, layercross)
-                wireconnect = vias.reverse_via(self.config.Layers, subatom['Module'], value, viacross)
-                module['result'] = wireconnect
+                layercross = vias.get_layercross(self.config, subatom['Module'], value)
+                viacross = vias.get_viacross(self.config, subatom['Module'], value, layercross)
+                module['result'] = vias.reverse_via(self.config, subatom['Module'], value, viacross)
             elif key == 'via_remove':
-                viacross = vias.remove_viacross(self.config.Layers, subatom['Module'], value)
-                module['result'] = viacross
+                module['result'] = vias.remove_viacross(self.config, subatom['Module'], value)
 
 
 

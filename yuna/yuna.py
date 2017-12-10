@@ -104,19 +104,19 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
 
     config.parse_gdspy_elements()
 
-
     proc = process.Process(examdir, config)
-    proc.circuit_layout(union)
-    # proc.update_wire_offset()
 
     jjs = proc.jjs
     vias = proc.vias
     wireset = proc.wiresets
     terms = config.Terms
 
-    tools.magenta_print('Write Layers')
-    cWrite = write.Write(True)
-    gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
+    # tools.magenta_print('Write Layers')
+    # cWrite = write.Write(True)
+    # gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
+    
+    gdspy.LayoutViewer()
+    gdspy.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 
     return wireset, vias, terms, config_data['Params'], config_data['Layers']
 

@@ -112,7 +112,26 @@ def remove_cells(yunacell):
     for i in sorted(indices, reverse=True):
         del yunacell.elements[i]
 
-
+    
+def add_label(cell, bb):
+    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
+    cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
+    label = gdspy.Label(cell.name, (cx, cy), 'nw', layer=11)
+    cell.add(label)
+    
+    
+def union_wires(cell, wire):
+    tools.green_print('Union wire:')
+    ucell = gdspy.Cell('union_MN1')
+    for key, polygon in cell.get_polygons(True).items():
+        if key == (wire, 0):
+            print(key, polygon)    
+            polygon = tools.angusj(polygon, polygon, 'union')
+            
+            for poly in polygon:
+                ucell.add(gdspy.Polygon(poly, 300))
+            
+            
 class Config:
     """
     Read the data from the GDS file, either from
@@ -159,75 +178,50 @@ class Config:
     def read_usercell_reference(self, cellref):
         yunacell = self.gdsii.extract(cellref)
 
-        # remove_cells(yunacell)
-        
         v_id = 0
         j_id = 0
 
-        Subatom = self.Atom['vias']['Subatom']
-        
         print('\nyunacell::')
         for cell in yunacell.get_dependencies(True):
             if cell.name[:3] == 'via' and cell.name != 'via_mm_tv00_rv22_70x70':
-                subatom = Subatom[cell.name]
-
-                for element in cell.elements:
-                    if isinstance(element, gdspy.Polygon):
-                        if element.layer == subatom['wire1'] or element.layer == subatom['wire2']:
-                            element.datatype = v_id
-
-                for element in cell.elements:
-                    if isinstance(element, gdspy.Polygon):
-                        print(element)
+                
+                cell.flatten(single_datatype=1)
+                
+                # subatom = self.Atom['vias']['Subatom'][cell.name]
+                # for element in cell.elements:
+                #     if isinstance(element, gdspy.Polygon):
+                #         if element.layer == subatom['wire1'] or element.layer == subatom['wire2']:
+                #             element.datatype = 1
 
                 bb = cell.get_bounding_box()
-
-                cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
-                cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-                
-                label = gdspy.Label(cell.name, (cx, cy), 'nw', layer=11)
-                cell.add(label)
-                v_id += 1
-
-            # elif cell.name[:3] == 'ljj':
-            #     bb = cell.get_bounding_box()
-
-            #     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
-            #     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-              
-            #     label = gdspy.Label(cell.name, (cx, cy), 'nw', layer=11)
-            #     cell.add(label)
-
-        print('datatypes::')
-        print(yunacell.get_datatypes())
-
-        print('cellrefs::')
-        for cellref in yunacell.get_cellreferences(True):
-            print(cellref)
-
-        print('elements::')
-        for i, element in enumerate(yunacell.elements):
-            if isinstance(element, gdspy.CellReference):
-                print(element)
+                add_label(cell, bb)
+            elif cell.name[:2] == 'jj':
+                cell.flatten(single_datatype=3)
+                jjgds = self.Layers['J2']['gds']
+                for element in cell.elements:
+                    bb = element.get_bounding_box()
+                    if isinstance(element, gdspy.PolygonSet):
+                        if element.layers == [jjgds]:
+                            add_label(cell, bb)
+                    elif isinstance(element, gdspy.Polygon):
+                        if element.layers == jjgds:
+                            add_label(cell, bb)
 
         yunacell.flatten()
+        
+        union_wires(yunacell, 34)
 
         for i, label in enumerate(yunacell.labels):
-            print(label.text)
             if label.text[:3] == 'via':
                 name = label.text + '_' + str(i)
-
                 via = vias.Via(i)
                 via.pos = label.position
-
                 self.vias[name] = via
-            # elif label.text[:3] == 'ljj':
-            #     name = label.text + '_' + str(i)
-
-            #     jj = junctions.Junction(i)
-            #     jj.pos = label.position
-
-            #     self.jjs[name] = jj
+            elif label.text[:2] == 'jj':
+                name = label.text + '_' + str(i)
+                # jj = junctions.Junction(i)
+                # jj.pos = label.position
+                # self.jjs[name] = jj
 
         self.Labels = yunacell.labels
         self.Elements = yunacell.elements

@@ -98,7 +98,20 @@ def create_terminal(Labels, element, terms, mtype):
         term = layers.Term(element.points.tolist())
         term.connect_label(Labels)
         terms.append(term)
-            
+
+
+def remove_cells(yunacell):
+    indices = []
+    for i, element in enumerate(yunacell.elements):
+        if isinstance(element, gdspy.CellReference):
+            name = element.ref_cell.name
+            if name == 'aj_res_bar_gds':
+                print(i)
+                indices.append(i)
+
+    for i in sorted(indices, reverse=True):
+        del yunacell.elements[i]
+
 
 class Config:
     """
@@ -129,7 +142,8 @@ class Config:
         self.Labels = None
         self.gdsii = None
         
-        self.vias = []
+        self.vias = {}
+        self.jjs = {}
         
     def set_gds(self, gds_file):
         self.gdsii = gdspy.GdsLibrary()
@@ -145,56 +159,75 @@ class Config:
     def read_usercell_reference(self, cellref):
         yunacell = self.gdsii.extract(cellref)
 
-        # # Remove cell references recursively.
-        # tools.remove_cells(gdspycell)
-        # for cell in gdspycell.get_dependencies():
-        #     tools.remove_cells(cell)
-        # gdspycell.flatten()
-        
-        # cell = tools.flatten_cell(gdspycell)
-        
-        # tools.create_device_cell(all_cells)
+        # remove_cells(yunacell)
         
         v_id = 0
         j_id = 0
+
+        Subatom = self.Atom['vias']['Subatom']
         
+        print('\nyunacell::')
         for cell in yunacell.get_dependencies(True):
-            print(cell.name)
-            if cell.name[:3] == 'via':
-                bbox = cell.get_bounding_box()
-                
-                # Get the center of the cell.
-                cx = (bbox[0][0] + bbox[1][0]) / 2.0
-                cy = (bbox[0][1] + bbox[1][1]) / 2.0
+            if cell.name[:3] == 'via' and cell.name != 'via_mm_tv00_rv22_70x70':
+                subatom = Subatom[cell.name]
+
+                for element in cell.elements:
+                    if isinstance(element, gdspy.Polygon):
+                        if element.layer == subatom['wire1'] or element.layer == subatom['wire2']:
+                            element.datatype = v_id
+
+                for element in cell.elements:
+                    if isinstance(element, gdspy.Polygon):
+                        print(element)
+
+                bb = cell.get_bounding_box()
+
+                cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
+                cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
                 
                 label = gdspy.Label(cell.name, (cx, cy), 'nw', layer=11)
-                # label = label.translate(2000000, 0)
                 cell.add(label)
-                
-                text = gdspy.Text('Sample text', 10e4, (cx, cy))
-                cell.add(text)
-                
-                via = vias.Via(v_id)
-                self.vias.append(via)
-                
-        for element in yunacell.elements:
+                v_id += 1
+
+            # elif cell.name[:3] == 'ljj':
+            #     bb = cell.get_bounding_box()
+
+            #     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
+            #     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
+              
+            #     label = gdspy.Label(cell.name, (cx, cy), 'nw', layer=11)
+            #     cell.add(label)
+
+        print('datatypes::')
+        print(yunacell.get_datatypes())
+
+        print('cellrefs::')
+        for cellref in yunacell.get_cellreferences(True):
+            print(cellref)
+
+        print('elements::')
+        for i, element in enumerate(yunacell.elements):
             if isinstance(element, gdspy.CellReference):
                 print(element)
-                print(element.get_labels(7))
-                
-        for cell in yunacell.get_dependencies(True):
-            cell.flatten()
-            
+
         yunacell.flatten()
-        
-        print('----------------------')
-        for element in yunacell.elements:
-            if isinstance(element, gdspy.Label):
-                print(element)
-                
-        # tools.green_print('Flattened cell labels:')
-        # for labels in flatcell.labels:
-        #     print(labels)
+
+        for i, label in enumerate(yunacell.labels):
+            print(label.text)
+            if label.text[:3] == 'via':
+                name = label.text + '_' + str(i)
+
+                via = vias.Via(i)
+                via.pos = label.position
+
+                self.vias[name] = via
+            # elif label.text[:3] == 'ljj':
+            #     name = label.text + '_' + str(i)
+
+            #     jj = junctions.Junction(i)
+            #     jj.pos = label.position
+
+            #     self.jjs[name] = jj
 
         self.Labels = yunacell.labels
         self.Elements = yunacell.elements
@@ -265,8 +298,8 @@ class Process:
 
         tools.green_print('Running Atom:')
 
-        if self.config.Atom['vias']:
-            self.calculate_vias(self.config)
+        # if self.config.Atom['vias']:
+        #     self.calculate_vias(self.config)
         if self.config.Atom['jjs']:
             junctions.fill_jj_list(self.config, self.basedir, self.jjs)
         

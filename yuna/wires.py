@@ -6,16 +6,44 @@ from .utils import tools
 
 import json
 import gdspy
+import pyclipper
 import networkx as nx
 import yuna.layers as layers
+from collections import defaultdict
 
 
-def union_polygons(Layers):
-    """ Union the normal wiring polygons. """
+def union_wire(Layers, layer):
+    """ This function saves the union of each
+    individual layer polygon. The result
+    is saved in the 'result' variable
+    in the config.json file of the
+    corrisponding layer. """
 
-    tools.green_print('Union Layer:')
-    for key, layer in Layers.items():
-        tools.union_wire(Layers, key)
+    print('      -> ' + layer)
+
+    count = [0]
+    union_poly = defaultdict(list)
+
+    cell_layer = Layers[layer]['result']
+
+    for poly in cell_layer:
+        if (count[0] == 0):
+            union_poly[layer] = [poly]
+        else:
+            clip = poly
+            pc = pyclipper.Pyclipper()
+
+            pc.AddPath(clip, pyclipper.PT_CLIP, True)
+            pc.AddPaths(union_poly[layer], pyclipper.PT_SUBJECT, True)
+
+            union_poly[layer] = pc.Execute(pyclipper.CT_UNION,
+                                           pyclipper.PFT_EVENODD,
+                                           pyclipper.PFT_EVENODD)
+
+        count[0] += 1
+
+    Layers[layer]['result'] = union_poly[layer]
+    Layers[layer]['active'] = True
 
 
 class WireSet:
@@ -45,7 +73,8 @@ def fill_wiresets(Layers, wiresets, union):
     tools.green_print('Calculating wires json:')
 
     if union:
-        union_polygons(Layers)
+        for key, layer in Layers.items():
+            union_wire(Layers, key)
 
     tools.magenta_print('Wires')    
     for name, layers in Layers.items():
@@ -82,40 +111,25 @@ class Wire:
         their difference and not letting 
         the overlap. """
 
-#         clip = []
-#         for via in vias:
-#             clip.append(via.polygon)
-# 
-#         wireoffset = tools.angusj_offset(clip, 'down')
-# 
-#         if layers.does_layers_intersect(self.polygon, wireoffset):
-#             return True
-#         else:
-#             return False
-
-        subj = self.polygon
-
         clip = []
+        subj = self.polygon
         for via in vias:
             clip.append(via.polygon)
         
         update = False
         if clip and subj:
             self.polygon = tools.angusj(clip, subj, 'difference')
-
             if self.polygon:
                 self.edgelabels = [None] * len(self.polygon[0])
                 update = True
 
-#         return update
 
     def update_with_jj_diff(self, jjs):
         """ Find the difference between the wiring
         polygons and the junction base polygons. """
 
-        subj = self.polygon
-
         clip = []
+        subj = self.polygon
         for jj in jjs:
             clip.append(jj.polygon)
 

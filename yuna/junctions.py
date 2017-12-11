@@ -140,8 +140,8 @@ class Junction:
       'base' and one 'res' layer, each.
     """
 
-    def __init__(self, jj_id, Layers):
-        self.Layers = Layers
+    def __init__(self, jj_id):
+        # self.Layers = Layers
 
         self.id = jj_id
         self.layers = {}
@@ -154,77 +154,77 @@ class Junction:
         self.shunt_value = None
         self.area_value = None
 
-    def set_layers(self, element):
-        self.layers = transpose_cell(self.Layers, element)
+    # def set_layers(self, element):
+    #     self.layers = transpose_cell(self.Layers, element)
 
-    def config_junction(self, basedir, atom):
-        """ The 'JJ' key means that we have to
-        access the corresponding layer from
-        the Junction Object List. """
+    # def config_junction(self, basedir, atom):
+    #     """ The 'JJ' key means that we have to
+    #     access the corresponding layer from
+    #     the Junction Object List. """
 
-        tools.magenta_print('Calculating junctions json:')
+    #     tools.magenta_print('Calculating junctions json:')
 
-        for subatom in atom['Subatom']:
-            tools.read_module(basedir, atom, subatom)
+    #     for subatom in atom['Subatom']:
+    #         tools.read_module(basedir, atom, subatom)
 
-            basename = subatom['Module']['base']['layer']
-            res = subatom['Module']['res']['layer']
+    #         basename = subatom['Module']['base']['layer']
+    #         res = subatom['Module']['res']['layer']
 
-            # TODO: Where do we use the GDS numbers?
-            self.gds_base = subatom['Module']['base']['gds']
-            self.gds_res = subatom['Module']['res']['gds']
+    #         # TODO: Where do we use the GDS numbers?
+    #         self.gds_base = subatom['Module']['base']['gds']
+    #         self.gds_res = subatom['Module']['res']['gds']
 
-            self.polygon = self.poly_with_jj_inside(basename)
-            self.res = self.get_shunt_branch(res)
+    #         self.polygon = self.poly_with_jj_inside(basename)
+    #         self.res = self.get_shunt_branch(res)
 
-    def poly_with_jj_inside(self, basename):
-        """ Get the base layer (M0) polygon in the Junction
-        objects that has a JJ layer inside them. """
+    # def poly_with_jj_inside(self, basename):
+    #     """ Get the base layer (M0) polygon in the Junction
+    #     objects that has a JJ layer inside them. """
 
-        name = layers.get_junction_layer(self.Layers)
+    #     name = layers.get_junction_layer(self.Layers)
 
-        baselayer = self.layers[basename]
-        jjlayer = self.layers[name]
+    #     baselayer = self.layers[basename]
+    #     jjlayer = self.layers[name]
 
-        return get_base_wire(baselayer, jjlayer)
+    #     return get_base_wire(baselayer, jjlayer)
 
-    def get_shunt_branch(self, res):
-        """ Get the shunt resistance branch
-        in the junction CellRefence. """
+    # def get_shunt_branch(self, res):
+    #     """ Get the shunt resistance branch
+    #     in the junction CellRefence. """
 
-        res_name = layers.get_res_layer(self.Layers)
-        jj_name = layers.get_junction_layer(self.Layers)
+    #     res_name = layers.get_res_layer(self.Layers)
+    #     jj_name = layers.get_junction_layer(self.Layers)
 
-        res_layer = self.layers[res_name]
-        jj_layer = self.layers[jj_name]
+    #     res_layer = self.layers[res_name]
+    #     jj_layer = self.layers[jj_name]
 
-        all_reslayers = []
-        for poly in res_layer:
-            if not layers.does_layers_intersect([poly], jj_layer):
-                all_reslayers.append(poly)
+    #     all_reslayers = []
+    #     for poly in res_layer:
+    #         if not layers.does_layers_intersect([poly], jj_layer):
+    #             all_reslayers.append(poly)
 
-        return clipping(all_reslayers, [self.polygon], 'difference')
+    #     return clipping(all_reslayers, [self.polygon], 'difference')
 
-    def connect_wires(self, wire):
-        if wire.active and wire.polygon:
-            wireoffset = tools.angusj_offset(wire.polygon, 'up')
-            if layers.does_layers_intersect([self.polygon], wireoffset):
-                self.connect_edges(wire)
+    # def connect_wires(self, wire):
+    #     if wire.active and wire.polygon:
+    #         wireoffset = tools.angusj_offset(wire.polygon, 'up')
+    #         if layers.does_layers_intersect([self.polygon], wireoffset):
+    #             self.connect_edges(wire)
 
-    def connect_edges(self, wire):
-        for i, polygon in enumerate(wire.polygon):
-            for point in polygon:
-                inside = pyclipper.PointInPolygon(point, self.polygon)
+    # def connect_edges(self, wire):
+    #     for i, polygon in enumerate(wire.polygon):
+    #         for point in polygon:
+    #             inside = pyclipper.PointInPolygon(point, self.polygon)
 
-                if inside != 0:
-                    self.edges.append(point)
-                    update_wire_object(wire, i, self.id)
+    #             if inside != 0:
+    #                 self.edges.append(point)
+    #                 update_wire_object(wire, i, self.id)
 
-    def calculate_shunt_value(self):
-        pass
+    # def calculate_shunt_value(self):
+    #     pass
 
-    def calculate_area_value(self):
-        pass
+    # def calculate_area_value(self):
+    #     pass
 
     def plot_jj(self, cell):
         cell.add(gdspy.Polygon(self.polygon, self.gds_base))

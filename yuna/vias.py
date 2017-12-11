@@ -203,13 +203,16 @@ class Via:
         """
 
         self.id = via_id
-        self.label = ''
+        self.pos = None
         self.wire1 = None
         self.wire2 = None
 
         self.polygon = []
         self.lines = []
         self.edges = []
+
+    # def set_position(self, label_cell):
+        
 
     def add_label(self, subatom):
         self.wire1 = subatom['wire1']

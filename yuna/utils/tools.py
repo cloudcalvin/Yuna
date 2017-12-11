@@ -121,40 +121,6 @@ def angusj_offset(layer, size):
     return solution
 
 
-def union_wire(Layers, layer):
-    """ This function saves the union of each
-    individual layer polygon. The result
-    is saved in the 'result' variable
-    in the config.json file of the
-    corrisponding layer. """
-
-    print('      -> ' + layer)
-
-    count = [0]
-    union_poly = defaultdict(list)
-
-    cell_layer = Layers[layer]['result']
-
-    for poly in cell_layer:
-        if (count[0] == 0):
-            union_poly[layer] = [poly]
-        else:
-            clip = poly
-            pc = pyclipper.Pyclipper()
-
-            pc.AddPath(clip, pyclipper.PT_CLIP, True)
-            pc.AddPaths(union_poly[layer], pyclipper.PT_SUBJECT, True)
-
-            union_poly[layer] = pc.Execute(pyclipper.CT_UNION,
-                                           pyclipper.PFT_EVENODD,
-                                           pyclipper.PFT_EVENODD)
-
-        count[0] += 1
-
-    Layers[layer]['result'] = union_poly[layer]
-    Layers[layer]['active'] = True
-
-
 def re_add_cells(flatcell, cell_list):
     for element in cell_list:
         flatcell.add(element)
@@ -212,7 +178,6 @@ def get_all_cellreferences(yunacell, recursive=False):
                     get_all_cellreferences(element.ref_cell, True)
                 )
             dependencies.add(element)
-    # print(element)
     return dependencies
 
 

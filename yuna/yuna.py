@@ -96,7 +96,7 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
 
     config = process.Config(config_data)
     config.set_gds(gds_file)
-    
+
     if cellref:
         config.read_usercell_reference(cellref)
     else:
@@ -105,9 +105,10 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     config.parse_gdspy_elements()
 
     proc = process.Process(examdir, config)
+    proc.circuit_layout(union)
 
-    jjs = proc.jjs
-    vias = proc.vias
+    jjs = config.jjs
+    vias = config.vias
     wireset = proc.wiresets
     terms = config.Terms
 

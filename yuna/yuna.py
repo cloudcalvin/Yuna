@@ -89,13 +89,12 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
-
-    config_data = read.config(config_file)
     
     tools.magenta_print('Process Layers')
     auron_cell = gdspy.Cell('auron_cell')
 
-    config = process.Config(config_data)
+    data = read.config(config_file)
+    config = process.Config(data)
     config.set_gds(gds_file)
 
     if cellref:
@@ -103,24 +102,10 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     else:
         config.read_topcell_reference()
 
-    # config.parse_gdspy_elements()
-
-    # proc = process.Process(examdir, config)
-    # proc.circuit_layout(union)
-
-    # jjs = config.jjs
-    # vias = config.vias
-    # wireset = proc.wiresets
-    # terms = config.Terms
-
-    # tools.magenta_print('Write Layers')
-    # cWrite = write.Write(True)
-    # gdssetup = cWrite.write_gds(examdir, ldf, jjs, vias, wireset)
-    
     gdspy.LayoutViewer()
     gdspy.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 
-    return auron_cell, config_data['Params'], config_data['Layers']
+    return auron_cell, data['Params'], data['Layers']
 
 
 if __name__ == '__main__':

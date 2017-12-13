@@ -10,6 +10,23 @@ import gdspy
 import pyclipper
 
 
+def midpoint(x1, y1, x2, y2):
+    return ((x1 + x2)/2, (y1 + y2)/2)
+
+
+def remove_cells(yunacell):
+    indices = []
+    for i, element in enumerate(yunacell.elements):
+        if isinstance(element, gdspy.CellReference):
+            name = element.ref_cell.name
+            if name == 'aj_res_bar_gds':
+                print(i)
+                indices.append(i)
+
+    for i in sorted(indices, reverse=True):
+        del yunacell.elements[i]
+
+
 def parameter_print(arguments):
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print ('Parameters:')
@@ -312,9 +329,61 @@ def read_module(basedir, atom, subatom):
 #     # readd_cells(flatcell, jj_list)
 
 
+# Used for detecting is term labels are inside term layers.
+# def connect_term_to_wire(terms, wiresets):
+#     for term in terms:
+#         print(term.labels)
+#         wireset = wiresets[term.layer]
+#         for wire in wireset.wires:
+#             for poly in wire.polygon:
+#                 for i in range(len(poly) - 1):
+#                     print(i)
+#                     x1, y1 = poly[i][0], poly[i][1]
+#                     x2, y2 = poly[i+1][0], poly[i+1][1]
+
+#                     cp = midpoint(x1, y1, x2, y2)
+#                     term.connect_wire_edge(i, wire, cp)
+
+            
+# def create_terminal(Labels, element, terms, mtype):
+#     if mtype == 'PolygonSet':
+#         for poly in element.polygons:
+#             term = layers.Term(poly.tolist())
+#             term.connect_label(Labels)
+#             terms.append(term)
+#     elif mtype == 'Polygon':
+#         term = layers.Term(element.points.tolist())
+#         term.connect_label(Labels)
+#         terms.append(term)
 
 
 
+# def get_via_wire_connections(Layers, layer):
+
+#     for w1 in layer['wire1']:
+#         wire1 = Layers[w1]['result']
+
+#         for w2 in layer['wire2']:
+#             wire2 = Layers[w2]['result']
+
+#             cross = tools.angusj(wire1, wire2, "intersection")
+
+#             viacross = []
+#             for subj in cross:
+#                 if tools.angusj([subj], layer['result'], "intersection"):
+#                     viacross.append(subj)
+#             return viacross
 
 
+# def get_viacross(Layers, Modules, value, subj):
+#     """  """
 
+#     clip = get_polygon(Layers, Modules, value['via_layer'])
+
+#     result_list = []
+#     viacross = []
+#     for poly in subj:
+#         if tools.angusj([poly], clip, "intersection"):
+#             viacross.append(poly)
+
+#     return viacross

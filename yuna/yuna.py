@@ -78,11 +78,11 @@ def machina(process, testname, ldf, cellref, cwd, union):
     if cellref == 'list':
         tools.list_layout_cells(gds_file)
     else:
-        wireset, vias, terms, Params, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
+        fincell, Params, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
 
     tools.cyan_print('Yuna. Done.')
 
-    return wireset, vias, terms, Params, Layers
+    return fincell, Params, Layers
 
 
 def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
@@ -93,24 +93,25 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     config_data = read.config(config_file)
     
     tools.magenta_print('Process Layers')
+    auron_cell = gdspy.Cell('auron_cell')
 
     config = process.Config(config_data)
     config.set_gds(gds_file)
 
     if cellref:
-        config.read_usercell_reference(cellref)
+        config.read_usercell_reference(cellref, auron_cell)
     else:
         config.read_topcell_reference()
 
-    config.parse_gdspy_elements()
+    # config.parse_gdspy_elements()
 
-    proc = process.Process(examdir, config)
-    proc.circuit_layout(union)
+    # proc = process.Process(examdir, config)
+    # proc.circuit_layout(union)
 
-    jjs = config.jjs
-    vias = config.vias
-    wireset = proc.wiresets
-    terms = config.Terms
+    # jjs = config.jjs
+    # vias = config.vias
+    # wireset = proc.wiresets
+    # terms = config.Terms
 
     # tools.magenta_print('Write Layers')
     # cWrite = write.Write(True)
@@ -119,7 +120,7 @@ def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
     gdspy.LayoutViewer()
     gdspy.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 
-    return wireset, vias, terms, config_data['Params'], config_data['Layers']
+    return auron_cell, config_data['Params'], config_data['Layers']
 
 
 if __name__ == '__main__':

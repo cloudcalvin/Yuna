@@ -12,38 +12,38 @@ import yuna.layers as layers
 from collections import defaultdict
 
 
-def union_wire(Layers, layer):
-    """ This function saves the union of each
-    individual layer polygon. The result
-    is saved in the 'result' variable
-    in the config.json file of the
-    corrisponding layer. """
+# def union_wire(Layers, layer):
+#     """ This function saves the union of each
+#     individual layer polygon. The result
+#     is saved in the 'result' variable
+#     in the config.json file of the
+#     corrisponding layer. """
 
-    print('      -> ' + layer)
+#     print('      -> ' + layer)
 
-    count = [0]
-    union_poly = defaultdict(list)
+#     count = [0]
+#     union_poly = defaultdict(list)
 
-    cell_layer = Layers[layer]['result']
+#     cell_layer = Layers[layer]['result']
 
-    for poly in cell_layer:
-        if (count[0] == 0):
-            union_poly[layer] = [poly]
-        else:
-            clip = poly
-            pc = pyclipper.Pyclipper()
+#     for poly in cell_layer:
+#         if (count[0] == 0):
+#             union_poly[layer] = [poly]
+#         else:
+#             clip = poly
+#             pc = pyclipper.Pyclipper()
 
-            pc.AddPath(clip, pyclipper.PT_CLIP, True)
-            pc.AddPaths(union_poly[layer], pyclipper.PT_SUBJECT, True)
+#             pc.AddPath(clip, pyclipper.PT_CLIP, True)
+#             pc.AddPaths(union_poly[layer], pyclipper.PT_SUBJECT, True)
 
-            union_poly[layer] = pc.Execute(pyclipper.CT_UNION,
-                                           pyclipper.PFT_EVENODD,
-                                           pyclipper.PFT_EVENODD)
+#             union_poly[layer] = pc.Execute(pyclipper.CT_UNION,
+#                                            pyclipper.PFT_EVENODD,
+#                                            pyclipper.PFT_EVENODD)
 
-        count[0] += 1
+#         count[0] += 1
 
-    Layers[layer]['result'] = union_poly[layer]
-    Layers[layer]['active'] = True
+#     Layers[layer]['result'] = union_poly[layer]
+#     Layers[layer]['active'] = True
 
 
 class WireSet:
@@ -72,9 +72,9 @@ def fill_wiresets(Layers, wiresets, union):
 
     tools.green_print('Calculating wires json:')
 
-    if union:
-        for key, layer in Layers.items():
-            union_wire(Layers, key)
+    # if union:
+    #     for key, layer in Layers.items():
+    #         union_wire(Layers, key)
 
     tools.magenta_print('Wires')    
     for name, layers in Layers.items():

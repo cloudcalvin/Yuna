@@ -37,10 +37,10 @@ union result and the moat layer.
 """
 
     
-def add_label(cell, bb):
+def add_label(cell, name, bb):
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-    label = gdspy.Label(cell.name, (cx, cy), 'nw', layer=11)
+    label = gdspy.Label(name, (cx, cy), 'nw', layer=11)
     cell.add(label)
 
 
@@ -146,7 +146,65 @@ class Config:
         self.gdsii.extract(topcell)
         self.Labels = self.gdsii.top_level()[0].labels
         self.Elements = self.gdsii.top_level()[0].elements
-        
+
+    def detect_via_using_cells(self, cell):
+        bb = cell.get_bounding_box()
+        add_label(cell, cell.name, bb)
+
+    def detect_jj_using_cells(self, cell):
+        for key, layer in self.Layers.items():
+            if layer['type'] == 'junction':                
+                for element in cell.elements:
+                    bb = element.get_bounding_box()
+                    if isinstance(element, gdspy.PolygonSet):
+                        if element.layers == [int(key)]:
+                            add_label(cell, cell.name, bb)
+                    elif isinstance(element, gdspy.Polygon):
+                        if element.layers == int(key):
+                            add_label(cell, cell.name, bb)
+
+    def detect_shunt_connections(self, cell):
+        """ Add via labels for the shunt 
+        resistance inside the jj cell. """
+
+        jj = self.Atom['jjs']['shunt']
+        jjlayers = [jj['wire'], jj['shunt'], jj['via']]
+
+        jj_cell = gdspy.Cell('jj_cell')
+
+        via_poly = None
+        for key, polygons in cell.get_polygons(True).items():
+            if key[0] == jj['via']:
+                via_poly = polygons
+
+        via_res = []
+        for via in via_poly:
+            for key, polygons in cell.get_polygons(True).items():
+                if key[0] == jj['shunt']:
+                    if layers.does_layers_intersect([via], polygons):
+                        via_res.append(via)
+
+        via_wire = []
+        for via in via_res:
+            for key, polygons in cell.get_polygons(True).items():
+                if key[0] == jj['wire']:
+                    if layers.does_layers_intersect([via], polygons):
+                        via_wire.append(via)
+
+        # Add the labels to the center of these via polygons
+        for via in via_wire:
+            poly = gdspy.Polygon(via, jj['via'])
+            bb = poly.get_bounding_box()
+
+            # TODO: CHeck wat ek hier doen! Engiunious!!!!!!
+            add_label(cell, jj['name'], bb)
+            jj_cell.add(poly)
+
+        # for key, polygons in cell.get_polygons(True).items():
+        #     if key[0] in jjlayers:
+        #         for poly in polygons:
+        #             jj_cell.add(gdspy.Polygon(poly, key[0]))
+
     def read_usercell_reference(self, cellref, auron_cell):
         yuna_cell = self.gdsii.extract(cellref)
 
@@ -154,21 +212,13 @@ class Config:
             if cell.name[:3] == 'via':
                 cell.flatten(single_datatype=1)
 
-                bb = cell.get_bounding_box()
-                add_label(cell, bb)
+                self.detect_via_using_cells(cell)
             elif cell.name[:2] == 'jj':
                 cell.flatten(single_datatype=3)
                 
-                for key, layer in self.Layers.items():
-                    if layer['type'] == 'junction':                
-                        for element in cell.elements:
-                            bb = element.get_bounding_box()
-                            if isinstance(element, gdspy.PolygonSet):
-                                if element.layers == [int(key)]:
-                                    add_label(cell, bb)
-                            elif isinstance(element, gdspy.Polygon):
-                                if element.layers == int(key):
-                                    add_label(cell, bb)
+                self.detect_jj_using_cells(cell)
+                self.detect_shunt_connections(cell)
+ 
 
         yuna_flatten = yuna_cell.copy('yuna_flatten', deep_copy=True)
         yuna_flatten.flatten()

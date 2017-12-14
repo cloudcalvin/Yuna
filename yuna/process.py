@@ -163,6 +163,24 @@ class Config:
                         if element.layers == int(key):
                             add_label(cell, cell.name, bb)
 
+    def intersect_via_shunt(self, via_res, via, polygons, key, jj):
+        if key[0] == jj['shunt']:
+            if layers.does_layers_intersect([via], polygons):
+                for poly in tools.angusj([via], polygons, 'intersection'):
+                    via_res.append(poly)
+
+    def intersect_via_wire(self, via_wire, via, polygons, key, jj):
+        if key[0] == jj['wire']:
+            if layers.does_layers_intersect([via], polygons):
+                for poly in tools.angusj([via], polygons, 'intersection'):
+                    via_wire.append(via)
+
+    def intersect_wire_ground(self, via_gnd, via, polygons, key, jj):
+        if key[0] == jj['ground']:
+            if layers.does_layers_intersect([via], polygons):
+                for poly in tools.angusj([via], polygons, 'intersection'):
+                    via_gnd.append(via)
+
     def detect_shunt_connections(self, cell):
         """ Add via labels for the shunt 
         resistance inside the jj cell. """
@@ -177,27 +195,37 @@ class Config:
             if key[0] == jj['via']:
                 via_poly = polygons
 
+        # Check of ons hierdie 3 stappe kan morf.
         via_res = []
         for via in via_poly:
             for key, polygons in cell.get_polygons(True).items():
-                if key[0] == jj['shunt']:
-                    if layers.does_layers_intersect([via], polygons):
-                        via_res.append(via)
+                self.intersect_via_shunt(via_res, via, polygons, key, jj)
 
         via_wire = []
         for via in via_res:
             for key, polygons in cell.get_polygons(True).items():
-                if key[0] == jj['wire']:
-                    if layers.does_layers_intersect([via], polygons):
-                        via_wire.append(via)
+                self.intersect_via_wire(via_wire, via, polygons, key, jj)
+
+        via_gnd = []
+        for i, via in enumerate(via_wire):
+            for key, polygons in cell.get_polygons(True).items():
+                self.intersect_wire_ground(via_gnd, via, polygons, key, jj)
 
         # Add the labels to the center of these via polygons
         for via in via_wire:
             poly = gdspy.Polygon(via, jj['via'])
             bb = poly.get_bounding_box()
 
-            # TODO: CHeck wat ek hier doen! Engiunious!!!!!!
+            # TODO: Check wat ek hier doen! Engiunious!!!!!!
             add_label(cell, jj['name'], bb)
+            jj_cell.add(poly)
+
+        for via in via_gnd:
+            poly = gdspy.Polygon(via, jj['via'])
+            bb = poly.get_bounding_box()
+
+            # TODO: CHeck wat ek hier doen! Engiunious!!!!!!
+            add_label(cell, jj['name'] + '_gnd', bb)
             jj_cell.add(poly)
 
         # for key, polygons in cell.get_polygons(True).items():
@@ -215,7 +243,7 @@ class Config:
                 self.detect_via_using_cells(cell)
             elif cell.name[:2] == 'jj':
                 cell.flatten(single_datatype=3)
-                
+
                 self.detect_jj_using_cells(cell)
                 self.detect_shunt_connections(cell)
  

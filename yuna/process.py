@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
-
+import itertools
 import yuna.junctions as junctions
 import yuna.wires as wires
 import yuna.vias as vias
@@ -36,13 +36,6 @@ union result and the moat layer.
 1000 to convert small floats 0.25 to integers, 250.
 """
 
-    
-def add_label(cell, name, bb):
-    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
-    cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-    label = gdspy.Label(name, (cx, cy), 'nw', layer=11)
-    cell.add(label)
-
 
 def is_layer_in_layout(wire, polygons):
     return (wire, 0) in polygons
@@ -56,20 +49,27 @@ def is_layer_in_jj(wire, polygons):
     return (wire, 3) in polygons
 
 
+def add_label(cell, name, bb):
+    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
+    cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
+    label = gdspy.Label(name, (cx, cy), 'nw', layer=11)
+    cell.add(label)
+
+
 def union_vias(vias, wire):
     """ Union vias of the same type. """
 
     tools.green_print('Union vias:')
 
-    vi = []
+    via_union = list()
     for v1 in vias:
         for v2 in vias:
             if v1 is not v2:
                 if layers.does_layers_intersect([v1], [v2]):
-                    mvia = tools.angusj([v1], [v2], 'union')
-                    for m in mvia:
-                        vi.append(m)
-    return vi
+                    for union in tools.angusj([v1], [v2], 'union'):
+                        via_union.append(union)
+
+    return list(via_union for via_union,_ in itertools.groupby(via_union))
 
 
 def union_wires(yuna_cell, auron_cell, wire):
@@ -92,6 +92,13 @@ def union_wires(yuna_cell, auron_cell, wire):
                 if layers.does_layers_intersect(via_offset, wires):
                     wires = tools.angusj([via], wires, 'union')
 
+            # Union vias of the same kind, that is not
+            # connected to any wires, but shouldn't
+            # be deleted. 
+            connected_vias = union_vias(vias, wire)
+            for poly in connected_vias:
+                auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
+
         # We know the wires inside a jj, so 
         # we only have to union it with wires
         # and dnt have to remove any jj layers.
@@ -99,14 +106,6 @@ def union_wires(yuna_cell, auron_cell, wire):
             jjs = yuna_cell.get_polygons(True)[(wire, 3)]
             for jj in jjs:
                 wires = tools.angusj([jj], wires, 'union')
-
-        # Union vias of the same kind, that is not
-        # connected to any wires, but shouldn't
-        # be deleted. 
-        if is_layer_in_via(wire, polygons):
-            connected_vias = union_vias(vias, wire)
-            for poly in connected_vias:
-                auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
 
         for poly in wires:
             auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
@@ -147,22 +146,6 @@ class Config:
         self.Labels = self.gdsii.top_level()[0].labels
         self.Elements = self.gdsii.top_level()[0].elements
 
-    def detect_via_using_cells(self, cell):
-        bb = cell.get_bounding_box()
-        add_label(cell, cell.name, bb)
-
-    def detect_jj_using_cells(self, cell):
-        for key, layer in self.Layers.items():
-            if layer['type'] == 'junction':                
-                for element in cell.elements:
-                    bb = element.get_bounding_box()
-                    if isinstance(element, gdspy.PolygonSet):
-                        if element.layers == [int(key)]:
-                            add_label(cell, cell.name, bb)
-                    elif isinstance(element, gdspy.Polygon):
-                        if element.layers == int(key):
-                            add_label(cell, cell.name, bb)
-
     def intersect_via_shunt(self, via_res, via, polygons, key, jj):
         if key[0] == jj['shunt']:
             if layers.does_layers_intersect([via], polygons):
@@ -180,6 +163,22 @@ class Config:
             if layers.does_layers_intersect([via], polygons):
                 for poly in tools.angusj([via], polygons, 'intersection'):
                     via_gnd.append(via)
+
+    def detect_via_using_cells(self, cell):
+        bb = cell.get_bounding_box()
+        add_label(cell, cell.name, bb)
+
+    def detect_jj_using_cells(self, cell):
+        for key, layer in self.Layers.items():
+            if layer['type'] == 'junction':                
+                for element in cell.elements:
+                    bb = element.get_bounding_box()
+                    if isinstance(element, gdspy.PolygonSet):
+                        if element.layers == [int(key)]:
+                            add_label(cell, cell.name, bb)
+                    elif isinstance(element, gdspy.Polygon):
+                        if element.layers == int(key):
+                            add_label(cell, cell.name, bb)
 
     def detect_shunt_connections(self, cell):
         """ Add via labels for the shunt 
@@ -247,7 +246,6 @@ class Config:
                 self.detect_jj_using_cells(cell)
                 self.detect_shunt_connections(cell)
  
-
         yuna_flatten = yuna_cell.copy('yuna_flatten', deep_copy=True)
         yuna_flatten.flatten()
         
@@ -255,7 +253,8 @@ class Config:
             if layer['type'] == 'wire' or layer['type'] == 'shunt':
                 union_wires(yuna_flatten, auron_cell, int(key))
 
-        for label in yuna_flatten.labels:
+        for i, label in enumerate(yuna_flatten.labels):
+            label.texttype = i
             auron_cell.add(label)
 
 

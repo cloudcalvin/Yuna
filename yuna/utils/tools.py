@@ -93,10 +93,12 @@ def angusj(clip, subj, method):
     """ Angusj clipping library """
 
     pc = pyclipper.Pyclipper()
+    # pc.StrictlySimple(True)
 
     pc.AddPaths(clip, pyclipper.PT_CLIP, True)
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
 
+    subj = None
     if method == 'difference':
         subj = pc.Execute(pyclipper.CT_DIFFERENCE,
                           pyclipper.PFT_EVENODD,
@@ -109,11 +111,7 @@ def angusj(clip, subj, method):
         subj = pc.Execute(pyclipper.CT_INTERSECTION,
                           pyclipper.PFT_NONZERO,
                           pyclipper.PFT_NONZERO)
-
-    if len(subj) > 0:
-        return subj
-    else:
-        return []
+    return subj
 
 
 def angusj_offset(layer, size):
@@ -130,6 +128,7 @@ def angusj_offset(layer, size):
 
         if size == 'down':
             solution.append(pco.Execute(-1000000)[0])
+            # solution.append(pco.Execute(-10)[0])
         elif size == 'up':
             solution.append(pco.Execute(10)[0])
         elif size == 'label':

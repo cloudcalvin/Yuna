@@ -87,10 +87,15 @@ def union_wires(yuna_cell, auron_cell, wire):
         # vias that are not connected to any wires.
         if is_layer_in_via(wire, polygons):
             vias = yuna_cell.get_polygons(True)[(wire, 1)]
+            # for poly in vias:
+            #     auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=1))
             for via in vias:
                 via_offset = tools.angusj_offset([via], 'up')
                 if layers.does_layers_intersect(via_offset, wires):
                     wires = tools.angusj([via], wires, 'union')
+                    # wires_2 = tools.angusj(via_offset, wires, 'union')
+                    # wires = pyclipper.CleanPolygons(wires)
+                    # wires = pyclipper.SimplifyPolygons(wires)
 
             # Union vias of the same kind, that is not
             # connected to any wires, but shouldn't
@@ -107,8 +112,8 @@ def union_wires(yuna_cell, auron_cell, wire):
             for jj in jjs:
                 wires = tools.angusj([jj], wires, 'union')
 
-        for poly in wires:
-            auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
+        # for poly in wires:
+        #     auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
             
             
 class Config:
@@ -163,43 +168,6 @@ class Config:
             if layers.does_layers_intersect([via], polygons):
                 for poly in tools.angusj([via], polygons, 'intersection'):
                     via_gnd.append(via)
-                        
-    def to_canvas_center(self, cell):
-        """
-        The cells are centered in the middle of the gds
-        file canvas. To include this cell into the main
-        cell, we have to transpose it to the required position.
-
-        Save tranposed coordinates in 'Layers' object.
-        Maybe we should automate this later by making
-        'result' a {} and not a [].
-        """
-
-        layers = dict()
-        for key, polygons in cell.get_polygons(True).items():
-            print(key, polygons)
-            origin = [0.0, 0.0]
-            for poly in polygons:
-                for coord in poly:
-                    coord[0] = origin[0] - coord[0]
-                    coord[1] = origin[1] - coord[1]
-        #     for layername, layerdata in Layers.items():
-        #         if layerdata['gds'] == key[0]:
-        #             layers[layername] = save_coords(polygons, element)
-        # return layers
-
-
-    # def save_coords(polygons, element):
-    #     """ Transpose each layer in the Junction reference
-    #     and save it by layername in a dict. """
-    # 
-    #     poly_list = []
-    #     for poly in polygons:
-    #         for coord in poly:
-    #             coord[0] = coord[0] + element.origin[0]
-    #             coord[1] = coord[1] + element.origin[1]
-    #         poly_list.append(poly.tolist())
-    #     return poly_lis
 
     def detect_via_using_cells(self, cell):
         bb = cell.get_bounding_box()
@@ -273,8 +241,8 @@ class Config:
         yuna_cell = self.gdsii.extract(cellref)
         
         for cell in yuna_cell.get_dependencies(True):
-            dx, dy = cell.to_canvas_center()
-            
+            # dx, dy = cell.to_canvas_center()
+
             if cell.name[:3] == 'via':
                 cell.flatten(single_datatype=1)
                 self.detect_via_using_cells(cell)
@@ -283,7 +251,7 @@ class Config:
                 self.detect_jj_using_cells(cell)
                 self.detect_shunt_connections(cell)
  
-        yuna_flatten = yuna_cell.copy('yuna_flatten', deep_copy=True)
+        yuna_flatten = yuna_cell.copy('Yuna Flat', deep_copy=True)
         yuna_flatten.flatten()
         
         for key, layer in self.Layers.items():

@@ -75,7 +75,7 @@ def union_vias(vias, wire):
 def union_wires(yuna_cell, auron_cell, wire):
     """  """
 
-    tools.green_print('Union wires:')
+    # tools.green_print('Union wires:')
 
     polygons = yuna_cell.get_polygons(True)
 
@@ -163,6 +163,43 @@ class Config:
             if layers.does_layers_intersect([via], polygons):
                 for poly in tools.angusj([via], polygons, 'intersection'):
                     via_gnd.append(via)
+                        
+    def to_canvas_center(self, cell):
+        """
+        The cells are centered in the middle of the gds
+        file canvas. To include this cell into the main
+        cell, we have to transpose it to the required position.
+
+        Save tranposed coordinates in 'Layers' object.
+        Maybe we should automate this later by making
+        'result' a {} and not a [].
+        """
+
+        layers = dict()
+        for key, polygons in cell.get_polygons(True).items():
+            print(key, polygons)
+            origin = [0.0, 0.0]
+            for poly in polygons:
+                for coord in poly:
+                    coord[0] = origin[0] - coord[0]
+                    coord[1] = origin[1] - coord[1]
+        #     for layername, layerdata in Layers.items():
+        #         if layerdata['gds'] == key[0]:
+        #             layers[layername] = save_coords(polygons, element)
+        # return layers
+
+
+    # def save_coords(polygons, element):
+    #     """ Transpose each layer in the Junction reference
+    #     and save it by layername in a dict. """
+    # 
+    #     poly_list = []
+    #     for poly in polygons:
+    #         for coord in poly:
+    #             coord[0] = coord[0] + element.origin[0]
+    #             coord[1] = coord[1] + element.origin[1]
+    #         poly_list.append(poly.tolist())
+    #     return poly_lis
 
     def detect_via_using_cells(self, cell):
         bb = cell.get_bounding_box()
@@ -234,15 +271,15 @@ class Config:
 
     def read_usercell_reference(self, cellref, auron_cell):
         yuna_cell = self.gdsii.extract(cellref)
-
+        
         for cell in yuna_cell.get_dependencies(True):
+            dx, dy = cell.to_canvas_center()
+            
             if cell.name[:3] == 'via':
                 cell.flatten(single_datatype=1)
-
                 self.detect_via_using_cells(cell)
             elif cell.name[:2] == 'jj':
                 cell.flatten(single_datatype=3)
-
                 self.detect_jj_using_cells(cell)
                 self.detect_shunt_connections(cell)
  

@@ -41,57 +41,49 @@ def main():
     tools.red_print('Summoning Yuna...')
     tools.parameter_print(arguments)
 
-    process = arguments['<process>']
-    testname = arguments['<testname>']
-    ldf = arguments['<ldf>']
+    # process = arguments['<process>']
+    # testname = arguments['<testname>']
+    # ldf = arguments['<ldf>']
 
     if arguments['--cell'] == 'list':
         cellref = 'list'
     elif arguments['--cell']:
-        cellref = arguments['--cell']
+        machina(arguments, '', False)
     else:
         cellref = ""
-
-    machina(process, testname, ldf, cellref, '', False)
 
     tools.red_print('Auron. Done.')
 
 
-def machina(process, testname, ldf, cellref, cwd, union):
+def machina(args, cwd, union):
     """  """
 
     tools.cyan_print('Running Yuna...')
+    
+    cellref = args['--cell']
+    process = args['<process>']
+    testname = args['<testname>']
+    ldf = args['<ldf>']
 
     if cwd == '':
         cwd = os.getcwd()
 
     basedir = cwd + '/tests/' + process
     examdir = basedir + '/' + testname
-
     gds_file = examdir + '/' + testname + '.gds'
-    config_file = examdir + '/' + testname + '.json'
-
-    wires = None
-
-    layers = read.ldf(ldf)
-
-    if cellref == 'list':
-        tools.list_layout_cells(gds_file)
-    else:
-        fincell, Params, Layers = generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union)
+    config_file = examdir + '/' + 'config.json'
 
     tools.cyan_print('Yuna. Done.')
 
-    return fincell, Params, Layers
+    return generate_gds(examdir, gds_file, config_file, cellref, union)
 
-
-def generate_gds(examdir, gds_file, layers, config_file, ldf, cellref, union):
+def generate_gds(examdir, gds_file, config_file, cellref, union):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
     
     tools.magenta_print('Process Layers')
-    auron_cell = gdspy.Cell('auron_cell')
+    auron_cell = gdspy.Cell('Auron Cell')
 
     data = read.config(config_file)
     config = process.Config(data)

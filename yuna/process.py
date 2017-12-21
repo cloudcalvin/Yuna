@@ -112,8 +112,8 @@ def union_wires(yuna_cell, auron_cell, wire):
             for jj in jjs:
                 wires = tools.angusj([jj], wires, 'union')
 
-        # for poly in wires:
-        #     auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
+        for poly in wires:
+            auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
             
             
 class Config:

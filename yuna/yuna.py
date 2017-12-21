@@ -41,10 +41,6 @@ def main():
     tools.red_print('Summoning Yuna...')
     tools.parameter_print(arguments)
 
-    # process = arguments['<process>']
-    # testname = arguments['<testname>']
-    # ldf = arguments['<ldf>']
-
     if arguments['--cell'] == 'list':
         cellref = 'list'
     elif arguments['--cell']:
@@ -55,12 +51,11 @@ def main():
     tools.red_print('Auron. Done.')
 
 
-def machina(args, cwd, union):
+def machina(args, cwd):
     """  """
 
     tools.cyan_print('Running Yuna...')
     
-    cellref = args['--cell']
     process = args['<process>']
     testname = args['<testname>']
     ldf = args['<ldf>']
@@ -75,7 +70,8 @@ def machina(args, cwd, union):
 
     tools.cyan_print('Yuna. Done.')
 
-    return generate_gds(examdir, gds_file, config_file, cellref, union)
+    return generate_gds(examdir, gds_file, config_file, args['--cell'], args['--union'])
+
 
 def generate_gds(examdir, gds_file, config_file, cellref, union):
     """ Read in the layers from the GDS file,

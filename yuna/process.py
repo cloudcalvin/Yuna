@@ -261,11 +261,9 @@ class Config:
         for i, label in enumerate(yuna_flatten.labels):
             label.texttype = i
             auron_cell.add(label)
-
-
-
-
-
-
-
-
+            
+            
+            
+            
+            
+            

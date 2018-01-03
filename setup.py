@@ -2,21 +2,17 @@
     First version of Yuna
 """
 
-
 from __future__ import print_function
 from __future__ import absolute_import
 
 import os
 from setuptools import setup, find_packages
 from termcolor import colored
-
-
-version = '0.0.2'
-
+from yuna import __version__
 
 setup(
     name="yuna",
-    version=version,
+    version=__version__,
     author="Ruben van Staden",
     author_email="rubenvanstaden@gmail.com",
     description="Processes the layers from a GDS file.",
@@ -25,7 +21,7 @@ setup(
     license="BSD",
     keywords="yuna",
     url="https://github.com/rubenvanstaden/yuna",
-    packages=['yuna', 'tests'],
+    packages=['yuna'],
     package_dir={'yuna': 'yuna'},
     install_requires=['gdspy', 'pyclipper', 'setuptools', 'numpy', 'matplotlib', 'docopt', 'future', 'termcolor'],
     entry_points={

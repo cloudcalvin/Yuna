@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
-
+import itertools
 import yuna.junctions as junctions
 import yuna.wires as wires
 import yuna.vias as vias
@@ -37,39 +37,83 @@ union result and the moat layer.
 """
 
 
-def shrink_touching_layers(layer):
-    return tools.angusj_offset(layer, 'down')
+def is_layer_in_layout(wire, polygons):
+    return (wire, 0) in polygons
 
 
-def midpoint(x1, y1, x2, y2):
-    return ((x1 + x2)/2, (y1 + y2)/2)
-            
+def is_layer_in_via(wire, polygons):
+    return (wire, 1) in polygons
 
-def connect_term_to_wire(terms, wiresets):
-    for term in terms:
-        print(term.labels)
-        wireset = wiresets[term.layer]
-        for wire in wireset.wires:
-            for poly in wire.polygon:
-                for i in range(len(poly) - 1):
-                    print(i)
-                    x1, y1 = poly[i][0], poly[i][1]
-                    x2, y2 = poly[i+1][0], poly[i+1][1]
 
-                    cp = midpoint(x1, y1, x2, y2)
-                    term.connect_wire_edge(i, wire, cp)
+def is_layer_in_jj(wire, polygons):
+    return (wire, 3) in polygons
 
-        # TODO: Add verbose parameter
-        # for wire in wireset.wires:
-        #     for edge in wire.edgelabels:
-        #         print(edge)
-            
-            
-def create_terminal(Labels, element, terms):
-    poly = element.points.tolist()
-    term = layers.Term(poly)
-    term.connect_label(Labels)
-    terms.append(term)
+
+def add_label(cell, name, bb):
+    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
+    cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
+    label = gdspy.Label(name, (cx, cy), 'nw', layer=11)
+    cell.add(label)
+
+
+def union_vias(vias, wire):
+    """ Union vias of the same type. """
+
+    tools.green_print('Union vias:')
+
+    via_union = list()
+    for v1 in vias:
+        for v2 in vias:
+            if v1 is not v2:
+                if layers.does_layers_intersect([v1], [v2]):
+                    for union in tools.angusj([v1], [v2], 'union'):
+                        via_union.append(union)
+
+    return list(via_union for via_union,_ in itertools.groupby(via_union))
+
+
+def union_wires(yuna_cell, auron_cell, wire):
+    """  """
+
+    # tools.green_print('Union wires:')
+
+    polygons = yuna_cell.get_polygons(True)
+
+    if is_layer_in_layout(wire, polygons):
+        wires = yuna_cell.get_polygons(True)[(wire, 0)]
+        wires = tools.angusj(wires, wires, 'union')
+
+        # Union vias with wires, but remove redundant 
+        # vias that are not connected to any wires.
+        if is_layer_in_via(wire, polygons):
+            vias = yuna_cell.get_polygons(True)[(wire, 1)]
+            # for poly in vias:
+            #     auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=1))
+            for via in vias:
+                via_offset = tools.angusj_offset([via], 'up')
+                if layers.does_layers_intersect(via_offset, wires):
+                    wires = tools.angusj([via], wires, 'union')
+                    # wires_2 = tools.angusj(via_offset, wires, 'union')
+                    # wires = pyclipper.CleanPolygons(wires)
+                    # wires = pyclipper.SimplifyPolygons(wires)
+
+            # Union vias of the same kind, that is not
+            # connected to any wires, but shouldn't
+            # be deleted. 
+            connected_vias = union_vias(vias, wire)
+            for poly in connected_vias:
+                auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
+
+        # We know the wires inside a jj, so 
+        # we only have to union it with wires
+        # and dnt have to remove any jj layers.
+        if is_layer_in_jj(wire, polygons):
+            jjs = yuna_cell.get_polygons(True)[(wire, 3)]
+            for jj in jjs:
+                wires = tools.angusj([jj], wires, 'union')
+
+        for poly in wires:
+            auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
             
             
 class Config:
@@ -92,177 +136,136 @@ class Config:
     """
     
     def __init__(self, config_data):
+        self.gdsii = None
         self.Params = config_data['Params']
         self.Layers = config_data['Layers']
         self.Atom = config_data['Atoms']
 
-        self.Elements = None
-        self.Terms = []
-        self.Labels = None
-        self.gdsii = None
-        
     def set_gds(self, gds_file):
         self.gdsii = gdspy.GdsLibrary()
         self.gdsii.read_gds(gds_file, unit=1.0e-12)
-        
+    
     def read_topcell_reference(self):
         topcell = self.gdsii.top_level()[0]
         self.gdsii.extract(topcell)
         self.Labels = self.gdsii.top_level()[0].labels
         self.Elements = self.gdsii.top_level()[0].elements
+
+    def intersect_via_shunt(self, via_res, via, polygons, key, jj):
+        if key[0] == jj['shunt']:
+            if layers.does_layers_intersect([via], polygons):
+                for poly in tools.angusj([via], polygons, 'intersection'):
+                    via_res.append(poly)
+
+    def intersect_via_wire(self, via_wire, via, polygons, key, jj):
+        if key[0] == jj['wire']:
+            if layers.does_layers_intersect([via], polygons):
+                for poly in tools.angusj([via], polygons, 'intersection'):
+                    via_wire.append(via)
+
+    def intersect_wire_ground(self, via_gnd, via, polygons, key, jj):
+        if key[0] == jj['ground']:
+            if layers.does_layers_intersect([via], polygons):
+                for poly in tools.angusj([via], polygons, 'intersection'):
+                    via_gnd.append(via)
+
+    def detect_via_using_cells(self, cell):
+        bb = cell.get_bounding_box()
+        add_label(cell, cell.name, bb)
+
+    def detect_jj_using_cells(self, cell):
+        for key, layer in self.Layers.items():
+            if layer['type'] == 'junction':                
+                for element in cell.elements:
+                    bb = element.get_bounding_box()
+                    if isinstance(element, gdspy.PolygonSet):
+                        if element.layers == [int(key)]:
+                            add_label(cell, cell.name, bb)
+                    elif isinstance(element, gdspy.Polygon):
+                        if element.layers == int(key):
+                            add_label(cell, cell.name, bb)
+
+    def detect_shunt_connections(self, cell):
+        """ Add via labels for the shunt 
+        resistance inside the jj cell. """
+
+        jj = self.Atom['jjs']['shunt']
+        jjlayers = [jj['wire'], jj['shunt'], jj['via']]
+
+        jj_cell = gdspy.Cell('jj_cell')
+
+        via_poly = None
+        for key, polygons in cell.get_polygons(True).items():
+            if key[0] == jj['via']:
+                via_poly = polygons
+
+        # Check of ons hierdie 3 stappe kan morf.
+        via_res = []
+        for via in via_poly:
+            for key, polygons in cell.get_polygons(True).items():
+                self.intersect_via_shunt(via_res, via, polygons, key, jj)
+
+        via_wire = []
+        for via in via_res:
+            for key, polygons in cell.get_polygons(True).items():
+                self.intersect_via_wire(via_wire, via, polygons, key, jj)
+
+        via_gnd = []
+        for i, via in enumerate(via_wire):
+            for key, polygons in cell.get_polygons(True).items():
+                self.intersect_wire_ground(via_gnd, via, polygons, key, jj)
+
+        # Add the labels to the center of these via polygons
+        for via in via_wire:
+            poly = gdspy.Polygon(via, jj['via'])
+            bb = poly.get_bounding_box()
+
+            # TODO: Check wat ek hier doen! Engiunious!!!!!!
+            add_label(cell, jj['name'], bb)
+            jj_cell.add(poly)
+
+        for via in via_gnd:
+            poly = gdspy.Polygon(via, jj['via'])
+            bb = poly.get_bounding_box()
+
+            # TODO: CHeck wat ek hier doen! Engiunious!!!!!!
+            add_label(cell, jj['name'] + '_gnd', bb)
+            jj_cell.add(poly)
+
+        # for key, polygons in cell.get_polygons(True).items():
+        #     if key[0] in jjlayers:
+        #         for poly in polygons:
+        #             jj_cell.add(gdspy.Polygon(poly, key[0]))
+
+    def read_usercell_reference(self, cellref, auron_cell):
+        yuna_cell = self.gdsii.extract(cellref)
         
-    def read_usercell_reference(self, cellref):
-        cell = self.gdsii.extract(cellref)
-        flatcell = tools.flatten_cell(cell)
-        self.Labels = flatcell.labels                
-        self.Elements = flatcell.elements
+        for cell in yuna_cell.get_dependencies(True):
+            # dx, dy = cell.to_canvas_center()
+
+            if cell.name[:3] == 'via':
+                cell.flatten(single_datatype=1)
+                self.detect_via_using_cells(cell)
+            elif cell.name[:2] == 'jj':
+                cell.flatten(single_datatype=3)
+                self.detect_jj_using_cells(cell)
+                self.detect_shunt_connections(cell)
+ 
+        yuna_flatten = yuna_cell.copy('Yuna Flat', deep_copy=True)
+        yuna_flatten.flatten()
         
-    def parse_gdspy_elements(self):
-        """ Add the elements read from GDSPY to the
-        corresponding Layers in the JSON object. """
+        for key, layer in self.Layers.items():
+            if layer['type'] == 'wire' or layer['type'] == 'shunt':
+                union_wires(yuna_flatten, auron_cell, int(key))
 
-        tools.green_print('Elements:')
-        for element in self.Elements:
-            if isinstance(element, gdspy.Polygon):            
-                if element.layer == self.Params['TERM']['gds']:
-                    create_terminal(self.Labels, element, self.Terms)
-                else:
-                    self.from_polygon_object(element)
-            elif isinstance(element, gdspy.PolygonSet):
-                self.from_polygonset_object(element)   
-                
-    def from_polygon_object(self, element):
-        """ Add the polygon to the 'result'
-        key in the 'Layers' object """
-
-        print(element)
-        for layer, lay_data in self.Layers.items():
-            if lay_data['gds'] == element.layer:
-                self.Layers[layer]['result'].append(element.points.tolist())
-
-    def from_polygonset_object(self, element):
-        """ Add the polygons from the PolygonSet to
-        the 'result' key in the 'Layers' object. """
-
-        print(element)
-        for layer, lay_data in self.Layers.items():
-            if lay_data['gds'] == element.layers[0]:
-                for poly in element.polygons:
-                    self.Layers[layer]['result'].append(poly.tolist())
+        for i, label in enumerate(yuna_flatten.labels):
+            label.texttype = i
+            auron_cell.add(label)
 
 
-class Process:
-    """
-    Read and parse the JSON config files.
-    The main JSON objects are created and updated.
 
-    Parameterss
-    ----------
-    basedir : string
-        String that is the main directory of Yuna.
-    gds_file : string
-        Path to the GDS file in the corresponding test directory.
-    config_data : dict
-        Full dict as readin and updated from the JSON config file.
-    """
 
-    def __init__(self, basedir, config):
-        self.basedir = basedir
-        self.config = config
-        
-        self.wiresets = {}
-        self.terms = []
-        self.vias = []
-        self.jjs = []
 
-    def circuit_layout(self, union):
-        """ Main loop of the class. Loop over each
-        atom, subatom and module. Then update
-        the config data structure results. """
 
-        tools.green_print('Running Atom:')
 
-        if self.config.Atom['vias']:
-            self.calculate_vias(self.config.Atom['vias'])
-        if self.config.Atom['jjs']:
-            junctions.fill_jj_list(self.config, self.basedir, self.jjs)
-        
-        wires.fill_wiresets(self.config.Layers, self.wiresets, union)
-        connect_term_to_wire(self.config.Terms, self.wiresets)
 
-        # Find the differene between the via, jjs and wires.
-        for key, wireset in self.wiresets.items():
-            for wire in wireset.wires:
-                if self.config.Atom['vias']:
-                    wire.update_with_via_diff(self.vias)
-                if self.config.Atom['jjs']:
-                    wire.update_with_jj_diff(self.jjs)
-
-        # # Connect the wires with via objects.
-        # if self.config.Atom['vias']:
-        #     for via in self.vias:
-        #         for key, wireset in self.wiresets.items():
-        #             tools.green_print(key)
-        #             for wire in wireset.wires:
-        #                 via.connect_wires(wire)
-        #     
-        # # Connect the wires with jj objects.            
-        # if self.config.Atom['jjs']:
-        #     for jj in self.jjs:
-        #         for key, wireset in self.wiresets.items():
-        #             for wire in wireset.wires:
-        #                 jj.connect_wires(wire)
-            
-        # cParams = params.Params()
-        # cParams.calculate_area(self.Elements, Layers)
-
-    def update_wire_offset(self):
-        for name, wireset in self.wiresets.items():
-            for wires in wireset.wires:
-                wires.polygon = shrink_touching_layers(wires.polygon)        
-        
-    def calculate_vias(self, atom):
-        """ 
-        * Read the Module data file in
-          and save it in the 'Module'
-          variable in the Subatom struct.
-        * Loop through the modules and calculate
-          the result of the Subatom struct.
-        """
-
-        print('      Num: ' + str(atom['id']))
-
-        for subatom in atom['Subatom']:
-            tools.read_module(self.basedir, atom, subatom)
-            
-            for module in subatom['Module']:
-                self.calculate_module(atom, subatom, module)
-                
-            subatom['result'] = subatom['Module'][-1]['result']
-
-        vias.fill_via_list(self.vias, atom)
-
-    def calculate_module(self, atom, subatom, module):
-        """
-        * Calculate the Subject polygon list.
-        * Calculate the Clippers polygon list.
-        * Clip and 1. and 2. using the proposed
-          method and save the result.
-        """
-
-        print('          Module: ' + str(module['id']))
-        print('          ' + str(module['desc']))
-
-        for key, value in list(module.items()):
-            if key == 'via_connect':
-                layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)
-                viacross = vias.get_viacross(self.config.Layers, subatom['Module'], value, layercross)
-                module['result'] = viacross
-            elif key == 'via_connect_reverse':
-                layercross = vias.get_layercross(self.config.Layers, subatom['Module'], value)
-                viacross = vias.get_viacross(self.config.Layers, subatom['Module'], value, layercross)
-                wireconnect = vias.reverse_via(self.config.Layers, subatom['Module'], value, viacross)
-                module['result'] = wireconnect
-            elif key == 'via_remove':
-                viacross = vias.remove_viacross(self.config.Layers, subatom['Module'], value)
-                module['result'] = viacross

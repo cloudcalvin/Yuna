@@ -15,41 +15,17 @@ Options:
 """
 
 
-from __future__ import print_function
-from __future__ import absolute_import
-
-from docopt import docopt
-from termcolor import colored
-
 import os
 import json
 import gdspy
 
-import yuna.process as process
+from docopt import docopt
+from yuna import process
 
 from yuna.utils import write
 from yuna.utils import tools
 
-from pprint import pprint
 
-
-# def main():
-#     """  """
-# 
-#     arguments = docopt(__doc__, version='Yuna 0.1.0')
-#     tools.red_print('Summoning Yuna...')
-#     tools.parameter_print(arguments)
-# 
-#     if arguments['--cell'] == 'list':
-#         cellref = 'list'
-#     elif arguments['--cell']:
-#         machina(arguments, '', False)
-#     else:
-#         cellref = ""
-# 
-#     tools.red_print('Auron. Done.')
-
-    
 def read_config(config_file):
     """ Reads the config file that is written in
     JSON. This file contains the logic of how
@@ -93,9 +69,6 @@ def machina(args, cwd):
     return auron_cell, data['Params'], data['Layers']
 
 
-if __name__ == '__main__':
-    main()
-    
     
     
     

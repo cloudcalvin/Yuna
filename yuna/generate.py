@@ -17,7 +17,7 @@ Options:
 
 import os
 import json
-import gdspy
+import gdsyuna
 
 from docopt import docopt
 from yuna import process
@@ -55,14 +55,14 @@ def machina(args, cwd):
     config = process.Config(data)
     config.set_gds(gds_file)
 
-    auron_cell = gdspy.Cell('Auron Cell')
+    auron_cell = gdsyuna.Cell('Auron Cell')
     if args['--cell']:
         config.read_usercell_reference(args['--cell'], auron_cell)
     else:
         config.read_topcell_reference()
 
-    gdspy.LayoutViewer()
-    gdspy.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
+    gdsyuna.LayoutViewer()
+    gdsyuna.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 
     tools.cyan_print('Yuna. Done.')
     

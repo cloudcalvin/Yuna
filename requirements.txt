@@ -4,7 +4,7 @@ matplotlib
 future; python_version < "3"
 networkx
 
-gdspy
+gdsyuna
 pyclipper
 docopt
 termcolor

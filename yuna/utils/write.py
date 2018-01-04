@@ -3,7 +3,7 @@ from termcolor import colored
 from yuna.utils import tools
 
 
-import gdspy
+import gdsyuna
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -19,11 +19,11 @@ class Write:
 
     def write_gds(self, basedir, ldf, jjs, vias, wiresets):
         """ Write polygons to a new GDS cell using
-        gdspy. The polygons written are read from
+        gdsyuna. The polygons written are read from
         the updated JSON Config file. """
 
         tools.green_print('Cell: STEM - Hypres')
-        cell = gdspy.Cell('STEM')
+        cell = gdsyuna.Cell('STEM')
 
         # for via in vias:
         #     via.plot_via(cell)
@@ -34,6 +34,6 @@ class Write:
                 wire.plot_wire(cell, wireset.gds)
 
         if self.view:
-            gdspy.LayoutViewer()
+            gdsyuna.LayoutViewer()
 
         return cell.get_polygons(True)

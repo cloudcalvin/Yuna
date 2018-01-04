@@ -23,7 +23,7 @@ setup(
     url="https://github.com/rubenvanstaden/yuna",
     packages=['yuna'],
     package_dir={'yuna': 'yuna'},
-    install_requires=['gdspy', 'pyclipper', 'setuptools', 'numpy', 'matplotlib', 'docopt', 'future', 'termcolor'],
+    install_requires=['gdsyuna', 'pyclipper', 'setuptools', 'numpy', 'matplotlib', 'docopt', 'future', 'termcolor'],
     entry_points={
         'console_scripts': [
             'yuna = yuna:main'

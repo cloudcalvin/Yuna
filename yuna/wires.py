@@ -5,7 +5,7 @@ from termcolor import colored
 from .utils import tools
 
 import json
-import gdspy
+import gdsyuna
 import pyclipper
 import networkx as nx
 import yuna.layers as layers
@@ -140,7 +140,7 @@ class Wire:
     def plot_wire(self, cell, gds):
         if self.active:
             for poly in self.polygon:
-                cell.add(gdspy.Polygon(poly, gds))
+                cell.add(gdsyuna.Polygon(poly, gds))
                 
                 
                 

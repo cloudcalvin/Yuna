@@ -6,7 +6,7 @@ from collections import defaultdict
 
 
 import json
-import gdspy
+import gdsyuna
 import yuna.utils.tools as tools
 import pyclipper
 from pprint import pprint 

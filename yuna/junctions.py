@@ -5,7 +5,7 @@ from collections import defaultdict
 from pprint import pprint
 from yuna.utils import tools
 
-import gdspy
+import gdsyuna
 import yuna.layers as layers
 import pyclipper
 
@@ -74,7 +74,7 @@ def is_jj_cell(element):
 
     jjbool = False
     
-    if isinstance(element, gdspy.CellReference):
+    if isinstance(element, gdsyuna.CellReference):
         print('      CellReference: ', end='')
         print(element)
         refname = element.ref_cell.name
@@ -227,8 +227,8 @@ class Junction:
     #     pass
 
     def plot_jj(self, cell):
-        cell.add(gdspy.Polygon(self.polygon, self.gds_base))
-        cell.add(gdspy.Polygon(self.res, self.gds_res))
+        cell.add(gdsyuna.Polygon(self.polygon, self.gds_base))
+        cell.add(gdsyuna.Polygon(self.res, self.gds_res))
 
 
 

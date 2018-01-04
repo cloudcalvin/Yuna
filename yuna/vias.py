@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import networkx as nx
 
-import gdspy
+import gdsyuna
 import yuna.layers as layers
 import pyclipper
 import yuna.wires as wires
@@ -261,12 +261,12 @@ class Via:
         update_edgelabels(p1, p2, wire, self.id)
 
     def plot_via(self, cell):
-        cell.add(gdspy.Polygon(self.polygon, self.gds))
+        cell.add(gdsyuna.Polygon(self.polygon, self.gds))
 
     def plot_connected_wires(self, cell):
         for gds, layers in self.wires.items():
             for poly in layers:
-                cell.add(gdspy.Polygon(poly, gds))    
+                cell.add(gdsyuna.Polygon(poly, gds))    
                 
                 
                 

@@ -2,7 +2,7 @@ from __future__ import print_function
 from termcolor import colored
 
 
-import gdspy
+import gdsyuna
 
 
 class Params:
@@ -24,7 +24,7 @@ class Params:
         
         hasjj = False
         for element in Elements:
-            if isinstance(element, gdspy.CellReference):
+            if isinstance(element, gdsyuna.CellReference):
                 name = element.ref_cell.name
                 if name[:2] == 'JJ':
                     hasjj = True
@@ -35,7 +35,7 @@ class Params:
         print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
         print('Junction areas:')
         for element in Elements:
-            if isinstance(element, gdspy.CellReference):
+            if isinstance(element, gdsyuna.CellReference):
                 name = element.ref_cell.name
                 if name[:2] == 'JJ':
                     for key, value in element.area(True).items():
@@ -59,7 +59,7 @@ class Params:
         for key, value in Layers.items():
             if value['type'] == 'resistance':
                 for poly in value['jj']:
-                    poly_element = gdspy.Polygon(poly, 21)
+                    poly_element = gdsyuna.Polygon(poly, 21)
                     value = poly_element.area(True).values()[0]
                     print('      ' + key + ' --> ' + str(value * 1e-12) + 'um')
                     self.res_area = value * 1e-12

@@ -13,7 +13,7 @@ import yuna.junctions as junctions
 import yuna.wires as wires
 import yuna.vias as vias
 import json
-import gdspy
+import gdsyuna
 import yuna.layers as layers
 import yuna.params as params
 from yuna.utils import tools
@@ -52,7 +52,7 @@ def is_layer_in_jj(wire, polygons):
 def add_label(cell, name, bb):
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-    label = gdspy.Label(name, (cx, cy), 'nw', layer=11)
+    label = gdsyuna.Label(name, (cx, cy), 'nw', layer=11)
     cell.add(label)
 
 
@@ -88,7 +88,7 @@ def union_wires(yuna_cell, auron_cell, wire):
         if is_layer_in_via(wire, polygons):
             vias = yuna_cell.get_polygons(True)[(wire, 1)]
             # for poly in vias:
-            #     auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=1))
+            #     auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=1))
             for via in vias:
                 via_offset = tools.angusj_offset([via], 'up')
                 if layers.does_layers_intersect(via_offset, wires):
@@ -102,7 +102,7 @@ def union_wires(yuna_cell, auron_cell, wire):
             # be deleted. 
             connected_vias = union_vias(vias, wire)
             for poly in connected_vias:
-                auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
+                auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=0))
 
         # We know the wires inside a jj, so 
         # we only have to union it with wires
@@ -113,7 +113,7 @@ def union_wires(yuna_cell, auron_cell, wire):
                 wires = tools.angusj([jj], wires, 'union')
 
         for poly in wires:
-            auron_cell.add(gdspy.Polygon(poly, layer=wire, datatype=0))
+            auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=0))
             
             
 class Config:
@@ -125,7 +125,7 @@ class Config:
     Attributes
     ----------
     Elements : list
-        Elements as read in from the GDS file using the GDSPY library.
+        Elements as read in from the GDS file using the gdsyuna library.
     Layer : list
         The Layer object as specified in the json config file.
 
@@ -142,7 +142,7 @@ class Config:
         self.Atom = config_data['Atoms']
 
     def set_gds(self, gds_file):
-        self.gdsii = gdspy.GdsLibrary()
+        self.gdsii = gdsyuna.GdsLibrary()
         self.gdsii.read_gds(gds_file, unit=1.0e-12)
     
     def read_topcell_reference(self):
@@ -178,10 +178,10 @@ class Config:
             if layer['type'] == 'junction':                
                 for element in cell.elements:
                     bb = element.get_bounding_box()
-                    if isinstance(element, gdspy.PolygonSet):
+                    if isinstance(element, gdsyuna.PolygonSet):
                         if element.layers == [int(key)]:
                             add_label(cell, cell.name, bb)
-                    elif isinstance(element, gdspy.Polygon):
+                    elif isinstance(element, gdsyuna.Polygon):
                         if element.layers == int(key):
                             add_label(cell, cell.name, bb)
 
@@ -192,7 +192,7 @@ class Config:
         jj = self.Atom['jjs']['shunt']
         jjlayers = [jj['wire'], jj['shunt'], jj['via']]
 
-        jj_cell = gdspy.Cell('jj_cell')
+        jj_cell = gdsyuna.Cell('jj_cell')
 
         via_poly = None
         for key, polygons in cell.get_polygons(True).items():
@@ -217,7 +217,7 @@ class Config:
 
         # Add the labels to the center of these via polygons
         for via in via_wire:
-            poly = gdspy.Polygon(via, jj['via'])
+            poly = gdsyuna.Polygon(via, jj['via'])
             bb = poly.get_bounding_box()
 
             # TODO: Check wat ek hier doen! Engiunious!!!!!!
@@ -225,7 +225,7 @@ class Config:
             jj_cell.add(poly)
 
         for via in via_gnd:
-            poly = gdspy.Polygon(via, jj['via'])
+            poly = gdsyuna.Polygon(via, jj['via'])
             bb = poly.get_bounding_box()
 
             # TODO: CHeck wat ek hier doen! Engiunious!!!!!!
@@ -235,7 +235,7 @@ class Config:
         # for key, polygons in cell.get_polygons(True).items():
         #     if key[0] in jjlayers:
         #         for poly in polygons:
-        #             jj_cell.add(gdspy.Polygon(poly, key[0]))
+        #             jj_cell.add(gdsyuna.Polygon(poly, key[0]))
 
     def read_usercell_reference(self, cellref, auron_cell):
         yuna_cell = self.gdsii.extract(cellref)

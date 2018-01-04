@@ -6,7 +6,7 @@ from collections import defaultdict
 import os
 import sys
 import json
-import gdspy
+import gdsyuna
 import pyclipper
 
 
@@ -17,7 +17,7 @@ def midpoint(x1, y1, x2, y2):
 def remove_cells(yunacell):
     indices = []
     for i, element in enumerate(yunacell.elements):
-        if isinstance(element, gdspy.CellReference):
+        if isinstance(element, gdsyuna.CellReference):
             name = element.ref_cell.name
             if name == 'aj_res_bar_gds':
                 print(i)
@@ -61,7 +61,7 @@ def cyan_print(header):
 def list_layout_cells(gds):
     """ List the Cells in the GDS layout. """
 
-    gdsii = gdspy.GdsLibrary()
+    gdsii = gdsyuna.GdsLibrary()
     gdsii.read_gds(gds, unit=1.0e-12)
 
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
@@ -156,7 +156,7 @@ def re_add_cells(flatcell, cell_list):
 #     via_list = []
 # 
 #     for i, element in enumerate(cell.elements):
-#         if isinstance(element, gdspy.CellReference):
+#         if isinstance(element, gdsyuna.CellReference):
 #             name = element.ref_cell.name
 #             if name[:2] == 'JJ':
 #                 print(str(i) + ' - Detected JJ: ' + name)
@@ -187,8 +187,8 @@ def get_all_cellreferences(yunacell, recursive=False):
     """
     dependencies = set()
     for element in yunacell.elements:
-        if isinstance(element, gdspy.CellReference) or isinstance(
-                element, gdspy.CellArray):
+        if isinstance(element, gdsyuna.CellReference) or isinstance(
+                element, gdsyuna.CellArray):
             if recursive:
                 dependencies.update(
                     get_all_cellreferences(element.ref_cell, True)
@@ -204,7 +204,7 @@ def create_device_cell(device_cellrefs):
     device_list = []
     
     for i, dev in enumerate(device_cellrefs):
-        if isinstance(dev, gdspy.CellReference):
+        if isinstance(dev, gdsyuna.CellReference):
             name = dev.ref_cell.name
             if name[:2] == 'JJ':
                 print(str(i) + ' - Detected JJ: ' + name)
@@ -215,7 +215,7 @@ def create_device_cell(device_cellrefs):
                 indices.append(i)
                 device_list.append(dev)
         
-    device = gdspy.Cell('DeviceCells')
+    device = gdsyuna.Cell('DeviceCells')
     for dev in device_list:
         device.add(dev) 
 
@@ -247,7 +247,7 @@ def flatten_cell(cell):
             device_list.append(mycell)
             
         # for i, element in enumerate(mycell.elements):
-        #     if isinstance(element, gdspy.CellReference):
+        #     if isinstance(element, gdsyuna.CellReference):
         #         name = element.ref_cell.name
         #         if name[:2] == 'JJ':
         #             print(str(i) + ' - Detected JJ: ' + name)
@@ -258,7 +258,7 @@ def flatten_cell(cell):
         #             indices.append(i)
         #             device_list.append(element)
             
-    device = gdspy.Cell('Cells')
+    device = gdsyuna.Cell('Cells')
     for dev in device_list:
         device.add(dev) 
 
@@ -298,10 +298,10 @@ def read_module(basedir, atom, subatom):
 #     atom = Atom['jjs']
 # 
 #     mycells = cell.copy('mycells', deep_copy=True)
-#     emergecell = gdspy.Cell('emerge')
+#     emergecell = gdsyuna.Cell('emerge')
 # 
 #     for i, element in enumerate(mycells.elements):
-#         if isinstance(element, gdspy.CellReference):
+#         if isinstance(element, gdsyuna.CellReference):
 #             name = element.ref_cell.name
 #             if name[:2] == 'JJ':
 #                 print(str(i) + ' - Detected JJ: ' + name)

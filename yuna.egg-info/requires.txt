@@ -1,4 +1,4 @@
-gdspy
+gdsyuna
 pyclipper
 setuptools
 numpy

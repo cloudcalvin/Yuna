@@ -28,13 +28,5 @@ setup(
         'console_scripts': [
             'yuna = yuna:main'
         ]
-    },
-    classifiers=[
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Development Status :: 2 - Alpha",
-        "Topic :: Utilities",
-        "License :: OSI Approved :: BSD License",
-    ],
+    }
 )

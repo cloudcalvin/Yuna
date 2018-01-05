@@ -1,23 +1,14 @@
-from __future__ import print_function
-from __future__ import absolute_import
-
-from termcolor import colored
-from pprint import pprint
-
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import networkx as nx
 import itertools
-import yuna.junctions as junctions
-import yuna.wires as wires
-import yuna.vias as vias
 import json
 import gdsyuna
-import yuna.layers as layers
-import yuna.params as params
-from yuna.utils import tools
 import pyclipper
+
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
+from yuna import tools
 
 
 """
@@ -55,7 +46,6 @@ def add_label(cell, name, bb):
     label = gdsyuna.Label(name, (cx, cy), 'nw', layer=11)
     cell.add(label)
 
-
 def union_vias(vias, wire):
     """ Union vias of the same type. """
 
@@ -65,7 +55,7 @@ def union_vias(vias, wire):
     for v1 in vias:
         for v2 in vias:
             if v1 is not v2:
-                if layers.does_layers_intersect([v1], [v2]):
+                if tools.does_layers_intersect([v1], [v2]):
                     for union in tools.angusj([v1], [v2], 'union'):
                         via_union.append(union)
 
@@ -91,7 +81,7 @@ def union_wires(yuna_cell, auron_cell, wire):
             #     auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=1))
             for via in vias:
                 via_offset = tools.angusj_offset([via], 'up')
-                if layers.does_layers_intersect(via_offset, wires):
+                if tools.does_layers_intersect(via_offset, wires):
                     wires = tools.angusj([via], wires, 'union')
                     # wires_2 = tools.angusj(via_offset, wires, 'union')
                     # wires = pyclipper.CleanPolygons(wires)
@@ -153,19 +143,19 @@ class Config:
 
     def intersect_via_shunt(self, via_res, via, polygons, key, jj):
         if key[0] == jj['shunt']:
-            if layers.does_layers_intersect([via], polygons):
+            if tools.does_layers_intersect([via], polygons):
                 for poly in tools.angusj([via], polygons, 'intersection'):
                     via_res.append(poly)
 
     def intersect_via_wire(self, via_wire, via, polygons, key, jj):
         if key[0] == jj['wire']:
-            if layers.does_layers_intersect([via], polygons):
+            if tools.does_layers_intersect([via], polygons):
                 for poly in tools.angusj([via], polygons, 'intersection'):
                     via_wire.append(via)
 
     def intersect_wire_ground(self, via_gnd, via, polygons, key, jj):
         if key[0] == jj['ground']:
-            if layers.does_layers_intersect([via], polygons):
+            if tools.does_layers_intersect([via], polygons):
                 for poly in tools.angusj([via], polygons, 'intersection'):
                     via_gnd.append(via)
 

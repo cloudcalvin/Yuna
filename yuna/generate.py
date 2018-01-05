@@ -21,9 +21,7 @@ import gdsyuna
 
 from docopt import docopt
 from yuna import process
-
-from yuna.utils import write
-from yuna.utils import tools
+from yuna import tools
 
 
 def read_config(config_file):

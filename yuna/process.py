@@ -46,7 +46,7 @@ def add_label(cell, name, bb):
     label = gdsyuna.Label(name, (cx, cy), 'nw', layer=11)
     cell.add(label)
 
-def union_vias(vias, wire):
+def union_same_vias(vias, wire):
     """ Union vias of the same type. """
 
     tools.green_print('Union vias:')
@@ -62,49 +62,62 @@ def union_vias(vias, wire):
     return list(via_union for via_union,_ in itertools.groupby(via_union))
 
 
-def union_wires(yuna_cell, auron_cell, wire):
+def union_wires(yuna_flatten, auron_cell, wire, mtype):
     """  """
 
-    # tools.green_print('Union wires:')
+    tools.green_print('Union wires: ' + str(wire))
 
-    polygons = yuna_cell.get_polygons(True)
+    polygons = yuna_flatten.get_polygons(True)
 
+    wires = None
     if is_layer_in_layout(wire, polygons):
-        wires = yuna_cell.get_polygons(True)[(wire, 0)]
+        print('Layers active: ' + str(wire))
+        wires = yuna_flatten.get_polygons(True)[(wire, 0)]
         wires = tools.angusj(wires, wires, 'union')
+        
+    return wires
 
-        # Union vias with wires, but remove redundant 
-        # vias that are not connected to any wires.
+
+def union_vias(yuna_flatten, auron_cell, wire, wires):
+    """ Union vias with wires, but remove redundant 
+    vias that are not connected to any wires. """
+    
+    polygons = yuna_flatten.get_polygons(True)
+    if wires is not None:
         if is_layer_in_via(wire, polygons):
-            vias = yuna_cell.get_polygons(True)[(wire, 1)]
-            # for poly in vias:
-            #     auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=1))
-            for via in vias:
+            vias = yuna_flatten.get_polygons(True)[(wire, 1)]
+            for via in yuna_flatten.get_polygons(True)[(wire, 1)]:
                 via_offset = tools.angusj_offset([via], 'up')
                 if tools.does_layers_intersect(via_offset, wires):
                     wires = tools.angusj([via], wires, 'union')
-                    # wires_2 = tools.angusj(via_offset, wires, 'union')
-                    # wires = pyclipper.CleanPolygons(wires)
-                    # wires = pyclipper.SimplifyPolygons(wires)
 
             # Union vias of the same kind, that is not
-            # connected to any wires, but shouldn't
-            # be deleted. 
-            connected_vias = union_vias(vias, wire)
+            # connected to any wires, but shouldn't be deleted. 
+            connected_vias = union_same_vias(vias, wire)
             for poly in connected_vias:
                 auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=0))
+                
+    return wires
 
-        # We know the wires inside a jj, so 
-        # we only have to union it with wires
-        # and dnt have to remove any jj layers.
-        if is_layer_in_jj(wire, polygons):
-            jjs = yuna_cell.get_polygons(True)[(wire, 3)]
-            for jj in jjs:
-                wires = tools.angusj([jj], wires, 'union')
-
-        for poly in wires:
-            auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=0))
             
+def union_jjs(yuna_flatten, auron_cell, wire, wires, mtype):
+    """ We know the wires inside a jj, so
+    we only have to union it with wires
+    and don't have to remove any jj layers. """
+    
+    polygons = yuna_flatten.get_polygons(True)
+    if wires is not None:
+        if is_layer_in_jj(wire, polygons):
+            for jj in yuna_flatten.get_polygons(True)[(wire, 3)]:
+                wires = tools.angusj([jj], wires, 'union')
+    else:
+        if mtype == 'shunt':
+            if is_layer_in_jj(wire, polygons):
+                for jj in yuna_flatten.get_polygons(True)[(wire, 3)]:
+                    auron_cell.add(gdsyuna.Polygon(jj, layer=wire, datatype=0))
+                    
+    return wires
+        
             
 class Config:
     """
@@ -134,12 +147,6 @@ class Config:
     def set_gds(self, gds_file):
         self.gdsii = gdsyuna.GdsLibrary()
         self.gdsii.read_gds(gds_file, unit=1.0e-12)
-    
-    def read_topcell_reference(self):
-        topcell = self.gdsii.top_level()[0]
-        self.gdsii.extract(topcell)
-        self.Labels = self.gdsii.top_level()[0].labels
-        self.Elements = self.gdsii.top_level()[0].elements
 
     def intersect_via_shunt(self, via_res, via, polygons, key, jj):
         if key[0] == jj['shunt']:
@@ -164,11 +171,16 @@ class Config:
         add_label(cell, cell.name, bb)
 
     def detect_jj_using_cells(self, cell):
+        """ We have to temporelaly flatten the JJ cell to get the 
+        JJ layer, since the JJ layer can be inside another cell. """
+        
         for key, layer in self.Layers.items():
-            if layer['type'] == 'junction':                
+            if layer['type'] == 'junction':
                 for element in cell.elements:
                     bb = element.get_bounding_box()
                     if isinstance(element, gdsyuna.PolygonSet):
+                        print(element.polygons)
+                        create i polygon en kry sy bb
                         if element.layers == [int(key)]:
                             add_label(cell, cell.name, bb)
                     elif isinstance(element, gdsyuna.Polygon):
@@ -182,7 +194,7 @@ class Config:
         jj = self.Atom['jjs']['shunt']
         jjlayers = [jj['wire'], jj['shunt'], jj['via']]
 
-        jj_cell = gdsyuna.Cell('jj_cell')
+        jj_cell = gdsyuna.Cell('jj_cell_' + cell.name)
 
         via_poly = None
         for key, polygons in cell.get_polygons(True).items():
@@ -232,11 +244,12 @@ class Config:
         
         for cell in yuna_cell.get_dependencies(True):
             # dx, dy = cell.to_canvas_center()
-
             if cell.name[:3] == 'via':
+                tools.green_print('Flattening via: ' + cell.name)
                 cell.flatten(single_datatype=1)
                 self.detect_via_using_cells(cell)
             elif cell.name[:2] == 'jj':
+                tools.green_print('Flattening junction: ' + cell.name)
                 cell.flatten(single_datatype=3)
                 self.detect_jj_using_cells(cell)
                 self.detect_shunt_connections(cell)
@@ -244,13 +257,42 @@ class Config:
         yuna_flatten = yuna_cell.copy('Yuna Flat', deep_copy=True)
         yuna_flatten.flatten()
         
+        # Union flattened layers and create Auron Cell.
         for key, layer in self.Layers.items():
-            if layer['type'] == 'wire' or layer['type'] == 'shunt':
-                union_wires(yuna_flatten, auron_cell, int(key))
+            mtype = ['wire', 'shunt', 'skyplane', 'gndplane']
+            if layer['type'] in mtype:
+                wires = union_wires(yuna_flatten, auron_cell, int(key), layer['type'])
+                wires = union_vias(yuna_flatten, auron_cell, int(key), wires)
+                wires = union_jjs(yuna_flatten, auron_cell, int(key), wires, layer['type'])
+                
+                if wires is not None:
+                    for poly in wires:
+                        auron_cell.add(gdsyuna.Polygon(poly, layer=int(key), datatype=0))
 
+        # Add labels to Auron Cell.
+        vias_config = self.Atom['vias'].keys()
+        tools.green_print('VIAs defined in the config file:')
+        print(vias_config)
         for i, label in enumerate(yuna_flatten.labels):
-            label.texttype = i
-            auron_cell.add(label)
+            # label.texttype = i
+            # auron_cell.add(label)
+            
+            if label.text in vias_config:
+                label.texttype = i
+                auron_cell.add(label)
+            
+    def read_topcell_reference(self):
+        topcell = self.gdsii.top_level()[0]
+        self.gdsii.extract(topcell)
+        self.Labels = self.gdsii.top_level()[0].labels
+        self.Elements = self.gdsii.top_level()[0].elements
+            
+            
+            
+            
+            
+            
+            
             
             
             

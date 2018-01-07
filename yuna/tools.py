@@ -112,8 +112,8 @@ def angusj(clip, subj, method):
                           pyclipper.PFT_EVENODD)
     elif method == 'union':
         subj = pc.Execute(pyclipper.CT_UNION,
-                          pyclipper.PFT_EVENODD,
-                          pyclipper.PFT_EVENODD)
+                          pyclipper.PFT_NONZERO,
+                          pyclipper.PFT_NONZERO)
     elif method == 'intersection':
         subj = pc.Execute(pyclipper.CT_INTERSECTION,
                           pyclipper.PFT_NONZERO,
@@ -144,105 +144,8 @@ def angusj_offset(layer, size):
     return solution
 
 
-# def re_add_cells(flatcell, cell_list):
-#     for element in cell_list:
-#         flatcell.add(element)
 
 
-# def get_all_cellreferences(yunacell, recursive=False):
-#     """
-#     Returns a list of the cells included in this cell as references.
-
-#     Parameters
-#     ----------
-#     recursive : bool
-#         If True returns cascading dependencies.
-
-#     Returns
-#     -------
-#     out : set of ``Cell``
-#         List of the cells referenced by this cell.
-#     """
-#     dependencies = set()
-#     for element in yunacell.elements:
-#         if isinstance(element, gdsyuna.CellReference) or isinstance(
-#                 element, gdsyuna.CellArray):
-#             if recursive:
-#                 dependencies.update(
-#                     get_all_cellreferences(element.ref_cell, True)
-#                 )
-#             dependencies.add(element)
-#     return dependencies
 
 
-# def create_device_cell(device_cellrefs):
-#     green_print('Create device cells:')
-    
-#     indices = []
-#     device_list = []
-    
-#     for i, dev in enumerate(device_cellrefs):
-#         if isinstance(dev, gdsyuna.CellReference):
-#             name = dev.ref_cell.name
-#             if name[:2] == 'JJ':
-#                 print(str(i) + ' - Detected JJ: ' + name)
-#                 indices.append(i)
-#                 device_list.append(dev)
-#             if name[:3] == 'via':
-#                 print(str(i) + ' - Detected VIA: ' + name)
-#                 indices.append(i)
-#                 device_list.append(dev)
-        
-#     device = gdsyuna.Cell('DeviceCells')
-#     for dev in device_list:
-#         device.add(dev) 
 
-
-# def flatten_cell(cell):
-#     """ This function does a deep copy of the current
-#     working cell, without the JJs. It then flattens
-#     this cell and afterwards adds the JJs. """
-
-#     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
-#     print('Deep copying cell for Flattening:')
-#     print(cell.name)
-
-#     indices = []
-#     device_list = []
-
-#     flatcell = cell.copy('flatcell', deep_copy=True)
-
-#     for i, mycell in enumerate(flatcell.get_dependencies()):
-#         name = mycell.name 
-#         print(name)
-#         if name[:2] == 'JJ':
-#             print(str(i) + ' - Detected JJ: ' + name)
-#             indices.append(i)
-#             device_list.append(mycell)
-#         if name[:3] == 'via':
-#             print(str(i) + ' - Detected VIA: ' + name)
-#             indices.append(i)
-#             device_list.append(mycell)
-            
-#     device = gdsyuna.Cell('Cells')
-#     for dev in device_list:
-#         device.add(dev) 
-
-#     for i in sorted(indices, reverse=True):
-#         del flatcell.elements[i]
-
-#     flatcell.flatten()
-
-#     re_add_cells(flatcell, device_list)
-
-#     return flatcell
-
-# def read_module(basedir, atom, subatom):
-#     """ Read the Module json file and save
-#     it in the Subatom 'Module' variable. """
-
-#     green_print('Reading Module:')
-#     config_file = basedir + '/' + subatom['module'] + '.json'
-#     print('        Subatom: ' + subatom['module'])
-#     with open(config_file) as data_file:
-#         subatom['Module'] = json.load(data_file)['Module']

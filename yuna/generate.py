@@ -49,8 +49,8 @@ def machina(args, cwd):
     gds_file = examdir + '/' + args['<testname>'] + '.gds'
     config_file = examdir + '/' + 'config.json'
 
-    data = read_config(config_file)
-    config = process.Config(data)
+    configdata = read_config(config_file)
+    config = process.Config(configdata)
     config.set_gds(gds_file)
 
     auron_cell = gdsyuna.Cell('Auron Cell')
@@ -64,7 +64,7 @@ def machina(args, cwd):
 
     tools.cyan_print('Yuna. Done.')
     
-    return auron_cell, data['Params'], data['Layers']
+    return auron_cell, configdata
 
 
     

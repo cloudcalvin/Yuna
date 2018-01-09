@@ -72,8 +72,14 @@ def union_wires(yuna_flatten, auron_cell, wire, mtype):
     wires = None
     if is_layer_in_layout(wire, polygons):
         print('Layers active: ' + str(wire))
+        
         wires = yuna_flatten.get_polygons(True)[(wire, 0)]
         wires = tools.angusj(wires, wires, 'union')
+        
+        # for ws in yuna_flatten.get_polygons(True)[(wire, 0)]:
+        #     ws_offset = tools.angusj_offset([ws], 'up')
+        #     if tools.does_layers_intersect(ws_offset, wires):
+        #         wires = tools.angusj([via], wires, 'union')
         
     return wires
 
@@ -91,11 +97,11 @@ def union_vias(yuna_flatten, auron_cell, wire, wires):
                 if tools.does_layers_intersect(via_offset, wires):
                     wires = tools.angusj([via], wires, 'union')
 
-            # Union vias of the same kind, that is not
-            # connected to any wires, but shouldn't be deleted. 
-            connected_vias = union_same_vias(vias, wire)
-            for poly in connected_vias:
-                auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=0))
+            # # Union vias of the same kind, that is not
+            # # connected to any wires, but shouldn't be deleted. 
+            # connected_vias = union_same_vias(vias, wire)
+            # for poly in connected_vias:
+            #     auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=0))
                 
     return wires
 
@@ -118,7 +124,20 @@ def union_jjs(yuna_flatten, auron_cell, wire, wires, mtype):
                     
     return wires
         
-            
+    
+# def union_jj_layers(Layers, cell):
+#     tools.green_print('Union junction layers:')
+#     jj_union_cell = gdsyuna.Cell('JJ_union Cell ' + cell.name)
+#     for key, polygons in cell.get_polygons(True).items():
+#         for gds, layer in Layers.items():
+#             if layer['type'] == 'junction':
+#                 if key[0] == int(gds):
+#                     # jj_poly = tools.angusj(polygons, polygons, 'union')
+#                     awe = union_same_vias(polygons, 51)
+#                     print(awe)
+#                     jj_union_cell.add(gdsyuna.Polygon(awe, layer=51, datatype=0))
+                    
+                    
 class Config:
     """
     Read the data from the GDS file, either from
@@ -177,68 +196,111 @@ class Config:
         for key, layer in self.Layers.items():
             if layer['type'] == 'junction':
                 for element in cell.elements:
-                    bb = element.get_bounding_box()
                     if isinstance(element, gdsyuna.PolygonSet):
-                        print(element.polygons)
-                        create i polygon en kry sy bb
-                        if element.layers == [int(key)]:
+                        if element.layers[0] == int(key):
+                            jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+                            poly = gdsyuna.Polygon(jj_poly, element.layers[0])
+                            bb = poly.get_bounding_box()
                             add_label(cell, cell.name, bb)
                     elif isinstance(element, gdsyuna.Polygon):
                         if element.layers == int(key):
                             add_label(cell, cell.name, bb)
 
-    def detect_shunt_connections(self, cell):
-        """ Add via labels for the shunt 
-        resistance inside the jj cell. """
-
-        jj = self.Atom['jjs']['shunt']
-        jjlayers = [jj['wire'], jj['shunt'], jj['via']]
-
+    # def detect_shunt_connections(self, cell):
+    #     """ Add via labels for the shunt 
+    #     resistance inside the jj cell. """
+    # 
+    #     jj = self.Atom['jjs']['shunt']
+    #     jjlayers = [jj['wire'], jj['shunt'], jj['via']]
+    # 
+    #     jj_cell = gdsyuna.Cell('jj_cell_' + cell.name)
+    # 
+    #     via_poly = None
+    #     for key, polygons in cell.get_polygons(True).items():
+    #         if key[0] == jj['via']:
+    #             via_poly = polygons
+    # 
+    #     # Check of ons hierdie 3 stappe kan morf.
+    #     via_res = []
+    #     for via in via_poly:
+    #         for key, polygons in cell.get_polygons(True).items():
+    #             self.intersect_via_shunt(via_res, via, polygons, key, jj)
+    # 
+    #     via_wire = []
+    #     for via in via_res:
+    #         for key, polygons in cell.get_polygons(True).items():
+    #             self.intersect_via_wire(via_wire, via, polygons, key, jj)
+    # 
+    #     via_gnd = []
+    #     for i, via in enumerate(via_wire):
+    #         for key, polygons in cell.get_polygons(True).items():
+    #             self.intersect_wire_ground(via_gnd, via, polygons, key, jj)
+    # 
+    #     print(via_gnd)
+    # 
+    #     # Add the labels to the center of these via polygons
+    #     for via in via_wire:
+    #         poly = gdsyuna.Polygon(via, jj['via'])
+    #         bb = poly.get_bounding_box()
+    # 
+    #         # TODO: Check wat ek hier doen! Engiunious!!!!!!
+    #         add_label(cell, jj['name'], bb)
+    #         jj_cell.add(poly)
+    # 
+    #     for via in via_gnd:
+    #         poly = gdsyuna.Polygon(via, jj['via'])
+    #         bb = poly.get_bounding_box()
+    # 
+    #         # TODO: CHeck wat ek hier doen! Engiunious!!!!!!
+    #         add_label(cell, jj['name'] + '_gnd', bb)
+    #         jj_cell.add(poly)
+    # 
+    #     # for key, polygons in cell.get_polygons(True).items():
+    #     #     if key[0] in jjlayers:
+    #     #         for poly in polygons:
+    #     #             jj_cell.add(gdsyuna.Polygon(poly, key[0]))
+    
+    def label_jj_shunt_connections(self, cell):
         jj_cell = gdsyuna.Cell('jj_cell_' + cell.name)
-
-        via_poly = None
-        for key, polygons in cell.get_polygons(True).items():
-            if key[0] == jj['via']:
-                via_poly = polygons
-
-        # Check of ons hierdie 3 stappe kan morf.
-        via_res = []
-        for via in via_poly:
-            for key, polygons in cell.get_polygons(True).items():
-                self.intersect_via_shunt(via_res, via, polygons, key, jj)
-
-        via_wire = []
-        for via in via_res:
-            for key, polygons in cell.get_polygons(True).items():
-                self.intersect_via_wire(via_wire, via, polygons, key, jj)
-
-        via_gnd = []
-        for i, via in enumerate(via_wire):
-            for key, polygons in cell.get_polygons(True).items():
-                self.intersect_wire_ground(via_gnd, via, polygons, key, jj)
-
-        # Add the labels to the center of these via polygons
-        for via in via_wire:
-            poly = gdsyuna.Polygon(via, jj['via'])
+        atom = self.Atom['jjs']['shunt']
+        
+        polygons = cell.get_polygons(True)
+        
+        via_key = (int(atom['via']), 3)
+        shunt_key = (int(atom['shunt']), 3)
+        
+        for via in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
+            poly = gdsyuna.Polygon(via, atom['via'])
             bb = poly.get_bounding_box()
-
-            # TODO: Check wat ek hier doen! Engiunious!!!!!!
-            add_label(cell, jj['name'], bb)
+    
+            add_label(cell, atom['name'], bb)
             jj_cell.add(poly)
-
-        for via in via_gnd:
-            poly = gdsyuna.Polygon(via, jj['via'])
+            
+    def label_jj_ground_connection(self, cell):
+        jj_cell = gdsyuna.Cell('jj_gnd_' + cell.name)
+        atom = self.Atom['jjs']['ground']
+        
+        polygons = cell.get_polygons(True)
+        
+        via_key = (int(atom['via']), 3)
+        shunt_key = (int(atom['gnd']), 3)
+        
+        for via in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
+            poly = gdsyuna.Polygon(via, atom['via'])
             bb = poly.get_bounding_box()
-
-            # TODO: CHeck wat ek hier doen! Engiunious!!!!!!
-            add_label(cell, jj['name'] + '_gnd', bb)
+    
+            add_label(cell, atom['name'], bb)
             jj_cell.add(poly)
-
-        # for key, polygons in cell.get_polygons(True).items():
-        #     if key[0] in jjlayers:
-        #         for poly in polygons:
-        #             jj_cell.add(gdsyuna.Polygon(poly, key[0]))
-
+            
+    def has_ground(self, cell):
+        atom = self.Atom['jjs']['ground']
+        key = (int(atom['via']), 3)
+        
+        if key in cell.get_polygons(True):
+            return True
+        else:
+            return False
+                    
     def read_usercell_reference(self, cellref, auron_cell):
         yuna_cell = self.gdsii.extract(cellref)
         
@@ -252,7 +314,11 @@ class Config:
                 tools.green_print('Flattening junction: ' + cell.name)
                 cell.flatten(single_datatype=3)
                 self.detect_jj_using_cells(cell)
-                self.detect_shunt_connections(cell)
+                # union_jj_layers(self.Layers, cell)
+                # self.detect_shunt_connections(cell)
+                self.label_jj_shunt_connections(cell)
+                if self.has_ground(cell):
+                    self.label_jj_ground_connection(cell)
  
         yuna_flatten = yuna_cell.copy('Yuna Flat', deep_copy=True)
         yuna_flatten.flatten()
@@ -268,16 +334,25 @@ class Config:
                 if wires is not None:
                     for poly in wires:
                         auron_cell.add(gdsyuna.Polygon(poly, layer=int(key), datatype=0))
-
+                        
         # Add labels to Auron Cell.
         vias_config = self.Atom['vias'].keys()
         tools.green_print('VIAs defined in the config file:')
         print(vias_config)
+        
         for i, label in enumerate(yuna_flatten.labels):
-            # label.texttype = i
-            # auron_cell.add(label)
-            
             if label.text in vias_config:
+                label.texttype = i
+                auron_cell.add(label)
+                
+            if label.text[:2] == 'jj':
+                label.texttype = i 
+                auron_cell.add(label)
+                
+            if label.text == 'gnd_junction':
+                label.texttype = i
+                auron_cell.add(label)
+            elif label.text == 'shunt_junction':
                 label.texttype = i
                 auron_cell.add(label)
             

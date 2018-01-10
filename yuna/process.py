@@ -97,6 +97,8 @@ def union_vias(yuna_flatten, auron_cell, wire, wires):
                 if tools.does_layers_intersect(via_offset, wires):
                     wires = tools.angusj([via], wires, 'union')
 
+            There must be a wire between connected vias of the same layer.
+                    
             # # Union vias of the same kind, that is not
             # # connected to any wires, but shouldn't be deleted. 
             # connected_vias = union_same_vias(vias, wire)
@@ -343,6 +345,10 @@ class Config:
         for i, label in enumerate(yuna_flatten.labels):
             if label.text in vias_config:
                 label.texttype = i
+                auron_cell.add(label)
+                
+            if label.text[0] == 'P':
+                label.texttype = i 
                 auron_cell.add(label)
                 
             if label.text[:2] == 'jj':

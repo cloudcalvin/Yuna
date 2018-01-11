@@ -40,12 +40,17 @@ def is_layer_in_jj(wire, polygons):
     return (wire, 3) in polygons
 
 
+def is_layer_in_ntron(wire, polygons):
+    return (wire, 4) in polygons
+
+
 def add_label(cell, name, bb):
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
     label = gdsyuna.Label(name, (cx, cy), 'nw', layer=11)
     cell.add(label)
 
+    
 def union_same_vias(vias, wire):
     """ Union vias of the same type. """
 
@@ -72,14 +77,8 @@ def union_wires(yuna_flatten, auron_cell, wire, mtype):
     wires = None
     if is_layer_in_layout(wire, polygons):
         print('Layers active: ' + str(wire))
-        
         wires = yuna_flatten.get_polygons(True)[(wire, 0)]
         wires = tools.angusj(wires, wires, 'union')
-        
-        # for ws in yuna_flatten.get_polygons(True)[(wire, 0)]:
-        #     ws_offset = tools.angusj_offset([ws], 'up')
-        #     if tools.does_layers_intersect(ws_offset, wires):
-        #         wires = tools.angusj([via], wires, 'union')
         
     return wires
 
@@ -91,20 +90,11 @@ def union_vias(yuna_flatten, auron_cell, wire, wires):
     polygons = yuna_flatten.get_polygons(True)
     if wires is not None:
         if is_layer_in_via(wire, polygons):
-            vias = yuna_flatten.get_polygons(True)[(wire, 1)]
             for via in yuna_flatten.get_polygons(True)[(wire, 1)]:
                 via_offset = tools.angusj_offset([via], 'up')
                 if tools.does_layers_intersect(via_offset, wires):
                     wires = tools.angusj([via], wires, 'union')
 
-            # There must be a wire between connected vias of the same layer.
-                    
-            # # Union vias of the same kind, that is not
-            # # connected to any wires, but shouldn't be deleted. 
-            # connected_vias = union_same_vias(vias, wire)
-            # for poly in connected_vias:
-            #     auron_cell.add(gdsyuna.Polygon(poly, layer=wire, datatype=0))
-                
     return wires
 
             
@@ -125,19 +115,16 @@ def union_jjs(yuna_flatten, auron_cell, wire, wires, mtype):
                     auron_cell.add(gdsyuna.Polygon(jj, layer=wire, datatype=0))
                     
     return wires
+
         
-    
-# def union_jj_layers(Layers, cell):
-#     tools.green_print('Union junction layers:')
-#     jj_union_cell = gdsyuna.Cell('JJ_union Cell ' + cell.name)
-#     for key, polygons in cell.get_polygons(True).items():
-#         for gds, layer in Layers.items():
-#             if layer['type'] == 'junction':
-#                 if key[0] == int(gds):
-#                     # jj_poly = tools.angusj(polygons, polygons, 'union')
-#                     awe = union_same_vias(polygons, 51)
-#                     print(awe)
-#                     jj_union_cell.add(gdsyuna.Polygon(awe, layer=51, datatype=0))
+def union_ntrons(yuna_flatten, auron_cell, wire, wires, mtype):
+    """  """
+    polygons = yuna_flatten.get_polygons(True)
+    if wires is not None:
+        if is_layer_in_ntron(wire, polygons):
+            for ntron in yuna_flatten.get_polygons(True)[(wire, 4)]:
+                wires = tools.angusj([ntron], wires, 'union')
+    return wires
                     
                     
 class Config:
@@ -294,8 +281,17 @@ class Config:
             add_label(cell, atom['name'], bb)
             jj_cell.add(poly)
             
-    # def label_ntron_connection(self, cell):
+    def label_ntron_connection(self, cell):
+        ntron_cell = gdsyuna.Cell('ntron' + cell.name)
+        atom = self.Atom['ntron']
         
+        key = (int(atom['ferro']), 4)
+        polygons = cell.get_polygons(True)[key]
+        
+        poly = gdsyuna.Polygon(polygons, atom['ferro'])
+        bb = poly.get_bounding_box()
+        add_label(cell, atom['name'], bb)
+        ntron_cell.add(poly)
             
     def has_ground(self, cell):
         atom = self.Atom['jjs']['ground']
@@ -324,6 +320,10 @@ class Config:
                 self.label_jj_shunt_connections(cell)
                 if self.has_ground(cell):
                     self.label_jj_ground_connection(cell)
+            elif cell.name[:5] == 'ntron':
+                tools.green_print('Flattening ntron: ' + cell.name)
+                cell.flatten(single_datatype=4)
+                self.label_ntron_connection(cell)
  
         yuna_flatten = yuna_cell.copy('Yuna Flat', deep_copy=True)
         yuna_flatten.flatten()
@@ -335,6 +335,9 @@ class Config:
                 wires = union_wires(yuna_flatten, auron_cell, int(key), layer['type'])
                 wires = union_vias(yuna_flatten, auron_cell, int(key), wires)
                 wires = union_jjs(yuna_flatten, auron_cell, int(key), wires, layer['type'])
+                wires = union_ntrons(yuna_flatten, auron_cell, int(key), wires, layer['type'])
+                
+                print(wires)
                 
                 if wires is not None:
                     for poly in wires:
@@ -355,6 +358,10 @@ class Config:
                 auron_cell.add(label)
                 
             if label.text[:2] == 'jj':
+                label.texttype = i 
+                auron_cell.add(label)
+                
+            if label.text[:5] == 'ntron':
                 label.texttype = i 
                 auron_cell.add(label)
                 

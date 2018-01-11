@@ -294,6 +294,9 @@ class Config:
             add_label(cell, atom['name'], bb)
             jj_cell.add(poly)
             
+    # def label_ntron_connection(self, cell):
+        
+            
     def has_ground(self, cell):
         atom = self.Atom['jjs']['ground']
         key = (int(atom['via']), 3)

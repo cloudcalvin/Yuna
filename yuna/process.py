@@ -51,11 +51,13 @@ class Config:
     
     def __init__(self, config_data):
         self.gdsii = None
-        self.Params = config_data['Params']
         self.Layers = config_data['Layers']
         self.Atom = config_data['Atoms']
 
-    def set_gds(self, gds_file):
+        self.yuna_flatten = None
+        self.auron_cell = gdsyuna.Cell('Auron Cell')
+
+    def init_gds_layout(self, gds_file):
         self.gdsii = gdsyuna.GdsLibrary()
         self.gdsii.read_gds(gds_file, unit=1.0e-12)
 
@@ -66,81 +68,83 @@ class Config:
             if cell.name[:3] == 'via':
                 tools.green_print('Flattening via: ' + cell.name)
                 cell.flatten(single_datatype=1)
-                labels.add_to_cell_center(cell)
+
+                labels.add_label(cell, cell, cell.name)
             elif cell.name[:2] == 'jj':
                 tools.green_print('Flattening junction: ' + cell.name)
                 cell.flatten(single_datatype=3)
 
-                atom = self.Atom['jjs']
+                labels.get_jj_layer(cell, self.Layers)
+                labels.get_shunt_connections(cell, self.Atom['jjs'])
 
-                labels.detect_jj_using_cells(cell, self.Layers)
-                labels.label_jj_shunt_connections(cell, atom)
-                if labels.has_ground(cell, atom):
-                    labels.label_jj_ground_connection(cell, atom)
+                if tools.has_ground(cell, self.Atom['jjs']):
+                    labels.get_ground_connection(cell, self.Atom['jjs'])
             elif cell.name[:5] == 'ntron':
                 tools.green_print('Flattening ntron: ' + cell.name)
                 cell.flatten(single_datatype=4)
-                
-                atom = self.Atom['ntron']
-                
-                # label_ntron_connection(cell, atom)
+                                
+                # labels.get_ntron_layer(cell, self.Atom['ntron'])
  
-        yuna_flatten = yuna_cell.copy('Yuna Flat', deep_copy=True)
-        yuna_flatten.flatten()
+        self.yuna_flatten = yuna_cell.copy('Yuna Flatten', deep_copy=True)
+        self.yuna_flatten.flatten()
 
-        return yuna_flatten
-
-    def create_auron_polygons(self, yuna_flatten, auron_cell):
+    def create_auron_polygons(self):
         """ Union flattened layers and create Auron Cell. """
 
         for key, layer in self.Layers.items():
             mtype = ['wire', 'shunt', 'skyplane', 'gndplane']
             if layer['type'] in mtype:
-                wires = union.union_wires(yuna_flatten, auron_cell, int(key), layer['type'])
-                wires = union.union_vias(yuna_flatten, auron_cell, int(key), wires)
-                wires = union.union_jjs(yuna_flatten, auron_cell, int(key), wires, layer['type'])
-                # wires = union.union_ntrons(yuna_flatten, auron_cell, int(key), wires, layer['type'])
+                gds = int(key)
+                polygons = self.yuna_flatten.get_polygons(True)
 
+                wires = union.default_layer_polygons(gds, polygons)
+                
                 if wires is not None:
+                    if (gds, 1) in polygons:
+                        wires = union.connect_wire_to_vias(gds, wires, polygons)
+                    if (gds, 3) in polygons:
+                        wires = union.connect_wire_to_jjs(gds, wires, polygons)
+                    if (gds, 4) in polygons:
+                        wires = union.connect_wire_to_ntrons(gds, wires, polygons)
+
                     for poly in wires:
-                        auron_cell.add(gdsyuna.Polygon(poly, layer=int(key), datatype=0))
+                        self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
+                else:
+                    if mtype == 'shunt':
+                        if (gds, 3) in polygons:
+                            for jj in polygons[(gds, 3)]:
+                                self.auron_cell.add(gdsyuna.Polygon(jj, layer=gds, datatype=0))
                     
-    def add_auron_labels(self, yuna_flatten, auron_cell):
+    def add_auron_labels(self):
         """ Add labels to Auron Cell. """
 
         vias_config = self.Atom['vias'].keys()
         tools.green_print('VIAs defined in the config file:')
         print(vias_config)
         
-        for i, label in enumerate(yuna_flatten.labels):
+        for i, label in enumerate(self.yuna_flatten.labels):
             if label.text in vias_config:
                 label.texttype = i
-                auron_cell.add(label)
+                self.auron_cell.add(label)
                 
             if label.text[0] == 'P':
                 label.texttype = i 
-                auron_cell.add(label)
+                self.auron_cell.add(label)
                 
             if label.text[:2] == 'jj':
                 label.texttype = i 
-                auron_cell.add(label)
+                self.auron_cell.add(label)
                 
             if label.text[:5] == 'ntron':
                 label.texttype = i 
-                auron_cell.add(label)
+                self.auron_cell.add(label)
                 
             if label.text == 'gnd_junction':
                 label.texttype = i
-                auron_cell.add(label)
+                self.auron_cell.add(label)
             elif label.text == 'shunt_junction':
                 label.texttype = i
-                auron_cell.add(label)
-            
-    def read_topcell_reference(self):
-        topcell = self.gdsii.top_level()[0]
-        self.gdsii.extract(topcell)
-        self.Labels = self.gdsii.top_level()[0].labels
-        self.Elements = self.gdsii.top_level()[0].elements
+                self.auron_cell.add(label)
             
             
             

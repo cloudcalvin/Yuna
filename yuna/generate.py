@@ -50,23 +50,23 @@ def machina(args, cwd):
     config_file = examdir + '/' + 'config.json'
 
     configdata = read_config(config_file)
-    config = process.Config(configdata)
-    config.set_gds(gds_file)
 
-    auron_cell = gdsyuna.Cell('Auron Cell')
+    config = process.Config(configdata)
+    config.init_gds_layout(gds_file)
+
     if args['--cell']:
-        yuna_flatten = config.create_yuna_flatten(args['--cell'])
-        config.create_auron_polygons(yuna_flatten, auron_cell)
-        config.add_auron_labels(yuna_flatten, auron_cell)
+        config.create_yuna_flatten(args['--cell'])
+        config.create_auron_polygons()
+        config.add_auron_labels()
     else:
-        config.read_topcell_reference()
+        print('Please specify a Cell')
 
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 
     tools.cyan_print('Yuna. Done.')
     
-    return auron_cell, configdata
+    return config.auron_cell, configdata
 
 
     

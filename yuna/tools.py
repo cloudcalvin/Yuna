@@ -10,8 +10,10 @@ import gdsyuna
 import pyclipper
 
 
-def does_layers_intersect(layer_1, layer_2):
-    if angusj(layer_1, layer_2, 'intersection'):
+def has_ground(cell, jj_atom):
+    key = (int(jj_atom['ground']['via']), 3)
+    
+    if key in cell.get_polygons(True):
         return True
     else:
         return False
@@ -19,19 +21,6 @@ def does_layers_intersect(layer_1, layer_2):
 
 def midpoint(x1, y1, x2, y2):
     return ((x1 + x2)/2, (y1 + y2)/2)
-
-
-def remove_cells(yunacell):
-    indices = []
-    for i, element in enumerate(yunacell.elements):
-        if isinstance(element, gdsyuna.CellReference):
-            name = element.ref_cell.name
-            if name == 'aj_res_bar_gds':
-                print(i)
-                indices.append(i)
-
-    for i in sorted(indices, reverse=True):
-        del yunacell.elements[i]
 
 
 def parameter_print(arguments):
@@ -100,7 +89,6 @@ def angusj(clip, subj, method):
     """ Angusj clipping library """
 
     pc = pyclipper.Pyclipper()
-    # pc.StrictlySimple(True)
 
     pc.AddPaths(clip, pyclipper.PT_CLIP, True)
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)

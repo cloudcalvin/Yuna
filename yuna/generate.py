@@ -55,7 +55,9 @@ def machina(args, cwd):
 
     auron_cell = gdsyuna.Cell('Auron Cell')
     if args['--cell']:
-        config.read_usercell_reference(args['--cell'], auron_cell)
+        yuna_flatten = config.create_yuna_flatten(args['--cell'])
+        config.create_auron_polygons(yuna_flatten, auron_cell)
+        config.add_auron_labels(yuna_flatten, auron_cell)
     else:
         config.read_topcell_reference()
 

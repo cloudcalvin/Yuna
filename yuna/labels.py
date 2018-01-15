@@ -1,5 +1,6 @@
 import gdsyuna
 import tools
+import gdsyuna
 
 
 def add_label(cell, element, name):
@@ -62,12 +63,42 @@ def get_ground_connection(cell, jj_atom):
 def get_ntron_layer(cell, atom):
     ntron_cell = gdsyuna.Cell('ntron' + cell.name)
     
-    key = (int(atom['ferro']), 4)
+    gds = 45
+    key = (gds, 4)
     points = cell.get_polygons(True)[key]
-
-    gds = atom['ferro']
-    name = atom['name']
-
+    pp = tools.angusj(points, points, 'union')
     poly = gdsyuna.Polygon(points, gds)
-    add_label(cell, poly, name)
+    print(poly)
+    
+    return ntron_cell.add(pp)
+    
+    # # for gds, layer in Layers.items():
+    # #     if layer['type'] == 'ntron':
+    # #         for element in cell.elements:
+    # #             if isinstance(element, gdsyuna.PolygonSet):
+    # #                 if element.layers[0] == int(gds):
+    # #                     jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+    # #                     poly = gdsyuna.Polygon(jj_poly, element.layers[0])
+    # #                     add_label(cell, poly, cell.name)
+    # #             elif isinstance(element, gdsyuna.Polygon):
+    # #                 if element.layers == int(gds):
+    # #                     add_label(cell, poly, cell.name)
+
+    # key = (int(atom['ferro']), 4)
+    # points = cell.get_polygons(True)[key]
+    # 
+    # gds = atom['ferro']
+    # name = atom['name']
+    # 
+    # poly = gdsyuna.Polygon(points, gds)
+    # add_label(cell, poly, name)
+    
+    
+    
+    
+    
+    
+    
+    
+    
     

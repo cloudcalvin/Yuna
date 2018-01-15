@@ -1,4 +1,5 @@
 import tools
+import gdsyuna
 
 
 def default_layer_polygons(gds, polygons):
@@ -30,11 +31,27 @@ def connect_wire_to_jjs(gds, wires, polygons):
         wires = tools.angusj([jj], wires, 'union')
     return wires
 
-def connect_wire_to_ntrons(gds, wires, polygons):
+def connect_wire_to_ntrons(gds, polygons, atom, auron_cell):
     """  """
-    for ntron in polygons[(gds, 4)]:
-        wires = tools.angusj([ntron], wires, 'union')
-    return wires
+    
+    pp = polygons[(gds, 4)]
+    lw = None
+    if gds == atom['wires']:
+        pass
+        # union_ntron = tools.angusj(pp, pp, 'union')
+        # auron_cell.add(gdsyuna.Polygon(union_ntron, layer=gds, datatype=0))
+        # for poly in pp:
+        #     union_ntron = tools.angusj([poly], pp, 'union')
+        # auron_cell.add(gdsyuna.Polygon(union_ntron, layer=gds, datatype=0))
+
+            # box_poly = gdsyuna.Polygon(poly, layer=gds, datatype=4)
+            # bb = box_poly.get_bounding_box()
+            # bb_poly = [[bb[0][0], bb[0][1]], 
+            #            [bb[1][0], bb[0][1]],
+            #            [bb[1][0], bb[1][1]],
+            #            [bb[0][0], bb[1][1]]]
+            # auron_cell.add(gdsyuna.Polygon(bb_poly, layer=gds, datatype=4))
+    return auron_cell
 
 
 # def union_same_vias(vias, wire):
@@ -51,3 +68,12 @@ def connect_wire_to_ntrons(gds, wires, polygons):
 #                         via_union.append(union)
 
 #     return list(via_union for via_union,_ in itertools.groupby(via_union))
+
+
+
+
+
+
+
+
+

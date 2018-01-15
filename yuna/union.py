@@ -34,23 +34,15 @@ def connect_wire_to_jjs(gds, wires, polygons):
 def connect_wire_to_ntrons(gds, polygons, atom, auron_cell):
     """  """
     
-    pp = polygons[(gds, 4)]
-    lw = None
     if gds == atom['wires']:
-        pass
-        # union_ntron = tools.angusj(pp, pp, 'union')
-        # auron_cell.add(gdsyuna.Polygon(union_ntron, layer=gds, datatype=0))
-        # for poly in pp:
-        #     union_ntron = tools.angusj([poly], pp, 'union')
-        # auron_cell.add(gdsyuna.Polygon(union_ntron, layer=gds, datatype=0))
-
-            # box_poly = gdsyuna.Polygon(poly, layer=gds, datatype=4)
-            # bb = box_poly.get_bounding_box()
-            # bb_poly = [[bb[0][0], bb[0][1]], 
-            #            [bb[1][0], bb[0][1]],
-            #            [bb[1][0], bb[1][1]],
-            #            [bb[0][0], bb[1][1]]]
-            # auron_cell.add(gdsyuna.Polygon(bb_poly, layer=gds, datatype=4))
+        for ntron in polygons[(gds, 4)]:
+            box_poly = gdsyuna.Polygon(ntron, layer=gds, datatype=4)
+            bb = box_poly.get_bounding_box()
+            bb_poly = [[bb[0][0], bb[0][1]], 
+                       [bb[1][0], bb[0][1]],
+                       [bb[1][0], bb[1][1]],
+                       [bb[0][0], bb[1][1]]]
+            auron_cell.add(gdsyuna.Polygon(bb_poly, layer=gds, datatype=4))
     return auron_cell
 
 

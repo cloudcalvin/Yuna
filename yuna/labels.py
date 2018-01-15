@@ -63,14 +63,14 @@ def get_ground_connection(cell, jj_atom):
 def get_ntron_layer(cell, atom):
     ntron_cell = gdsyuna.Cell('ntron' + cell.name)
     
-    gds = 45
-    key = (gds, 4)
-    points = cell.get_polygons(True)[key]
-    pp = tools.angusj(points, points, 'union')
-    poly = gdsyuna.Polygon(points, gds)
-    print(poly)
+    # gds = 45
+    # key = (gds, 4)
+    # points = cell.get_polygons(True)[key]
+    # pp = tools.angusj(points, points, 'union')
+    # poly = gdsyuna.Polygon(points, gds)
+    # print(poly)
     
-    return ntron_cell.add(pp)
+    # return ntron_cell.add(pp)
     
     # # for gds, layer in Layers.items():
     # #     if layer['type'] == 'ntron':

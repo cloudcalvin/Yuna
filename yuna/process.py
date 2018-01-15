@@ -82,10 +82,14 @@ class Config:
             elif cell.name[:5] == 'ntron':
                 tools.green_print('Flattening ntron: ' + cell.name)
                 cell.flatten(single_datatype=4)
-                                
-                cell = labels.get_ntron_layer(cell, self.Atom['ntron'])
-                print(cell.elements)
-                print(cell.get_polygons(True))
+
+                for element in cell.elements:
+                    if isinstance(element, gdsyuna.PolygonSet):
+                        if element.layers[0] == 45:
+                            element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
+               
+                # cell = labels.get_ntron_layer(cell, self.Atom['ntron'])
+                # print(cell.elements)
  
         self.yuna_flatten = yuna_cell.copy('Yuna Flatten', deep_copy=True)
         self.yuna_flatten.flatten()
@@ -107,9 +111,7 @@ class Config:
                     if (gds, 3) in polygons:
                         wires = union.connect_wire_to_jjs(gds, wires, polygons)
                     if (gds, 4) in polygons:
-                        pass
-                        # self.auron_cell = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], self.auron_cell)
-                        # self.auron_cell.add(gdsyuna.Polygon(bb, layer=gds, datatype=4))
+                        self.auron_cell = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], self.auron_cell)
                             
                     for poly in wires:
                         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))

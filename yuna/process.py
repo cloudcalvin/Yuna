@@ -64,6 +64,12 @@ class Config:
     def create_yuna_flatten(self, cellref):
         yuna_cell = self.gdsii.extract(cellref)
         
+        tools.green_print('CellReferences:')
+        for element in yuna_cell.elements:
+            if isinstance(element, gdsyuna.CellReference):            
+                print(element)
+                print('')
+        
         for cell in yuna_cell.get_dependencies(True):
             if cell.name[:3] == 'via':
                 tools.green_print('Flattening via: ' + cell.name)
@@ -80,15 +86,19 @@ class Config:
                 if tools.has_ground(cell, self.Atom['jjs']):
                     labels.get_ground_connection(cell, self.Atom['jjs'])
             elif cell.name[:5] == 'ntron':
-                tools.green_print('Flattening ntron: ' + cell.name)
-                cell.flatten(single_datatype=4)
+                if cell.name[-3:] == 'gnd':
+                    tools.green_print('Flattening ntron: ' + cell.name)
+                    cell.flatten(single_datatype=4)
+                    labels.get_ntron_layer(cell, self.Atom['ntron'])
+                else:
+                    tools.green_print('Flattening ntron: ' + cell.name)
+                    cell.flatten(single_datatype=5)
 
                 for element in cell.elements:
                     if isinstance(element, gdsyuna.PolygonSet):
                         if element.layers[0] == 45:
                             element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
                
-                # cell = labels.get_ntron_layer(cell, self.Atom['ntron'])
                 # print(cell.elements)
  
         self.yuna_flatten = yuna_cell.copy('Yuna Flatten', deep_copy=True)
@@ -105,16 +115,32 @@ class Config:
 
                 wires = union.default_layer_polygons(gds, polygons)
                 
+                print(wires)
+                
+                ntron_wire = None
                 if wires is not None:
                     if (gds, 1) in polygons:
                         wires = union.connect_wire_to_vias(gds, wires, polygons)
                     if (gds, 3) in polygons:
                         wires = union.connect_wire_to_jjs(gds, wires, polygons)
                     if (gds, 4) in polygons:
-                        self.auron_cell = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], self.auron_cell)
-                            
-                    for poly in wires:
-                        self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
+                        wires = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], wires)
+                    if (gds, 5) in polygons:
+                        tools.green_print('NTRON polygons')
+                        # self.auron_cell = union.get_ntron_box(gds, polygons, self.Atom['ntron'], self.auron_cell)
+                        device = union.connect_wire_to_ntron_ground(gds, polygons, self.Atom['ntron'], wires)
+                        
+                        all_sides = union.side_connection(wires, device)
+                        
+                        # intersected_sides = union.wire_side_intersections(all_sides, wires)
+                        self.auron_cell = union.wire_side_intersections(all_sides, wires, self.auron_cell, device)
+                        
+                        # if device is not None:
+                        #     for poly in device:
+                        #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
+                        
+                    # for poly in wires:
+                    #     self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
                 else:
                     if mtype == 'shunt':
                         if (gds, 3) in polygons:

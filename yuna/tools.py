@@ -106,6 +106,10 @@ def angusj(clip, subj, method):
         subj = pc.Execute(pyclipper.CT_INTERSECTION,
                           pyclipper.PFT_NONZERO,
                           pyclipper.PFT_NONZERO)
+    elif method == 'exclusive':
+        subj = pc.Execute(pyclipper.CT_XOR,
+                          pyclipper.PFT_NONZERO,
+                          pyclipper.PFT_NONZERO)
     return subj
 
 
@@ -122,18 +126,11 @@ def angusj_offset(layer, size):
         pco.AddPath(poly, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
         if size == 'down':
-            solution.append(pco.Execute(-1000000)[0])
-            # solution.append(pco.Execute(-10)[0])
+            solution.append(pco.Execute(-100000)[0])
+            # solution.append(pco.Execute(-1000)[0])
         elif size == 'up':
             solution.append(pco.Execute(10)[0])
         elif size == 'label':
             solution.append(pco.Execute(2000)[0])
 
     return solution
-
-
-
-
-
-
-

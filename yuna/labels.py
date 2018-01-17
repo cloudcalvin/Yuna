@@ -7,7 +7,7 @@ def add_label(cell, element, name):
     bb = element.get_bounding_box()
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-    label = gdsyuna.Label(name, (cx, cy), 'nw', layer=11)
+    label = gdsyuna.Label(name, (cx, cy), 'nw', layer=64)
     cell.add(label)
 
 
@@ -84,14 +84,9 @@ def get_ntron_layer(cell, atom):
     # #                 if element.layers == int(gds):
     # #                     add_label(cell, poly, cell.name)
 
-    # key = (int(atom['ferro']), 4)
-    # points = cell.get_polygons(True)[key]
-    # 
-    # gds = atom['ferro']
-    # name = atom['name']
-    # 
-    # poly = gdsyuna.Polygon(points, gds)
-    # add_label(cell, poly, name)
+    points = cell.get_polygons(True)[(42, 4)]
+    poly = gdsyuna.Polygon(points, 42)
+    add_label(cell, poly, 'ntron_ground')
     
     
     

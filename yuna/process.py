@@ -99,8 +99,6 @@ class Config:
                         if element.layers[0] == 45:
                             element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
                
-                # print(cell.elements)
- 
         self.yuna_flatten = yuna_cell.copy('Yuna Flatten', deep_copy=True)
         self.yuna_flatten.flatten()
 
@@ -114,8 +112,6 @@ class Config:
                 polygons = self.yuna_flatten.get_polygons(True)
 
                 wires = union.default_layer_polygons(gds, polygons)
-                
-                print(wires)
                 
                 ntron_wire = None
                 if wires is not None:

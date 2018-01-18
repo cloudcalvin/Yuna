@@ -86,7 +86,7 @@ def get_ntron_layer(cell, atom):
 
     points = cell.get_polygons(True)[(42, 4)]
     poly = gdsyuna.Polygon(points, 42)
-    add_label(cell, poly, 'ntron_ground')
+    add_label(cell, poly, 'via_PlugVia')
     
     
     

@@ -10,6 +10,14 @@ import gdsyuna
 import pyclipper
 
 
+def print_cellrefs(cell):
+    green_print('CellReferences:')
+    for element in cell.elements:
+        if isinstance(element, gdsyuna.CellReference):            
+            print(element)
+            print('')
+
+
 def has_ground(cell, jj_atom):
     key = (int(jj_atom['ground']['via']), 3)
     

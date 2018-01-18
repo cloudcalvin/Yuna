@@ -64,46 +64,30 @@ class Config:
     def create_yuna_flatten(self, cellref):
         yuna_cell = self.gdsii.extract(cellref)
         
-        tools.green_print('CellReferences:')
-        for element in yuna_cell.elements:
-            if isinstance(element, gdsyuna.CellReference):            
-                print(element)
-                print('')
+        tools.print_cellrefs(yuna_cell)
         
         for cell in yuna_cell.get_dependencies(True):
             if cell.name[:3] == 'via':
-                tools.green_print('Flattening via: ' + cell.name)
-                cell.flatten(single_datatype=1)
-
-                labels.add_label(cell, cell, cell.name)
+                labels.vias(cell, self.Layers, self.Atom)
             elif cell.name[:2] == 'jj':
-                tools.green_print('Flattening junction: ' + cell.name)
-                cell.flatten(single_datatype=3)
-
-                labels.get_jj_layer(cell, self.Layers)
-                labels.get_shunt_connections(cell, self.Atom['jjs'])
-
-                if tools.has_ground(cell, self.Atom['jjs']):
-                    labels.get_ground_connection(cell, self.Atom['jjs'])
+                labels.junctions(cell, self.Layers, self.Atom)
             elif cell.name[:5] == 'ntron':
-                if cell.name[-3:] == 'gnd':
-                    tools.green_print('Flattening ntron: ' + cell.name)
-                    cell.flatten(single_datatype=4)
-                    labels.get_ntron_layer(cell, self.Atom['ntron'])
-                else:
-                    tools.green_print('Flattening ntron: ' + cell.name)
-                    cell.flatten(single_datatype=5)
-
-                for element in cell.elements:
-                    if isinstance(element, gdsyuna.PolygonSet):
-                        if element.layers[0] == 45:
-                            element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
+                labels.ntrons(cell, self.Layers, self.Atom)
                
         self.yuna_flatten = yuna_cell.copy('Yuna Flatten', deep_copy=True)
         self.yuna_flatten.flatten()
 
     def create_auron_polygons(self):
-        """ Union flattened layers and create Auron Cell. """
+        """ Union flattened layers and create Auron Cell. 
+        Polygons are labels as follow:
+        
+        1 - vias 
+        2 - 
+        3 - jjs 
+        4 - ntrons 
+        5 - ntrons ground 
+        6 - ntrons box
+        """
 
         for key, layer in self.Layers.items():
             mtype = ['wire', 'shunt', 'skyplane', 'gndplane']
@@ -123,7 +107,7 @@ class Config:
                         wires = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], wires)
                     if (gds, 5) in polygons:
                         tools.green_print('NTRON polygons')
-                        # self.auron_cell = union.get_ntron_box(gds, polygons, self.Atom['ntron'], self.auron_cell)
+                        self.auron_cell = union.get_ntron_box(gds, polygons, self.Atom['ntron'], self.auron_cell)
                         device = union.connect_wire_to_ntron_ground(gds, polygons, self.Atom['ntron'], wires)
                         
                         all_sides = union.side_connection(wires, device)

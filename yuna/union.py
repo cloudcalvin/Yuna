@@ -44,7 +44,7 @@ def get_ntron_box(gds, polygons, atom, auron_cell):
                        [bb[1][0], bb[0][1]],
                        [bb[1][0], bb[1][1]],
                        [bb[0][0], bb[1][1]]]
-            # auron_cell.add(gdsyuna.Polygon(bb_poly, layer=gds, datatype=4))
+            auron_cell.add(gdsyuna.Polygon(bb_poly, layer=gds, datatype=6))
     return auron_cell
     
     

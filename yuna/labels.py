@@ -9,6 +9,42 @@ def add_label(cell, element, name):
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
     label = gdsyuna.Label(name, (cx, cy), 'nw', layer=64)
     cell.add(label)
+    
+    
+def vias(cell, Layers, Atom):
+    tools.green_print('Flattening via: ' + cell.name)
+    cell.flatten(single_datatype=1)
+
+    add_label(cell, cell, cell.name)
+    
+    
+def junctions(cell, Layers, Atom):
+    tools.green_print('Flattening junction: ' + cell.name)
+    cell.flatten(single_datatype=3)
+    
+    get_jj_layer(cell, Layers)
+    get_shunt_connections(cell, Atom['jjs'])
+
+    if tools.has_ground(cell, Atom['jjs']):
+        get_ground_connection(cell, Atom['jjs'])
+        
+        
+def ntrons(cell, Layers, Atom):
+    if cell.name[-3:] == 'gnd':
+        tools.green_print('Flattening ntron: ' + cell.name)
+        cell.flatten(single_datatype=4)
+        
+        get_ntron_layer(cell, Atom['ntron'])
+    else:
+        tools.green_print('Flattening ntron: ' + cell.name)
+        cell.flatten(single_datatype=5)
+
+        add_label(cell, cell, cell.name)
+        
+    for element in cell.elements:
+        if isinstance(element, gdsyuna.PolygonSet):
+            if element.layers[0] == 45:
+                element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
 
 
 def get_jj_layer(cell, Layers):

@@ -107,7 +107,11 @@ class Config:
                         wires = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], wires)
                     if (gds, 5) in polygons:
                         tools.green_print('NTRON polygons')
-                        self.auron_cell = union.get_ntron_box(gds, polygons, self.Atom['ntron'], self.auron_cell)
+                        
+                        ntron_wires = polygons[(gds, 5)]
+                        # wires = tools.angusj(ntron_wires, wires, 'difference')
+                        
+                        # self.auron_cell = union.get_ntron_box(gds, polygons, self.Atom['ntron'], self.auron_cell)
                         device = union.connect_wire_to_ntron_ground(gds, polygons, self.Atom['ntron'], wires)
                         
                         all_sides = union.side_connection(wires, device)
@@ -115,9 +119,12 @@ class Config:
                         # intersected_sides = union.wire_side_intersections(all_sides, wires)
                         self.auron_cell = union.wire_side_intersections(all_sides, wires, self.auron_cell, device)
                         
+                        # if all_sides is not None:
+                        #     for poly in all_sides:
+                        #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
                         # if device is not None:
                         #     for poly in device:
-                        #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
+                        #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=1))
                         
                     # for poly in wires:
                     #     self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))

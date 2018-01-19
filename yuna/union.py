@@ -12,6 +12,7 @@ def default_layer_polygons(gds, polygons):
         wires = polygons[(gds, 0)]
         wires = tools.angusj(wires, wires, 'union')
     return wires
+    
 
 def connect_wire_to_vias(gds, wires, polygons):
     """ Union vias with wires, but remove redundant 
@@ -73,10 +74,31 @@ def get_side_direction(p1, p2):
     
     
 def side_connection(wires, wire_diff):
-    print('-------- side poly')
-    
     all_sides = list()
     for poly in wire_diff:
+        p1, p2 = poly[0], poly[len(poly) - 1]
+        
+        xy = get_side_direction(p1, p2)
+        
+        l = 0.5e6
+        side_poly = list()
+        if xy == 'x':
+            tl = [p1[0], p1[1]+l]
+            bl = [p1[0], p1[1]-l]
+            
+            br = [p2[0], p2[1]-l]
+            tr = [p2[0], p2[1]+l]
+            
+            all_sides.append([tl, bl, br, tr])
+        elif xy == 'y':
+            tl = [p1[0]-l, p1[1]]
+            bl = [p2[0]-l, p2[1]]
+            
+            br = [p2[0]+l, p2[1]]
+            tr = [p1[0]+l, p1[1]]
+            
+            all_sides.append([tl, bl, br, tr])
+        
         for i in range(len(poly) - 1):
             p1, p2 = poly[i], poly[i+1]
             
@@ -106,6 +128,8 @@ def side_connection(wires, wire_diff):
 def wire_side_intersections(all_sides, wires, auron_cell, device):
     interpoly = []
     wire_poly = []
+    print('allsides')
+    print(all_sides)
     for poly in all_sides:
         poly_offset = tools.angusj_offset([poly], 'down')
         if tools.angusj(poly_offset, wires, 'intersection'):

@@ -30,17 +30,22 @@ def junctions(cell, Layers, Atom):
         
         
 def ntrons(cell, Layers, Atom):
-    if cell.name[-3:] == 'gnd':
-        tools.green_print('Flattening ntron: ' + cell.name)
-        cell.flatten(single_datatype=4)
+    # if cell.name[-3:] == 'gnd':
+    #     tools.green_print('Flattening ntron: ' + cell.name)
+    #     cell.flatten(single_datatype=4)
+    # 
+    #     get_ntron_layer(cell, Atom['ntron'])
+    # else:
+    #     tools.green_print('Flattening ntron: ' + cell.name)
+    #     cell.flatten(single_datatype=5)
+    # 
+    #     add_label(cell, cell, cell.name)
         
-        get_ntron_layer(cell, Atom['ntron'])
-    else:
-        tools.green_print('Flattening ntron: ' + cell.name)
-        cell.flatten(single_datatype=5)
+    tools.green_print('Flattening ntron: ' + cell.name)
+    cell.flatten(single_datatype=4)
 
-        add_label(cell, cell, cell.name)
-        
+    add_label(cell, cell, cell.name)
+    
     for element in cell.elements:
         if isinstance(element, gdsyuna.PolygonSet):
             if element.layers[0] == 45:

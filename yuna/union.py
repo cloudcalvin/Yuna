@@ -57,11 +57,16 @@ def connect_wire_to_ntrons(gds, polygons, atom, wires):
     
 
 def connect_wire_to_ntron_ground(gds, polygons, atom, wires):
-    wire_diff = None
     if gds == atom['wires']:
-        # wire_diff = tools.angusj(polygons[(gds, 4)], wires, 'difference')
-        wire_diff = tools.angusj(wires, polygons[(gds, 5)], 'difference')
-    return wire_diff
+        for poly in polygons[(gds, 5)]:
+            wires = tools.angusj([poly], wires, 'union')
+    return wires
+    
+    # wire_diff = None
+    # if gds == atom['wires']:
+    #     # wire_diff = tools.angusj(polygons[(gds, 4)], wires, 'difference')
+    #     wire_diff = tools.angusj(wires, polygons[(gds, 5)], 'difference')
+    # return wire_diff
     
     
 def get_side_direction(p1, p2):

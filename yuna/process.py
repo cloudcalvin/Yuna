@@ -87,8 +87,13 @@ class Config:
         4 - ntrons 
         5 - ntrons ground 
         6 - ntrons box
+        
+        Layer with datatype=10 is a hole polygons that will be deleting at meshing.
         """
 
+        polylayers = []
+        hole_poly_pair = []
+        remove_list = []
         for key, layer in self.Layers.items():
             mtype = ['wire', 'shunt', 'skyplane', 'gndplane']
             if layer['type'] in mtype:
@@ -105,34 +110,59 @@ class Config:
                         wires = union.connect_wire_to_jjs(gds, wires, polygons)
                     if (gds, 4) in polygons:
                         wires = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], wires)
+                        self.auron_cell = union.get_ntron_box(gds, polygons, self.Atom['ntron'], self.auron_cell)
                     if (gds, 5) in polygons:
-                        tools.green_print('NTRON polygons')
+                        wires = union.connect_wire_to_ntrons_ground(gds, polygons, self.Atom['ntron'], wires)
                         
-                        ntron_wires = polygons[(gds, 5)]
-                        # wires = tools.angusj(ntron_wires, wires, 'difference')
-                        
+                        # ntron_wires = polygons[(gds, 5)]
+                        # # wires = tools.angusj(ntron_wires, wires, 'difference')
+                        # 
                         # self.auron_cell = union.get_ntron_box(gds, polygons, self.Atom['ntron'], self.auron_cell)
-                        device = union.connect_wire_to_ntron_ground(gds, polygons, self.Atom['ntron'], wires)
+                        # device = union.connect_wire_to_ntron_ground(gds, polygons, self.Atom['ntron'], wires)
+                        # 
+                        # all_sides = union.side_connection(wires, device)
+                        # 
+                        # # intersected_sides = union.wire_side_intersections(all_sides, wires)
+                        # self.auron_cell = union.wire_side_intersections(all_sides, wires, self.auron_cell, device)
+                        # 
+                        # # if all_sides is not None:
+                        # #     for poly in all_sides:
+                        # #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
+                        # # if device is not None:
+                        # #     for poly in device:
+                        # #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=1))
                         
-                        all_sides = union.side_connection(wires, device)
+                    # if wires is not None:
+                    #     for i, poly in enumerate(wires):
+                    #         if pyclipper.Orientation(poly):
+                    #             layerholes.append(poly)
+                    #         else:
+                    #             holes.append(poly)
+                    
+                    if wires is not None:
+                        for i, poly in enumerate(wires):
+                            polylayers.append(i)
+                            if not pyclipper.Orientation(poly):
+                                hole_poly_pair.append((i-1, i))
+                                remove_list.append(i-1)
+                                remove_list.append(i)
+
+                    print(list(hole_poly_pair))
+                    print(list(set(polylayers) - set(remove_list)))
                         
-                        # intersected_sides = union.wire_side_intersections(all_sides, wires)
-                        self.auron_cell = union.wire_side_intersections(all_sides, wires, self.auron_cell, device)
-                        
-                        # if all_sides is not None:
-                        #     for poly in all_sides:
-                        #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
-                        # if device is not None:
-                        #     for poly in device:
-                        #         self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=1))
-                        
-                    # for poly in wires:
-                    #     self.auron_cell.add(gdsyuna.Polygon(poly, layer=gds, datatype=0))
+                    nonhole_poly = list(set(polylayers) - set(remove_list))
+                    for i in nonhole_poly:
+                        self.auron_cell.add(gdsyuna.Polygon(wires[i], layer=gds, datatype=0))
+
+                    for i, pair in enumerate(hole_poly_pair):
+                        self.auron_cell.add(gdsyuna.Polygon(wires[pair[0]], layer=99+gds, datatype=i))
+                        self.auron_cell.add(gdsyuna.Polygon(wires[pair[1]], layer=100+gds, datatype=i))
                 else:
                     if mtype == 'shunt':
                         if (gds, 3) in polygons:
                             for jj in polygons[(gds, 3)]:
                                 self.auron_cell.add(gdsyuna.Polygon(jj, layer=gds, datatype=0))
+            
                     
     def add_auron_labels(self):
         """ Add labels to Auron Cell. """

@@ -34,30 +34,35 @@ def connect_wire_to_jjs(gds, wires, polygons):
     return wires
     
 
-def get_ntron_box(gds, polygons, atom, auron_cell):
+def get_ntron_box(gds, wires, auron_cell):
     """  """
     
-    if gds == atom['wires']:
-        for ntron in polygons[(gds, 4)]:
-            box_poly = gdsyuna.Polygon(ntron, layer=gds, datatype=4)
-            bb = box_poly.get_bounding_box()
-            bb_poly = [[bb[0][0], bb[0][1]], 
-                       [bb[1][0], bb[0][1]],
-                       [bb[1][0], bb[1][1]],
-                       [bb[0][0], bb[1][1]]]
-            auron_cell.add(gdsyuna.Polygon(bb_poly, layer=gds, datatype=6))
+    # for ntron in polygons[(gds, 4)]:
+    box_poly = gdsyuna.Polygon(wires, layer=gds, datatype=4)
+    print(box_poly)
+    bb = box_poly.get_bounding_box()
+    bb_poly = [[bb[0][0], bb[0][1]], 
+               [bb[1][0], bb[0][1]],
+               [bb[1][0], bb[1][1]],
+               [bb[0][0], bb[1][1]]]
+    auron_cell.add(gdsyuna.Polygon(bb_poly, layer=gds, datatype=6))
     return auron_cell
     
     
-def connect_wire_to_ntrons(gds, polygons, atom, wires):
+def connect_wire_to_ntrons(gds, polygons, atom, wires, auron_cell):
     if gds == atom['wires']:
-        for poly in polygons[(gds, 4)]:
+        ntron_union = tools.angusj(polygons[(gds, 4)], polygons[(gds, 4)], 'union')
+        for box in ntron_union:
+            auron_cell = get_ntron_box(gds, box, auron_cell)
+        # print(cell_wires)
+        for poly in ntron_union:
             wires = tools.angusj([poly], wires, 'union')
-    return wires
+    return wires, auron_cell
     
 
 def connect_wire_to_ntron_ground(gds, polygons, atom, wires):
     if gds == atom['wires']:
+        cell_wires = tools.angusj(polygons[(gds, 5)], polygons[(gds, 5)])
         for poly in polygons[(gds, 5)]:
             wires = tools.angusj([poly], wires, 'union')
     return wires

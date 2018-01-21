@@ -43,13 +43,14 @@ def ntrons(cell, Layers, Atom):
         
     tools.green_print('Flattening ntron: ' + cell.name)
     cell.flatten(single_datatype=4)
-
-    add_label(cell, cell, cell.name)
+    
+    # add_label(cell, cell, cell.name)
     
     for element in cell.elements:
         if isinstance(element, gdsyuna.PolygonSet):
             if element.layers[0] == 45:
                 element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
+    return cell
 
 
 def get_jj_layer(cell, Layers):
@@ -125,7 +126,7 @@ def get_ntron_layer(cell, atom):
     # #                 if element.layers == int(gds):
     # #                     add_label(cell, poly, cell.name)
 
-    points = cell.get_polygons(True)[(42, 4)]
+    points = cell.get_polygons(True)[(42, 0)]
     poly = gdsyuna.Polygon(points, 42)
     add_label(cell, poly, 'via_PlugVia')
     

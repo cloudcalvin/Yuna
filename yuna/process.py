@@ -28,7 +28,45 @@ union result and the moat layer.
 3) Note, you might have to multiple each coordinate with
 1000 to convert small floats 0.25 to integers, 250.
 """
-                    
+
+
+def holelayer_tuple(basis):
+    holedata = []
+    for i, poly in enumerate(basis.baselayer):
+        if not pyclipper.Orientation(poly):
+            holedata.append((i-1, i))
+    return holedata
+    
+    
+def holelayer_list(basis):
+    removepoly = []
+    for i, poly in enumerate(basis.baselayer):
+        if not pyclipper.Orientation(poly):
+            removepoly.append(i-1)
+            removepoly.append(i)
+    return removepoly
+
+    
+def baselayer_list(basis):
+    wirepoly = []
+    for i, poly in enumerate(basis.baselayer):
+        wirepoly.append(i)
+    return wirepoly
+    
+
+def save_baselayers(auron_cell, basis):
+    wirepoly = baselayer_list(basis)
+    removepoly = holelayer_list(basis)
+    for i in list(set(wirepoly) - set(removepoly)):
+        auron_cell.add(gdsyuna.Polygon(basis.baselayer[i], layer=basis.gds, datatype=0))
+
+
+def save_holelayers(auron_cell, basis):
+    holedata = holelayer_tuple(basis)
+    for i, pair in enumerate(holedata):
+        auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[0]], layer=99+basis.gds, datatype=i))
+        auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[1]], layer=100+basis.gds, datatype=i))
+            
                     
 class Config:
     """
@@ -54,7 +92,8 @@ class Config:
         self.Layers = config_data['Layers']
         self.Atom = config_data['Atoms']
 
-        self.yuna_flatten = None
+        self.yuna_labels = None
+        self.yuna_polygons = None
         self.auron_cell = gdsyuna.Cell('Auron Cell')
 
     def init_gds_layout(self, gds_file):
@@ -62,78 +101,76 @@ class Config:
         self.gdsii.read_gds(gds_file, unit=1.0e-12)
 
     def create_yuna_flatten(self, cellref):
+        """  """
+    
         yuna_cell = self.gdsii.extract(cellref)
         
         tools.print_cellrefs(yuna_cell)
         
+        # First get all the VIAs
         for cell in yuna_cell.get_dependencies(True):
             if cell.name[:3] == 'via':
                 labels.vias(cell, self.Layers, self.Atom)
-                
+
+        # Second get all the JJs 
         for cell in yuna_cell.get_dependencies(True):
             if cell.name[:2] == 'jj':
                 labels.junctions(cell, self.Layers, self.Atom)
-            elif cell.name[:5] == 'ntron':
-                # cell = labels.ntrons(cell, self.Layers, self.Atom)
-                tools.green_print('Flattening ntron: ' + cell.name)
-                cell.flatten(single_datatype=4)
-                
-                # for element in cell.elements:
-                #     print(element)
-                #     if isinstance(element, gdsyuna.PolygonSet):
-                #         if element.layers[0] == 45:
-                #             print(element.polygons)
-                #             element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
-                       
-        self.yuna_flatten = yuna_cell.copy('Yuna Flatten', deep_copy=True)
-        self.yuna_flatten.flatten()
+
+        # Third get all the NTRONs
+        for cell in yuna_cell.get_dependencies(True):
+            if cell.name[:5] == 'ntron':
+                labels.ntrons(cell, self.Layers, self.Atom)
+
+        yuna_flatten = yuna_cell.copy('Yuna Flatten', deep_copy=True)
+        yuna_flatten.flatten()
+
+        self.yuna_labels = yuna_flatten.labels
+        self.yuna_polygons = yuna_flatten.get_polygons(True)
 
     def create_auron_polygons(self):
-        """ Union flattened layers and create Auron Cell. 
-        Polygons are labels as follow:
-        
-        1 - vias 
-        2 - 
-        3 - jjs 
-        4 - ntrons 
-        5 - ntrons ground 
-        6 - ntrons box
-        
-        Layer with datatype=10 is a hole polygons that will be deleting at meshing.
+        """ 
+            Union flattened layers and create Auron Cell. 
+            Polygons are labels as follow:
+            
+            1 - vias
+            2 - 
+            3 - jjs
+            4 - ntrons
+            5 - ntrons ground
+            6 - ntrons box
+
+            Variables
+            ---------
+
+            wirepoly : list
+                Normal interconnected wire polygons in the top-level cell.
+            holepoly : tuple
+                Holds the indexes of the polygon with a hole and the hole itself.
+            removelist : list
+                Is the difference between wirepoly and holepoly. Indexes that has to be removed.
+            
+            Layer with datatype=10 is a hole polygons that will be deleting at meshing.
         """
 
-        polylayers = []
-        hole_poly_pair = []
-        remove_list = []
         for key, layer in self.Layers.items():
             mtype = ['wire', 'shunt', 'skyplane', 'gndplane']
             if layer['type'] in mtype:
-                gds = int(key)
-                polygons = self.yuna_flatten.get_polygons(True)
-
-                wires = union.default_layer_polygons(gds, polygons)
                 
-                if wires is not None:
-                    if (gds, 1) in polygons:
-                        wires = union.connect_wire_to_vias(gds, wires, polygons)
-                    if (gds, 3) in polygons:
-                        wires = union.connect_wire_to_jjs(gds, wires, polygons)
-                    if (gds, 4) in polygons:
-                        wires, self.auron_cell = union.connect_wire_to_ntrons(gds, polygons, self.Atom['ntron'], wires, self.auron_cell)
-                        
-                    for i, poly in enumerate(wires):
-                        polylayers.append(i)
-                        if not pyclipper.Orientation(poly):
-                            hole_poly_pair.append((i-1, i))
-                            remove_list.append(i-1)
-                            remove_list.append(i)
+                basis = connect.BasisLayer(int(key), self.yuna_polygons)
+                
+                basis.set_baselayer()
+                
+                if basis.baselayer is not None:
+                    if (basis.gds, 1) in self.yuna_polygons:
+                        basis.connect_to_vias()
+                    if (basis.gds, 3) in self.yuna_polygons:
+                        basis.connect_to_jjs()
+                    if (basis.gds, 4) in self.yuna_polygons:
+                        nbox = basis.connect_to_ntrons(self.Atom['ntron'], self.auron_cell)
 
-                    for i in list(set(polylayers) - set(remove_list)):
-                        self.auron_cell.add(gdsyuna.Polygon(wires[i], layer=gds, datatype=0))
-
-                    for i, pair in enumerate(hole_poly_pair):
-                        self.auron_cell.add(gdsyuna.Polygon(wires[pair[0]], layer=99+gds, datatype=i))
-                        self.auron_cell.add(gdsyuna.Polygon(wires[pair[1]], layer=100+gds, datatype=i))
+                    save_baselayers(self.auron_cell, basis)
+                    save_holelayers(self.auron_cell, basis)
                 else:
                     if mtype == 'shunt':
                         if (gds, 3) in polygons:
@@ -148,11 +185,16 @@ class Config:
         tools.green_print('VIAs defined in the config file:')
         print(vias_config)
         
-        for i, label in enumerate(self.yuna_flatten.labels):
+        lbl = ['P', 'jj', 'ntron', 'gnd_junction', 'shunt_junction']
+        for i, label in enumerate(self.yuna_labels):
             if label.text in vias_config:
                 label.texttype = i
                 self.auron_cell.add(label)
-                
+
+            # if label.text.split('_')[0] in lbl:
+            #     label.texttype = i
+            #     self.auron_cell.add(label)
+
             if label.text[0] == 'P':
                 label.texttype = i 
                 self.auron_cell.add(label)

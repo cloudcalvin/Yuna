@@ -30,27 +30,8 @@ def junctions(cell, Layers, Atom):
         
         
 def ntrons(cell, Layers, Atom):
-    # if cell.name[-3:] == 'gnd':
-    #     tools.green_print('Flattening ntron: ' + cell.name)
-    #     cell.flatten(single_datatype=4)
-    # 
-    #     get_ntron_layer(cell, Atom['ntron'])
-    # else:
-    #     tools.green_print('Flattening ntron: ' + cell.name)
-    #     cell.flatten(single_datatype=5)
-    # 
-    #     add_label(cell, cell, cell.name)
-        
     tools.green_print('Flattening ntron: ' + cell.name)
     cell.flatten(single_datatype=4)
-    
-    # add_label(cell, cell, cell.name)
-    
-    for element in cell.elements:
-        if isinstance(element, gdsyuna.PolygonSet):
-            if element.layers[0] == 45:
-                element.polygons = tools.angusj(element.polygons, element.polygons, 'union')
-    return cell
 
 
 def get_jj_layer(cell, Layers):
@@ -102,30 +83,7 @@ def get_ground_connection(cell, jj_atom):
         add_label(cell, poly, name)
         # jj_cell.add(polygons)
         
-def get_ntron_layer(cell, atom):
-    ntron_cell = gdsyuna.Cell('ntron' + cell.name)
-    
-    # gds = 45
-    # key = (gds, 4)
-    # points = cell.get_polygons(True)[key]
-    # pp = tools.angusj(points, points, 'union')
-    # poly = gdsyuna.Polygon(points, gds)
-    # print(poly)
-    
-    # return ntron_cell.add(pp)
-    
-    # # for gds, layer in Layers.items():
-    # #     if layer['type'] == 'ntron':
-    # #         for element in cell.elements:
-    # #             if isinstance(element, gdsyuna.PolygonSet):
-    # #                 if element.layers[0] == int(gds):
-    # #                     jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-    # #                     poly = gdsyuna.Polygon(jj_poly, element.layers[0])
-    # #                     add_label(cell, poly, cell.name)
-    # #             elif isinstance(element, gdsyuna.Polygon):
-    # #                 if element.layers == int(gds):
-    # #                     add_label(cell, poly, cell.name)
-
+def get_ntron_layer(cell, atom):    
     points = cell.get_polygons(True)[(42, 0)]
     poly = gdsyuna.Polygon(points, 42)
     add_label(cell, poly, 'via_PlugVia')

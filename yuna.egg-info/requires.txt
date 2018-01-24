@@ -1,8 +1,0 @@
-gdsyuna
-pyclipper
-setuptools
-numpy
-matplotlib
-docopt
-future
-termcolor

@@ -1,15 +1,15 @@
-Environment Setup
+Installation
 -----------------
 
-Prerequisites
-~~~~~~~~~~~~~
+Environment Setup
+~~~~~~~~~~~~~~~~~
 
 Yuna package descriptions:
 
-* `pyclipper` Python wrapper for Angusj Clipper library.
-* `termcolor` Package for color outputs in the terminal.
-* `gdsyuna` Python library for GDS file handeling.
-* `docopt` Library for user arguments in the terminal.
+* `docopt <http://docopt.org>`_ Command-line interface library.
+* `gdsyuna <https://github.com/rubenvanstaden/gdsyuna>`_ Library for GDS file manipulations.
+* `pyclipper <https://github.com/greginvm/pyclipper>`_ Python wrapper for Angusj Clipper library.
+* `termcolor <https://pypi.python.org/pypi/termcolor>`_ Package for color outputs in the terminal.
 
 Make sure Python is installed on your system:
 

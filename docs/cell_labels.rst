@@ -13,9 +13,9 @@ all layers in the cell are updated to a unique value that represents a cell type
 :: 
 
     0 - Normal interconnected wire layers in the top-level cell.
-    1 - Layers that are inside *via* cells. 
-    2 - Layers inside *jj* cells.
-    3 - Layers inside *ntron* cells.
+    1 - Layers that are inside via cells. 
+    2 - Layers inside jj cells.
+    3 - Layers inside ntron cells.
 
 Ntron Detection 
 ---------------

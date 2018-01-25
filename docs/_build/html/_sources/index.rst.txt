@@ -14,6 +14,7 @@ Welcome to Yuna's documentation!
    gdsyuna
    baselayers
    cell_labels
+   installation
 
 Indices and tables
 ==================

@@ -13,6 +13,7 @@ Welcome to Yuna's documentation!
    overview
    gdsyuna
    baselayers
+   cell_labels
 
 Indices and tables
 ==================

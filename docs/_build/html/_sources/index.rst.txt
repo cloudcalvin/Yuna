@@ -10,8 +10,7 @@ Welcome to Yuna's documentation!
    :maxdepth: 2
    :caption: Contents:
    
-   all-about-me
-
+   overview
 
 Indices and tables
 ==================

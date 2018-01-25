@@ -1,10 +1,10 @@
 GDSYuna
 =======
 
-The `GDSYuna <https://github.com/rubenvanstaden/gdsyuna>` package is a 
+The `GDSYuna <https://github.com/rubenvanstaden/gdsyuna>`_ package is a 
 new package introduced for solving LVS problems for memory cell technology. 
 It is a fork from the open source GDSPY library with multiple bug-fixes 
-and some added extensions. A list of changes made in this fork is given below:
+and some added extensions. A list of changes made to in this fork is given below:
 
 1. When the top-level cell is flattened all labels are recursively added in position to the flattened structure. 
 2. The labels positions added to the layout must be updated when the CellReference is reflected and/or translated. 

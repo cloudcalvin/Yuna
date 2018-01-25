@@ -11,6 +11,7 @@ Welcome to Yuna's documentation!
    :caption: Contents:
    
    overview
+   gdsyuna
 
 Indices and tables
 ==================

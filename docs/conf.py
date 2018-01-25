@@ -33,7 +33,7 @@
 extensions = []
 
 import sphinx_rtd_theme
-from yuna import __version__
+# from yuna import __version__
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,7 +57,8 @@ author = u'Ruben van Staden'
 # built documents.
 #
 # The short X.Y version.
-version = __version__ 
+# version = __version__ 
+version = u'0.0.1'
 # The full version, including alpha/beta/rc tags.
 release = u'to_zanarkan'
 

@@ -12,6 +12,7 @@ Welcome to Yuna's documentation!
    
    overview
    gdsyuna
+   baselayers
 
 Indices and tables
 ==================

@@ -10,11 +10,11 @@ Welcome to Yuna's documentation!
    :maxdepth: 2
    :caption: Contents:
    
+   installation
    overview
    gdsyuna
-   baselayers
    cell_labels
-   installation
+   baselayers
 
 Indices and tables
 ==================

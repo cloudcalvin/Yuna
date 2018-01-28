@@ -161,9 +161,11 @@ class Config:
                 
                 basis.set_baselayer()
                 
+                print('wnfuiewbgiewufbuwbfuibiqwfbewipufwe[iufbib')
                 if basis.baselayer is not None:
                     if (basis.gds, 1) in self.yuna_polygons:
-                        basis.connect_to_vias()
+                        print('wnfuiewbgiewufbuwbfuibiqwfbewipufwe[iufbib')
+                        basis.connect_to_vias(self.auron_cell)
                     if (basis.gds, 3) in self.yuna_polygons:
                         basis.connect_to_jjs()
                     if (basis.gds, 4) in self.yuna_polygons:

@@ -30,14 +30,16 @@ class BasisLayer():
             poly = self.polygons[(self.gds, 0)]
             self.baselayer = tools.angusj(poly, poly, 'union')
 
-    def connect_to_vias(self):
+    def connect_to_vias(self, auron_cell):
         """ Union vias with wires, but remove redundant
         vias that are not connected to any wires. """
 
         for via in self.polygons[(self.gds, 1)]:
-            via_offset = tools.angusj_offset([via], 'up')
-            if tools.angusj(via_offset, self.baselayer, 'intersection'):
-                self.baselayer = tools.angusj([via], self.baselayer, 'union')
+            print('wenfiebfeifube')
+            # via_offset = tools.angusj_offset([via], 'up')
+            # if tools.angusj(via_offset, self.baselayer, 'intersection'):
+            #     self.baselayer = tools.angusj([via], self.baselayer, 'union')
+            auron_cell.add(gdsyuna.Polygon(via, layer=self.gds, datatype=1))
 
     def connect_to_jjs(self):
         """ We know the wires inside a jj, so we only have to 

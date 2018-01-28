@@ -9,6 +9,5 @@ dist/
 __pycache__/
 *.pos
 *.msh
-*.gds
 *.pyc
 MANIFEST.in

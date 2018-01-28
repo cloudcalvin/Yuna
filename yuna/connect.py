@@ -35,11 +35,10 @@ class BasisLayer():
         vias that are not connected to any wires. """
 
         for via in self.polygons[(self.gds, 1)]:
-            print('wenfiebfeifube')
-            # via_offset = tools.angusj_offset([via], 'up')
-            # if tools.angusj(via_offset, self.baselayer, 'intersection'):
-            #     self.baselayer = tools.angusj([via], self.baselayer, 'union')
             auron_cell.add(gdsyuna.Polygon(via, layer=self.gds, datatype=1))
+            via_offset = tools.angusj_offset([via], 'up')
+            if tools.angusj(via_offset, self.baselayer, 'intersection'):
+                self.baselayer = tools.angusj([via], self.baselayer, 'union')
 
     def connect_to_jjs(self):
         """ We know the wires inside a jj, so we only have to 

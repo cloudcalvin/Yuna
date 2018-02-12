@@ -26,7 +26,7 @@ setup(
     install_requires=['gdsyuna', 'pyclipper', 'setuptools', 'numpy', 'matplotlib', 'docopt', 'future', 'termcolor'],
     entry_points={
         'console_scripts': [
-            'yuna = yuna:main'
+            'yuna = yuna:layout'
         ]
     }
 )

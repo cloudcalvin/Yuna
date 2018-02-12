@@ -1,7 +1,7 @@
 # """
 # 
 # Usage:
-#     yuna <process> <testname> <ldf> [--cell=<cellname>] [(<atom_num> <subatom_num>)]
+#     yuna <process> <testname> <ldf> [--cell=<cellname>] [--union] [--model]
 #     yuna (-h | --help)
 #     yuna (-V | --version)
 # 
@@ -15,32 +15,67 @@
 # """
 # 
 # 
+# import os
+# import json
+# import gdsyuna
+# 
 # from docopt import docopt
-# from yuna.utils import tools
+# from yuna import process
+# from yuna import tools
 # 
 # 
-# def main():
-#     """  """
+# def read_config(config_file):
+#     """ Reads the config file that is written in
+#     JSON. This file contains the logic of how
+#     the different layers will interact. """
 # 
-#     arguments = docopt(__doc__, version='Yuna 0.1.0')
-#     tools.red_print('Summoning Yuna...')
-#     tools.parameter_print(arguments)
+#     data = None
+#     with open(config_file) as data_file:
+#         data = json.load(data_file)
+#     return data
 # 
-#     process = arguments['<process>']
-#     testname = arguments['<testname>']
-#     ldf = arguments['<ldf>']
 # 
-#     if arguments['--cell'] == 'list':
-#         cellref = 'list'
-#     elif arguments['--cell']:
-#         cellref = arguments['--cell']
+# def main(args, cwd):
+#     """ Read in the layers from the GDS file,
+#     do clipping and send polygons to
+#     GMSH to generate the Mesh. """
+# 
+#     tools.cyan_print('Running Yuna...')
+# 
+#     gds_file, config_file = '', ''
+#     for root, dirs, files in os.walk(os.getcwd()):
+#         for file in files:
+#             if file.endswith('.gds'):
+#                 gds_file = os.getcwd() + '/' + file
+#             elif file.endswith('.json'):
+#                 config_file = os.getcwd() + '/' + file
+# 
+#     configdata = read_config(config_file)
+# 
+#     config = process.Config(configdata)
+#     config.init_gds_layout(gds_file)
+# 
+#     if args['--cell']:
+#         config.create_yuna_flatten(args['--cell'])
+#         config.create_auron_polygons()
+#         config.add_auron_labels()
 #     else:
-#         cellref = ""
+#         print('Please specify a Cell')
 # 
-#     machina(process, testname, ldf, cellref, '')
+#     gdsyuna.LayoutViewer()
+#     gdsyuna.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 # 
-#     tools.red_print('Auron. Done.')
+#     tools.cyan_print('Yuna. Done.')
+# 
+#     return config.auron_cell, configdata
 # 
 # 
 # if __name__ == '__main__':
 #     main()
+# 
+# 
+# 
+# 
+# 
+# 
+# 

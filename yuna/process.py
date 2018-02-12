@@ -4,8 +4,8 @@ import itertools
 import json
 import gdsyuna
 import pyclipper
-import labels
-import connect
+from yuna import labels
+from yuna import connect
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -177,7 +177,6 @@ class Config:
                             for jj in polygons[(gds, 3)]:
                                 self.auron_cell.add(gdsyuna.Polygon(jj, layer=gds, datatype=0))
             
-                    
     def add_auron_labels(self):
         """ Add labels to Auron Cell. """
 

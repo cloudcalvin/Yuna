@@ -1,6 +1,5 @@
 import gdsyuna
 import tools
-import gdsyuna
 
 
 def add_label(cell, element, name):

@@ -35,19 +35,20 @@ def read_config(config_file):
     return data
 
 
-def machina(args, cwd):
+def grand_summon(args, cwd):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
 
     tools.cyan_print('Running Yuna...')
-    
-    if cwd == '':
-        cwd = os.getcwd()
 
-    examdir = cwd + '/tests/' + args['<process>'] + '/' + args['<testname>']
-    gds_file = examdir + '/' + args['<testname>'] + '.gds'
-    config_file = examdir + '/' + 'config.json'
+    gds_file, config_file = '', ''
+    for root, dirs, files in os.walk(os.getcwd()):
+        for file in files:
+            if file.endswith('.gds'):
+                gds_file = os.getcwd() + '/' + file
+            elif file.endswith('.json'):
+                config_file = os.getcwd() + '/' + file
 
     configdata = read_config(config_file)
 
@@ -65,13 +66,5 @@ def machina(args, cwd):
     gdsyuna.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 
     tools.cyan_print('Yuna. Done.')
-    
+
     return config.auron_cell, configdata
-
-
-    
-    
-    
-    
-    
-    

@@ -1,2 +1,2 @@
 from yuna.overdrive import grand_summon
-__version__ = '1.0.3'
+__version__ = '1.0.4'

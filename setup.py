@@ -1,7 +1,3 @@
-"""
-    First version of Yuna
-"""
-
 from __future__ import print_function
 from __future__ import absolute_import
 
@@ -23,10 +19,19 @@ setup(
     url="https://github.com/rubenvanstaden/yuna",
     packages=['yuna'],
     package_dir={'yuna': 'yuna'},
-    install_requires=['gdsyuna', 'pyclipper', 'setuptools', 'numpy', 'matplotlib', 'docopt', 'future', 'termcolor'],
+    install_requires=[
+        'gdsyuna', 
+        'pyclipper', 
+        'setuptools', 
+        'numpy', 
+        'matplotlib', 
+        'docopt', 
+        'future', 
+        'termcolor'
+    ],
     entry_points={
         'console_scripts': [
-            'yuna = yuna:layout'
+            'yuna = yuna:grand_summon'
         ]
     }
 )

@@ -43,7 +43,7 @@ def get_jj_layer(cell, Layers):
                 if isinstance(element, gdsyuna.PolygonSet):
                     if element.layers[0] == int(gds):
                         jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-                        poly = gdsyuna.Polygon(jj_poly, element.layers[0])
+                        poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
                         add_label(cell, poly, cell.name)
                 elif isinstance(element, gdsyuna.Polygon):
                     if element.layers == int(gds):
@@ -62,7 +62,7 @@ def get_shunt_connections(cell, jj_atom):
     shunt_key = (int(jj_atom['shunt']['shunt']), 3)
     
     for points in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
-        poly = gdsyuna.Polygon(points, gds)
+        poly = gdsyuna.Polygon(points, gds, verbose=False)
         add_label(cell, poly, name)
         # jj_cell.add(polygons)
         
@@ -78,13 +78,13 @@ def get_ground_connection(cell, jj_atom):
     shunt_key = (int(jj_atom['ground']['gnd']), 3)
     
     for points in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
-        poly = gdsyuna.Polygon(points, gds)
+        poly = gdsyuna.Polygon(points, gds, verbose=False)
         add_label(cell, poly, name)
         # jj_cell.add(polygons)
         
 def get_ntron_layer(cell, atom):    
     points = cell.get_polygons(True)[(42, 0)]
-    poly = gdsyuna.Polygon(points, 42)
+    poly = gdsyuna.Polygon(points, 42, verbose=False)
     add_label(cell, poly, 'via_PlugVia')
     
     

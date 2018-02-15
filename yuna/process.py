@@ -58,14 +58,14 @@ def save_baselayers(auron_cell, basis):
     wirepoly = baselayer_list(basis)
     removepoly = holelayer_list(basis)
     for i in list(set(wirepoly) - set(removepoly)):
-        auron_cell.add(gdsyuna.Polygon(basis.baselayer[i], layer=basis.gds, datatype=0))
+        auron_cell.add(gdsyuna.Polygon(basis.baselayer[i], layer=basis.gds, datatype=0, verbose=False))
 
 
 def save_holelayers(auron_cell, basis):
     holedata = holelayer_tuple(basis)
     for i, pair in enumerate(holedata):
-        auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[0]], layer=99+basis.gds, datatype=i))
-        auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[1]], layer=100+basis.gds, datatype=i))
+        auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[0]], layer=99+basis.gds, datatype=i, verbose=False))
+        auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[1]], layer=100+basis.gds, datatype=i, verbose=False))
             
                     
 class Config:
@@ -175,7 +175,7 @@ class Config:
                     if mtype == 'shunt':
                         if (gds, 3) in polygons:
                             for jj in polygons[(gds, 3)]:
-                                self.auron_cell.add(gdsyuna.Polygon(jj, layer=gds, datatype=0))
+                                self.auron_cell.add(gdsyuna.Polygon(jj, layer=gds, datatype=0, verbose=False))
             
     def add_auron_labels(self):
         """ Add labels to Auron Cell. """

@@ -35,32 +35,32 @@ def read_config(config_file):
     return data
 
 
-def grand_summon(args, cwd):
+def grand_summon(basedir, cell, cwd):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
 
     tools.cyan_print('Running Yuna...')
 
+    if not cell:
+        raise ValueError('not a valid cell name')
+    
     gds_file, config_file = '', ''
     for root, dirs, files in os.walk(os.getcwd()):
         for file in files:
             if file.endswith('.gds'):
-                gds_file = os.getcwd() + '/' + file
+                gds_file = basedir + '/' + file
             elif file.endswith('.json'):
-                config_file = os.getcwd() + '/' + file
+                config_file = basedir + '/' + file
 
     configdata = read_config(config_file)
 
     config = process.Config(configdata)
     config.init_gds_layout(gds_file)
 
-    if args['--cell']:
-        config.create_yuna_flatten(args['--cell'])
-        config.create_auron_polygons()
-        config.add_auron_labels()
-    else:
-        print('Please specify a Cell')
+    config.create_yuna_flatten(cell)
+    config.create_auron_polygons()
+    config.add_auron_labels()
 
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)

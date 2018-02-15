@@ -4,7 +4,7 @@ import gdsyuna
 
 def get_ntron_box(gds, poly):
         """  """
-        box_poly = gdsyuna.Polygon(poly, layer=gds, datatype=4)
+        box_poly = gdsyuna.Polygon(poly, layer=gds, datatype=4, verbose=False)
         bb = box_poly.get_bounding_box()
         nbox = [[bb[0][0], bb[0][1]], 
                 [bb[1][0], bb[0][1]],
@@ -35,7 +35,7 @@ class BasisLayer():
         vias that are not connected to any wires. """
 
         for via in self.polygons[(self.gds, 1)]:
-            auron_cell.add(gdsyuna.Polygon(via, layer=self.gds, datatype=1))
+            auron_cell.add(gdsyuna.Polygon(via, layer=self.gds, datatype=1, verbose=False))
             via_offset = tools.angusj_offset([via], 'up')
             if tools.angusj(via_offset, self.baselayer, 'intersection'):
                 self.baselayer = tools.angusj([via], self.baselayer, 'union')
@@ -56,7 +56,7 @@ class BasisLayer():
             poly = self.polygons[(self.gds, 4)]
             for box in tools.angusj(poly, poly, 'union'):
                 nbox = get_ntron_box(self.gds, box)
-                auron_cell.add(gdsyuna.Polygon(nbox, layer=self.gds, datatype=6))
+                auron_cell.add(gdsyuna.Polygon(nbox, layer=self.gds, datatype=6, verbose=False))
             for poly in tools.angusj(poly, poly, 'union'):
                 self.baselayer = tools.angusj([poly], self.baselayer, 'union')
         return nbox

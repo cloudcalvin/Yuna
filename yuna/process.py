@@ -193,19 +193,21 @@ class Config:
             # if label.text.split('_')[0] in lbl:
             #     label.texttype = i
             #     self.auron_cell.add(label)
+            # label.texttype = i 
+            # self.auron_cell.add(label)
 
             if label.text[0] == 'P':
                 label.texttype = i 
                 self.auron_cell.add(label)
-                
+            
             if label.text[:2] == 'jj':
                 label.texttype = i 
                 self.auron_cell.add(label)
-                
+            
             if label.text[:5] == 'ntron':
                 label.texttype = i 
                 self.auron_cell.add(label)
-                
+            
             if label.text == 'gnd_junction':
                 label.texttype = i
                 self.auron_cell.add(label)

@@ -51,8 +51,10 @@ def grand_summon(basedir, cell, cwd):
             if file.endswith('.gds'):
                 gds_file = basedir + '/' + file
             elif file.endswith('.json'):
-                config_file = basedir + '/' + file
+                if file == 'config.json':
+                    config_file = basedir + '/' + file
 
+    tools.green_print(config_file)
     configdata = read_config(config_file)
 
     config = process.Config(configdata)

@@ -6,10 +6,8 @@ Usage:
     yuna (-V | --version)
 
 Options:
-    -h --help     Show this screen.
-    -p --pretty   Prettify the output.
-    -V --version  Show version.
-    --quiet       print less text
+    -h --help     show this screen.
+    -V --version  show version.
     --verbose     print more text
 
 """

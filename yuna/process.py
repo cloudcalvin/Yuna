@@ -156,9 +156,7 @@ class Config:
         for key, layer in self.Layers.items():
             mtype = ['wire', 'shunt', 'skyplane', 'gndplane']
             if layer['type'] in mtype:
-                
                 basis = connect.BasisLayer(int(key), self.yuna_polygons)
-                
                 basis.set_baselayer()
                 
                 if basis.baselayer is not None:
@@ -172,7 +170,7 @@ class Config:
                     save_baselayers(self.auron_cell, basis)
                     save_holelayers(self.auron_cell, basis)
                 else:
-                    if mtype == 'shunt':
+                    if layer['type'] == 'shunt':
                         if (gds, 3) in polygons:
                             for jj in polygons[(gds, 3)]:
                                 self.auron_cell.add(gdsyuna.Polygon(jj, layer=gds, datatype=0, verbose=False))
@@ -184,43 +182,16 @@ class Config:
         tools.green_print('VIAs defined in the config file:')
         print(vias_config)
         
-        lbl = ['P', 'jj', 'ntron', 'gnd_junction', 'shunt_junction']
+        lbl = ['P', 'jj', 'ntron', 'sht', 'gnd']
         for i, label in enumerate(self.yuna_labels):
             if label.text in vias_config:
                 label.texttype = i
                 self.auron_cell.add(label)
 
-            # if label.text.split('_')[0] in lbl:
-            #     label.texttype = i
-            #     self.auron_cell.add(label)
-            # label.texttype = i 
-            # self.auron_cell.add(label)
+            if label.text.split('_')[0] in lbl:
+                label.texttype = i
+                self.auron_cell.add(label)
 
-            if label.text[0] == 'P':
-                label.texttype = i 
-                self.auron_cell.add(label)
-            
-            if label.text[:2] == 'jj':
-                label.texttype = i 
-                self.auron_cell.add(label)
-            
-            if label.text[:5] == 'ntron':
-                label.texttype = i 
-                self.auron_cell.add(label)
-            
-            if label.text == 'gnd_junction':
-                label.texttype = i
-                self.auron_cell.add(label)
-            elif label.text == 'shunt_junction':
-                label.texttype = i
-                self.auron_cell.add(label)
-            
-            
-            
-            
-            
-            
-            
             
             
             

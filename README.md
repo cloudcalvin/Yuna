@@ -2,9 +2,13 @@
 
 Yuna uses the *gdsyuna* package to read and manipulate the GDS layers.
 
-## Dependencies
+## User 
 
-Yuna package descriptions:
+Setup for the normal user.
+
+### Dependencies
+
+*Yuna* package descriptions:
 
 `pyclipper` Python wrapper for Angusj Clipper library.
 `termcolor` Package for color outputs in the terminal.
@@ -14,46 +18,25 @@ Yuna package descriptions:
 Make sure Python is installed on your system:
 
 ```
-# Fedora
 sudo dnf install python2-devel
 sudo dnf install python3-devel
-
-# CentOS
-sudo yum install python-devel
-
-# Ubuntu
-sudo apt-get install python-dev
-sudo apt-get install python3-dev
-```
-
-Install the necessary C++ compilers:
-
-```
-# Fedora
 sudo dnf install gcc-c++
-
-# CentOS
-sudo yum install gcc-c++
-
-# Ubuntu
-sudo apt-get update 
-sudo apt-get install --reinstall build-essential
+sudo dnf install tkinter
 ```
 
-Install TKinter which is needed by Matplotlib:
-
-```
-sudo apt-get install python-tk # Ubuntu
-sudo dnf install tkinter # Fedora
-```
-
-## Installing
+### Installing
 
 You can install Yuna directly from the Python package manager *pip* using:
 
 ```
 sudo pip install yuna
 ```
+
+## Developers
+
+Documentation for developers for maintaining and extending.
+
+### Installation
 
 To instead install Yuna from source, clone the git repository, *cd* into it, and run:
 
@@ -70,7 +53,11 @@ package on your system.
 sudo pip install -e .
 ```
 
-## Mac OS
+Uploading package to PyPi using *twine*:
 
-To get the Tkinter UI working in Mac, add the following file in `~/.matplotlib`:
-https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python
+```
+sudo python setup.py bdist_wheel
+twine upload dist/*
+```
+
+Unit testing overview: http://docs.python-guide.org/en/latest/writing/tests/

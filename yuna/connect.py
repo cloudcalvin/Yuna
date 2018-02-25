@@ -6,7 +6,7 @@ def get_ntron_box(gds, poly):
         """  """
         box_poly = gdsyuna.Polygon(poly, layer=gds, datatype=4, verbose=False)
         bb = box_poly.get_bounding_box()
-        nbox = [[bb[0][0], bb[0][1]], 
+        nbox = [[bb[0][0], bb[0][1]],
                 [bb[1][0], bb[0][1]],
                 [bb[1][0], bb[1][1]],
                 [bb[0][0], bb[1][1]]]
@@ -22,10 +22,8 @@ class BasisLayer():
         self.gds = gds
         self.polygons = polygons
         self.baselayer = None
-        
-    def set_baselayer(self):
-        tools.green_print('Union defualt baselayers: ' + str(self.gds))
 
+    def set_baselayer(self):
         if (self.gds, 0) in self.polygons:
             poly = self.polygons[(self.gds, 0)]
             self.baselayer = tools.angusj(poly, poly, 'union')
@@ -41,12 +39,12 @@ class BasisLayer():
                 self.baselayer = tools.angusj([via], self.baselayer, 'union')
 
     def connect_to_jjs(self):
-        """ We know the wires inside a jj, so we only have to 
+        """ We know the wires inside a jj, so we only have to
         union it with wires and don't have to remove any jj layers. """
 
         for jj in self.polygons[(self.gds, 3)]:
             self.baselayer = tools.angusj([jj], self.baselayer, 'union')
-        
+
     def connect_to_ntrons(self, atom, auron_cell):
         """ Union all the baselayers in the ntron cell
         and then find the bounding box. """
@@ -60,9 +58,3 @@ class BasisLayer():
             for poly in tools.angusj(poly, poly, 'union'):
                 self.baselayer = tools.angusj([poly], self.baselayer, 'union')
         return nbox
-        
-        
-        
-        
-        
-        

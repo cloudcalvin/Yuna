@@ -11,16 +11,17 @@ import pyclipper
 
 
 def print_cellrefs(cell):
-    green_print('CellReferences:')
+    print('')
+    magenta_print('CellReferences')
     for element in cell.elements:
-        if isinstance(element, gdsyuna.CellReference):            
+        if isinstance(element, gdsyuna.CellReference):
             print(element)
             print('')
 
 
 def has_ground(cell, jj_atom):
     key = (int(jj_atom['ground']['via']), 3)
-    
+
     if key in cell.get_polygons(True):
         return True
     else:
@@ -46,19 +47,19 @@ def red_print(header):
 
 def magenta_print(header):
     """ Python package header (Purple) """
-    print ('\n' + '[' + colored('*', 'magenta', attrs=['bold']) + '] ', end='')
-    print ('--- ' + header + ' ----------')
+    print ('\n' + '--- ' + colored(header, 'red', attrs=['bold']) + ' ', end='')
+    print ('----------')
 
 
 def green_print(header):
     """ Function header (Green) """
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
+    print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print(header)
 
 
 def cyan_print(header):
     """ Function header (Green) """
-    print ('\n[' + colored('*', 'cyan', attrs=['bold']) + '] ', end='')
+    print ('\n[' + colored('+++', 'cyan', attrs=['bold']) + '] ', end='')
     print(header)
 
 
@@ -72,6 +73,7 @@ def list_layout_cells(gds):
     print('Cell List:')
     for key, value in gdsii.cell_dict.items():
         print('      -> ' + key)
+    print('')
 
 
 def is_layer_active(Layers, atom):

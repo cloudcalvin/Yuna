@@ -38,11 +38,11 @@ def grand_summon(basedir, cell, cwd):
     do clipping and send polygons to
     GMSH to generate the Mesh. """
 
-    tools.cyan_print('Running Yuna...')
+    tools.cyan_print('Summoning Yuna...')
 
     if not cell:
         raise ValueError('not a valid cell name')
-    
+
     gds_file, config_file = '', ''
     for root, dirs, files in os.walk(os.getcwd()):
         for file in files:
@@ -63,21 +63,8 @@ def grand_summon(basedir, cell, cwd):
     config.add_auron_labels()
 
     gdsyuna.LayoutViewer()
-    gdsyuna.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
+    gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
 
-    tools.cyan_print('Yuna. Done.')
+    tools.cyan_print('Yuna. Done.\n')
 
     return config.auron_cell, configdata
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

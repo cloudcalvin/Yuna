@@ -20,6 +20,7 @@ import gdsyuna
 from docopt import docopt
 from yuna import process
 from yuna import tools
+from yuna import modeling
 
 
 def read_config(config_file):
@@ -33,7 +34,7 @@ def read_config(config_file):
     return data
 
 
-def grand_summon(basedir, cell, cwd):
+def grand_summon(basedir, cell, config_name, cwd, model):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
@@ -49,7 +50,7 @@ def grand_summon(basedir, cell, cwd):
             if file.endswith('.gds'):
                 gds_file = basedir + '/' + file
             elif file.endswith('.json'):
-                if file == 'config.json':
+                if file == config_name:
                     config_file = basedir + '/' + file
 
     tools.green_print(config_file)
@@ -61,6 +62,9 @@ def grand_summon(basedir, cell, cwd):
     config.create_yuna_flatten(cell)
     config.create_auron_polygons()
     config.add_auron_labels()
+
+    if model is True:
+        modeling.setup_3d_geo(config.auron_cell, configdata)
 
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)

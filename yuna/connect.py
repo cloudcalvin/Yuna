@@ -1,5 +1,5 @@
-import tools
 import gdsyuna
+from yuna import tools
 
 
 def get_ntron_box(gds, poly):

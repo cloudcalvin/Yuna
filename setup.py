@@ -6,13 +6,17 @@ from termcolor import colored
 from pprint import pprint
 from yuna import __version__
 
+setup_requires = []
+if 'build_sphinx' in sys.argv:
+    setup_requires.extend(['sphinx', 'sphinx_rtd_theme'])
+
 setup(
     name="yuna",
     version=__version__,
     author="Ruben van Staden",
     author_email="rubenvanstaden@gmail.com",
     description="Processes the layers from a GDS file.",
-    setup_requires=['setuptools-markdown'],
+    setup_requires=setup_requires,
     long_description_markdown_filename='README.md',
     license="BSD",
     keywords="yuna",

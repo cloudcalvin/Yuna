@@ -33,7 +33,7 @@ def read_config(config_file):
     return data
 
 
-def grand_summon(basedir, cell, cwd):
+def grand_summon(basedir, cell, config_name, cwd):
     """ Read in the layers from the GDS file,
     do clipping and send polygons to
     GMSH to generate the Mesh. """
@@ -49,8 +49,10 @@ def grand_summon(basedir, cell, cwd):
             if file.endswith('.gds'):
                 gds_file = basedir + '/' + file
             elif file.endswith('.json'):
-                if file == 'config.json':
+                if file == config_name:
                     config_file = basedir + '/' + file
+
+    print(config_file)
 
     tools.green_print(config_file)
     configdata = read_config(config_file)

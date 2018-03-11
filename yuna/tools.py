@@ -8,6 +8,18 @@ import sys
 import json
 import gdsyuna
 import pyclipper
+import numpy as np
+
+
+def read_config(config_file):
+    """ Reads the config file that is written in
+    JSON. This file contains the logic of how
+    the different layers will interact. """
+
+    data = None
+    with open(config_file) as data_file:
+        data = json.load(data_file)
+    return data
 
 
 def print_cellrefs(cell):
@@ -93,6 +105,18 @@ def make_active(Layers, layer):
 
     if layer in Layers:
         Layers[layer]['active'] = True
+
+
+def convert_node_to_3d(wire, z_start):
+    layer = np.array(wire).tolist()
+
+    polygons = []
+    for pl in layer:
+        poly = [[float(y*10e-9) for y in x] for x in pl]
+        for row in poly:
+            row.append(z_start)
+        polygons.append(poly)
+    return polygons
 
 
 def angusj(clip, subj, method):

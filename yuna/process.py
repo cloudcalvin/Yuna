@@ -89,6 +89,7 @@ class Config:
 
     def __init__(self, config_data):
         self.gdsii = None
+        self.Params = config_data['Params']
         self.Layers = config_data['Layers']
         self.Atom = config_data['Atoms']
 
@@ -101,7 +102,9 @@ class Config:
         self.gdsii.read_gds(gds_file, unit=1.0e-12)
 
     def create_yuna_flatten(self, cellref):
-        """  """
+        """
+
+        """
 
         yuna_cell = self.gdsii.extract(cellref)
 
@@ -128,30 +131,39 @@ class Config:
         self.yuna_labels = yuna_flatten.labels
         self.yuna_polygons = yuna_flatten.get_polygons(True)
 
-    def create_auron_polygons(self):
+    def add_terminals(self):
+        gds = int(self.Params['TERM']['gds'])
+
+        if (gds, 0) in self.yuna_polygons:
+            for jj in self.yuna_polygons[(gds, 0)]:
+                polygon = gdsyuna.Polygon(jj, layer=gds, datatype=0, verbose=False)
+                self.auron_cell.add(polygon)
+
+    def create_wirechains(self):
         """
-            Union flattened layers and create Auron Cell.
-            Polygons are labels as follow:
+        Union flattened layers and create Auron Cell.
+        Polygons are labels as follow:
 
-            1 - vias
-            2 -
-            3 - jjs
-            4 - ntrons
-            5 - ntrons ground
-            6 - ntrons box
+        1 - vias
+        2 -
+        3 - jjs
+        4 - ntrons
+        5 - ntrons ground
+        6 - ntrons box
 
-            Variables
-            ---------
+        Variables
+        ---------
+        wirepoly : list
+            Normal interconnected wire polygons in the top-level cell.
+        holepoly : tuple
+            Holds the indexes of the polygon with a hole and the hole itself.
+        removelist : list
+            Is the difference between wirepoly and holepoly. Indexes that has to be removed.
 
-            wirepoly : list
-                Normal interconnected wire polygons in the top-level cell.
-            holepoly : tuple
-                Holds the indexes of the polygon with a hole and the hole itself.
-            removelist : list
-                Is the difference between wirepoly and holepoly. Indexes that has to be removed.
-
-            Layer with datatype=10 is a hole polygons that will be deleting at meshing.
+        Layer with datatype=10 is a hole polygons that will be deleting at meshing.
         """
+
+        self.add_terminals()
 
         for key, layer in self.Layers.items():
             mtype = ['wire', 'shunt', 'skyplane', 'gndplane']
@@ -171,11 +183,11 @@ class Config:
                     save_holelayers(self.auron_cell, basis)
                 else:
                     if layer['type'] == 'shunt':
-                        if (gds, 3) in polygons:
-                            for jj in polygons[(gds, 3)]:
+                        if (basis.gds, 3) in self.yuna_polygons:
+                            for jj in self.yuna_polygons[(gds, 3)]:
                                 self.auron_cell.add(gdsyuna.Polygon(jj, layer=gds, datatype=0, verbose=False))
 
-    def add_auron_labels(self):
+    def add_component_labels(self):
         """ Add labels to Auron Cell. """
 
         vias_config = self.Atom['vias'].keys()

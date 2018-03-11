@@ -14,8 +14,10 @@ def get_ntron_box(gds, poly):
 
 
 class BasisLayer():
-    """ This is the basis wiring layer that connects
-    the top-level wire with cells and terminals. """
+    """
+    This is the basis wiring layer that connects
+    the top-level wire with cells and terminals.
+    """
 
     def __init__(self, gds, polygons):
         """  """

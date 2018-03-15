@@ -10,44 +10,43 @@ def add_label(cell, element, name):
     cell.add(label)
 
 
-def vias(cell, Layers, Atom):
+def vias(cell, pdd):
     print('--- flattening ' + cell.name)
     cell.flatten(single_datatype=1)
 
     add_label(cell, cell, cell.name)
 
 
-def junctions(cell, Layers, Atom):
+def junctions(cell, pdd):
     print('--- flattening ' + cell.name)
     cell.flatten(single_datatype=3)
 
-    get_jj_layer(cell, Layers)
-    get_shunt_connections(cell, Atom['jjs'])
+    get_jj_layer(cell, pdd)
+    get_shunt_connections(cell, pdd.atoms['jjs'])
 
-    if tools.has_ground(cell, Atom['jjs']):
-        get_ground_connection(cell, Atom['jjs'])
+    if tools.has_ground(cell, pdd.atoms['jjs']):
+        get_ground_connection(cell, pdd.atoms['jjs'])
 
 
-def ntrons(cell, Layers, Atom):
+def ntrons(cell, pdd):
     print('--- flattening ' + cell.name)
     cell.flatten(single_datatype=4)
 
 
-def get_jj_layer(cell, Layers):
+def get_jj_layer(cell, pdd):
     """ We have to temporelaly flatten the JJ cell to get the
     JJ layer, since the JJ layer can be inside another cell. """
 
-    for gds, layer in Layers.items():
-        if layer['type'] == 'junction':
-            for element in cell.elements:
-                if isinstance(element, gdsyuna.PolygonSet):
-                    if element.layers[0] == int(gds):
-                        jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-                        poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
-                        add_label(cell, poly, cell.name)
-                elif isinstance(element, gdsyuna.Polygon):
-                    if element.layers == int(gds):
-                        add_label(cell, poly, cell.name)
+    for key, layer in pdd.junctions.items():
+        for element in cell.elements:
+            if isinstance(element, gdsyuna.PolygonSet):
+                if element.layers[0] == key[0]:
+                    jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+                    poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+                    add_label(cell, poly, cell.name)
+            elif isinstance(element, gdsyuna.Polygon):
+                if element.layers == key[0]:
+                    add_label(cell, poly, cell.name)
 
 
 def get_shunt_connections(cell, jj_atom):

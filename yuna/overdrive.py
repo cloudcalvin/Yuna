@@ -27,6 +27,21 @@ from yuna import tools
 from yuna import modeling
 
 
+def process_data(fabdata):
+    pdd = process.ProcessData('Hypres', fabdata)
+
+    pdd.add_parameters(fabdata['Params'])
+    pdd.add_atoms(fabdata['Atoms'])
+    pdd.add_wires()
+    pdd.add_vias()
+    pdd.add_junctions()
+
+    for key, value in pdd.junctions.items():
+        print(key)
+
+    return pdd
+
+
 def grand_summon(basedir, args):
     """
     Read in the layers from the GDS file,
@@ -71,29 +86,33 @@ def grand_summon(basedir, args):
                     config_file = basedir + '/' + file
 
     tools.green_print(config_file)
-    configdata = tools.read_config(config_file)
+    jsondata = tools.read_config(config_file)
 
-    config = process.Config(configdata)
-    config.init_gds_layout(gds_file)
+    gdsii = gdsyuna.GdsLibrary()
+    gdsii.read_gds(gds_file, unit=1.0e-12)
 
-    config.create_yuna_flatten(cellname)
-    config.create_wirechains()
+    pdd = process_data(jsondata)
 
-    config.add_component_labels()
+    cell_wirechain = gdsyuna.Cell('Wirechain Cell')
+    cell_layout = process.create_cell_layout(gdsii, cellname, pdd)
 
-    if model is True:
-        geom = pygmsh.opencascade.Geometry()
+    process.add_terminals(pdd, cell_layout, cell_wirechain)
+    process.create_wirechains(pdd, cell_layout, cell_wirechain)
+    process.add_component_labels(pdd, cell_layout, cell_wirechain)
 
-        geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.05;')
-        geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.05;')
-
-        wc = modeling.wirechain(geom, cellname, config.auron_cell, configdata)
-
-        tc = modeling.terminals(wc, geom, config, configdata)
+    # if model is True:
+    #     geom = pygmsh.opencascade.Geometry()
+    #
+    #     geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.05;')
+    #     geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.05;')
+    #
+    #     wc = modeling.wirechain(geom, cellname, config.auron_cell, configdata)
+    #
+    #     tc = modeling.terminals(wc, geom, config, configdata)
 
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
 
     tools.cyan_print('Yuna. Done.\n')
 
-    return config.auron_cell, configdata
+    return cell_wirechain, pdd

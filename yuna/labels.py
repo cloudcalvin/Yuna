@@ -1,6 +1,8 @@
 import gdsyuna
 from yuna import tools
 
+from yuna import process
+
 
 def add_label(cell, element, name):
     bb = element.get_bounding_box()
@@ -37,28 +39,30 @@ def get_jj_layer(cell, pdd):
     """ We have to temporelaly flatten the JJ cell to get the
     JJ layer, since the JJ layer can be inside another cell. """
 
-    for key, layer in pdd.junctions.items():
-        for element in cell.elements:
-            if isinstance(element, gdsyuna.PolygonSet):
-                if element.layers[0] == key[0]:
-                    jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-                    poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
-                    add_label(cell, poly, cell.name)
-            elif isinstance(element, gdsyuna.Polygon):
-                if element.layers == key[0]:
-                    add_label(cell, poly, cell.name)
+    # for key, layer in pdd.junctions.items():
+    for component in pdd.components:
+        if isinstance(component, process.Junction):
+            for element in cell.elements:
+                if isinstance(element, gdsyuna.PolygonSet):
+                    if element.layers[0] == component.gds:
+                        jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+                        poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+                        add_label(cell, poly, cell.name)
+                elif isinstance(element, gdsyuna.Polygon):
+                    if element.layers == component.gds:
+                        add_label(cell, poly, cell.name)
 
 
 def get_shunt_connections(cell, jj_atom):
     jj_cell = gdsyuna.Cell('jj_cell_' + cell.name)
 
-    gds = jj_atom['shunt']['via']
+    gds = jj_atom['shunt']['gds']
     name = jj_atom['shunt']['name']
 
     polygons = cell.get_polygons(True)
 
     via_key = (int(gds), 3)
-    shunt_key = (int(jj_atom['shunt']['shunt']), 3)
+    shunt_key = (int(jj_atom['shunt']['layers'][1]), 3)
 
     for points in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
         poly = gdsyuna.Polygon(points, gds, verbose=False)
@@ -68,13 +72,13 @@ def get_shunt_connections(cell, jj_atom):
 def get_ground_connection(cell, jj_atom):
     jj_cell = gdsyuna.Cell('jj_gnd_' + cell.name)
 
-    gds = jj_atom['ground']['via']
+    gds = jj_atom['ground']['gds']
     name = jj_atom['ground']['name']
 
     polygons = cell.get_polygons(True)
 
     via_key = (int(gds), 3)
-    shunt_key = (int(jj_atom['ground']['gnd']), 3)
+    shunt_key = (int(jj_atom['ground']['layers'][1]), 3)
 
     for points in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
         poly = gdsyuna.Polygon(points, gds, verbose=False)

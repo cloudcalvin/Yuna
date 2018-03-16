@@ -32,7 +32,7 @@ def print_cellrefs(cell):
 
 
 def has_ground(cell, jj_atom):
-    key = (int(jj_atom['ground']['via']), 3)
+    key = (int(jj_atom['ground']['gds']), 3)
 
     if key in cell.get_polygons(True):
         return True

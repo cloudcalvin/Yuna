@@ -101,6 +101,8 @@ def grand_summon(basedir, args):
                 if file == config_name:
                     config_file = basedir + '/' + file
 
+    print(config_file)
+
     tools.green_print(config_file)
     jsondata = tools.read_config(config_file)
 

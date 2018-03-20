@@ -25,37 +25,36 @@ from docopt import docopt
 from yuna import process
 from yuna import tools
 from yuna import modeling
+from yuna import structure
 
 
-def add_junction_component(fabdata):
-    gds = fabdata['Atoms']['jjs']['gds']
-    name = fabdata['Atoms']['jjs']['name']
-    layers = fabdata['Atoms']['jjs']['layers']
-    color = fabdata['Atoms']['jjs']['color']
+def geom_wirechain(datafield):
+    """
 
-    jj = process.Junction(gds, name, layers, color)
+    """
 
-    jj.add_position(fabdata)
-    jj.add_width(fabdata)
-    jj.add_shunt_data(fabdata)
-    jj.add_ground_data(fabdata)
+    geom = pygmsh.opencascade.Geometry()
 
-    return jj
+    geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
+    geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.1;')
 
+    layers = datafield.get_polygons()
 
-def process_data(fabdata):
-    pdd = process.ProcessData('Hypres', fabdata)
+    wirechain = list()
+    for key, value in layers.items():
+        if key[0] == 6:
+            for i, points in enumerate(layers[key]):
+                for pp in points:
+                    polyname = 'name' + '_' + str(i)
+                    poly = geom.add_polygon(pp, lcar=0.1, make_surface=True)
+                    geom.add_physical_surface(poly.surface, label=str(key)+str(i))
+                    wirechain.append(poly.surface)
 
-    pdd.add_parameters(fabdata['Params'])
-    pdd.add_atoms(fabdata['Atoms'])
+    geom.boolean_union(wirechain)
 
-    pdd.add_wires()
-    pdd.add_vias()
+    pygmsh.generate_mesh(geom, geo_filename='wirechain.geo')
 
-    jj = add_junction_component(fabdata)
-    pdd.add_component(jj)
-
-    return pdd
+    # meshio.write('3d_model.vtk', *layer_mesh)
 
 
 def grand_summon(basedir, args):
@@ -101,22 +100,18 @@ def grand_summon(basedir, args):
                 if file == config_name:
                     config_file = basedir + '/' + file
 
-    print(config_file)
-
-    tools.green_print(config_file)
-    jsondata = tools.read_config(config_file)
-
     gdsii = gdsyuna.GdsLibrary()
     gdsii.read_gds(gds_file, unit=1.0e-12)
 
-    pdd = process_data(jsondata)
+    pdd = tools.read_config(config_file)
 
-    cell_wirechain = gdsyuna.Cell('Wirechain Cell')
-    cell_layout = process.create_cell_layout(gdsii, cellname, pdd)
+    datafield = structure.DataField('Hypres')
 
-    process.add_terminals(pdd, cell_layout, cell_wirechain)
-    process.create_wirechains(pdd, cell_layout, cell_wirechain)
-    process.add_component_labels(pdd, cell_layout, cell_wirechain)
+    cell = gdsii.extract(cellname)
+    process.detect_components(cell, pdd, datafield)
+    process.create_wirechains(pdd, cell, datafield)
+
+    geom_wirechain(datafield)
 
     # if model is True:
     #     geom = pygmsh.opencascade.Geometry()
@@ -128,9 +123,11 @@ def grand_summon(basedir, args):
     #
     #     tc = modeling.terminals(wc, geom, config, configdata)
 
+    datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
+
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
 
     tools.cyan_print('Yuna. Done.\n')
 
-    return cell_wirechain, pdd
+    return my_cell, pdd

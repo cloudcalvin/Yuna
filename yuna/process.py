@@ -4,6 +4,7 @@ import itertools
 import json
 import gdsyuna
 import pyclipper
+
 from yuna import labels
 from yuna import connect
 
@@ -11,6 +12,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from yuna import tools
+from yuna import structure
+from yuna import merge
 
 
 """
@@ -54,19 +57,27 @@ def baselayer_list(basis):
     return wirepoly
 
 
-def save_baselayers(auron_cell, basis):
+def save_baselayers(auron_cell, basis, my_cell):
     wirepoly = baselayer_list(basis)
     removepoly = holelayer_list(basis)
     for i in list(set(wirepoly) - set(removepoly)):
         auron_cell.add(gdsyuna.Polygon(basis.baselayer[i], layer=basis.gds, datatype=0, verbose=False))
 
+        my_poly = structure.Polygon(basis.baselayer[i], layer=basis.gds, datatype=0, verbose=False)
+        my_cell.add(my_poly)
 
-def save_holelayers(auron_cell, basis):
+
+def save_holelayers(auron_cell, basis, my_cell):
     holedata = holelayer_tuple(basis)
     for i, pair in enumerate(holedata):
         auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[0]], layer=99+basis.gds, datatype=i, verbose=False))
         auron_cell.add(gdsyuna.Polygon(basis.baselayer[pair[1]], layer=100+basis.gds, datatype=i, verbose=False))
 
+        my_poly_1 = structure.Polygon(basis.baselayer[pair[0]], layer=99+basis.gds, datatype=i, verbose=False)
+        my_poly_2 = structure.Polygon(basis.baselayer[pair[1]], layer=100+basis.gds, datatype=i, verbose=False)
+
+        my_cell.add(my_poly_1)
+        my_cell.add(my_poly_2)
 
 
 class Junction(object):
@@ -277,7 +288,13 @@ class ResistorData(object):
         self.wires = gds_list
 
 
-def create_cell_layout(gdsii, cellref, pdd):
+def datafield_terminal_labels(cell, datafield):
+    for lbl in cell.labels:
+        label = structure.Label('1', '2', lbl.text, lbl.position, rotation=lbl.rotation, layer=lbl.layer)
+        datafield.add(label)
+
+
+def detect_components(cell, pdd, datafield):
     """
     Vias are primary components and are detected first.
     JJs and nTrons are defined as secondary components.
@@ -288,28 +305,24 @@ def create_cell_layout(gdsii, cellref, pdd):
         The flattened version of original cell with labeled components
     """
 
-    cell_original = gdsii.extract(cellref)
+    tools.print_cellrefs(cell)
 
-    tools.print_cellrefs(cell_original)
+    datafield_terminal_labels(cell, datafield)
 
-    for cell in cell_original.get_dependencies(True):
-        if cell.name[:3] == 'via':
-            labels.vias(cell, pdd)
+    for subcell in cell.get_dependencies(True):
+        if subcell.name[:3] == 'via':
+            labels.vias(subcell, pdd, datafield)
 
-    for cell in cell_original.get_dependencies(True):
-        if cell.name[:2] == 'jj':
-            labels.junctions(cell, pdd)
+    for subcell in cell.get_dependencies(True):
+        if subcell.name[:2] == 'jj':
+            labels.junctions(subcell, pdd, datafield)
 
-    for cell in cell_original.get_dependencies(True):
-        if cell.name[:5] == 'ntron':
-            labels.ntrons(cell, pdd)
-
-    cell_layout = cell_original.copy('Yuna Flatten', deep_copy=True)
-
-    return cell_layout.flatten()
+    # for cell in cell_original.get_dependencies(True):
+    #     if cell.name[:5] == 'ntron':
+    #         labels.ntrons(my_cell, pdd)
 
 
-def add_terminals(pdd, cell_layout, cell_wirechain):
+def add_terminals(pdd, cell_layout, poly, datafield):
     """
     Parameters
     ----------
@@ -319,75 +332,100 @@ def add_terminals(pdd, cell_layout, cell_wirechain):
         The cell containing all the layer polygons merged
     """
 
-    polygons = cell_layout.get_polygons(True)
+    key = (pdd.get_term_gds(), 0)
 
-    gds = pdd.get_term_gds()
-
-    if (gds, 0) in polygons:
-        for jj in polygons[(gds, 0)]:
-            polygon = gdsyuna.Polygon(jj, layer=gds, datatype=0, verbose=False)
-            cell_wirechain.add(polygon)
+    if key in poly:
+        for jj in poly[key]:
+            datafield.add(structure.Polygon(jj, *key))
 
 
-def create_wirechains(pdd, cell_layout, cell_wirechain):
+def create_wirechains(pdd, cell, datafield):
     """
-    Union flattened layers and create Auron Cell.
-    Polygons are labels as follow:
+    The wirechain for each gdsnumber is created in four phases:
 
-    1 - vias
-    2 -
-    3 - jjs
-    4 - ntrons
-    5 - ntrons ground
-    6 - ntrons box
+    1. Merge all the normal conducting wires.
+    2. Merge the polygons inside each component.
+    3. Find the difference between the conducting polygons
+       and the component polygons.
+    4. Add these polygons to the datafield object.
 
-    Variables
+    Parameters
+    ----------
+    cell_layout : gdspy Cell
+        The original layout cell flattened
+    datafield : gdspy Cell
+        The cell containing all the layer polygons merged
+
+    Arguments
     ---------
-    wirepoly : list
-        Normal interconnected wire polygons in the top-level cell.
-    holepoly : tuple
-        Holds the indexes of the polygon with a hole and the hole itself.
-    removelist : list
-        Is the difference between wirepoly and holepoly. Indexes that has to be removed.
-
-    Layer with datatype=10 is a hole polygons that will be deleting at meshing.
+    metals : list
+        A list containing the points of the merged polygons.
+    components : list
+        The merged polygons of the specific layer in the components
+        that corresponds to the current datatype value.
     """
 
-    polygons = cell_layout.get_polygons(True)
+    cell_layout = cell.copy('Layout Flatten', deep_copy=True)
+    cell_layout.flatten()
+
+    poly = cell_layout.get_polygons(True)
+
+    add_terminals(pdd, cell_layout, poly, datafield)
 
     for key, layer in pdd.wires.items():
-        basis = connect.BasisLayer(key[0], polygons)
-        basis.set_baselayer()
+        if key in poly:
+            metals = tools.angusj(poly[key], poly[key], 'union')
 
-        if basis.baselayer is not None:
-            if (basis.gds, 1) in polygons:
-                basis.connect_to_vias(cell_wirechain)
-            if (basis.gds, 3) in polygons:
-                basis.connect_to_jjs()
-            if (basis.gds, 4) in polygons:
-                nbox = basis.connect_to_ntrons(self.Atom['ntron'], cell_wirechain)
+            for datatype in [1, 3]:
+                dkey = (key[0], datatype)
+                if dkey in poly:
+                    components = tools.angusj(poly[dkey], poly[dkey], 'union')
+                    for pp in components:
+                        datafield.add(structure.Polygon(pp, *dkey))
+                    metals = tools.angusj(components, metals, 'difference')
 
-            save_baselayers(cell_wirechain, basis)
-            save_holelayers(cell_wirechain, basis)
-        else:
-            pass
+            for pp in metals:
+                datafield.add(structure.Polygon(pp, *key))
 
+    # polygons = cell_layout.get_polygons(True)
+    #
+    # for key, layer in pdd.wires.items():
+    #     basis = connect.BasisLayer(key[0], polygons)
+    #     basis.set_baselayer()
+    #
+    #     if basis.baselayer is not None:
+    #         if (basis.gds, 1) in polygons:
+    #             basis.connect_to_vias(cell_wirechain, my_cell)
+    #         if (basis.gds, 3) in polygons:
+    #             basis.connect_to_jjs()
+    #         if (basis.gds, 4) in polygons:
+    #             nbox = basis.connect_to_ntrons(self.Atom['ntron'], cell_wirechain, my_cell)
+    #
+    #         save_baselayers(cell_wirechain, basis, my_cell)
+    #         save_holelayers(cell_wirechain, basis, my_cell)
+    #     else:
+    #         pass
 
-def add_component_labels(celldata, cell_layout, cell_wirechain):
-    """ Add labels to Auron Cell. """
-
-    cell_labels = cell_layout.labels
-    vias_config = celldata.atoms['vias'].keys()
-
-    tools.green_print('VIAs defined in the config file:')
-    print(vias_config)
-
-    lbl = ['P', 'jj', 'ntron', 'sht', 'gnd']
-    for i, label in enumerate(cell_labels):
-        if label.text in vias_config:
-            label.texttype = i
-            cell_wirechain.add(label)
-
-        if label.text.split('_')[0] in lbl:
-            label.texttype = i
-            cell_wirechain.add(label)
+# def add_component_labels(celldata, cell_layout, cell_wirechain, my_cell):
+#     """ Add labels to Auron Cell. """
+#
+#     cell_labels = cell_layout.labels
+#     vias_config = celldata.atoms['vias'].keys()
+#
+#     tools.green_print('VIAs defined in the config file:')
+#     print(vias_config)
+#
+#     for lbl in my_cell.get_labels():
+#         label = gdsyuna.Label(lbl.text, lbl.position, rotation=lbl.rotation, layer=lbl.layer)
+#         cell_wirechain.add(label)
+#
+#     # lbl = ['P', 'jj', 'ntron', 'sht', 'gnd']
+#     # for i, label in enumerate(cell_labels):
+#     #
+#     #     if label.text in vias_config:
+#     #         label.texttype = i
+#     #         cell_wirechain.add(label)
+#     #
+#     #     if label.text.split('_')[0] in lbl:
+#     #         label.texttype = i
+#     #         cell_wirechain.add(label)

@@ -2,6 +2,8 @@ from yuna import tools
 import gdsyuna
 from yuna import tools
 
+from yuna import structure
+
 
 def get_ntron_box(gds, poly):
         """  """
@@ -14,7 +16,7 @@ def get_ntron_box(gds, poly):
         return nbox
 
 
-class BasisLayer():
+class BasisLayer(object):
     """
     This is the basis wiring layer that connects
     the top-level wire with cells and terminals.
@@ -31,12 +33,16 @@ class BasisLayer():
             poly = self.polygons[(self.gds, 0)]
             self.baselayer = tools.angusj(poly, poly, 'union')
 
-    def connect_to_vias(self, auron_cell):
+    def connect_to_vias(self, auron_cell, my_cell):
         """ Union vias with wires, but remove redundant
         vias that are not connected to any wires. """
 
         for via in self.polygons[(self.gds, 1)]:
             auron_cell.add(gdsyuna.Polygon(via, layer=self.gds, datatype=1, verbose=False))
+
+            my_poly = structure.Polygon(via, layer=self.gds, datatype=1, verbose=False)
+            my_cell.add(my_poly)
+
             via_offset = tools.angusj_offset([via], 'up')
             if tools.angusj(via_offset, self.baselayer, 'intersection'):
                 self.baselayer = tools.angusj([via], self.baselayer, 'union')
@@ -48,7 +54,7 @@ class BasisLayer():
         for jj in self.polygons[(self.gds, 3)]:
             self.baselayer = tools.angusj([jj], self.baselayer, 'union')
 
-    def connect_to_ntrons(self, atom, auron_cell):
+    def connect_to_ntrons(self, atom, auron_cell, my_cell):
         """ Union all the baselayers in the ntron cell
         and then find the bounding box. """
 
@@ -58,6 +64,9 @@ class BasisLayer():
             for box in tools.angusj(poly, poly, 'union'):
                 nbox = get_ntron_box(self.gds, box)
                 auron_cell.add(gdsyuna.Polygon(nbox, layer=self.gds, datatype=6, verbose=False))
+
+                my_poly = structure.Polygon(via, layer=self.gds, datatype=1, verbose=False)
+                my_cell.add(my_poly)
             for poly in tools.angusj(poly, poly, 'union'):
                 self.baselayer = tools.angusj([poly], self.baselayer, 'union')
         return nbox

@@ -10,6 +10,38 @@ import gdsyuna
 import pyclipper
 import numpy as np
 
+from yuna import process
+
+
+def add_junction_component(fabdata):
+    gds = fabdata['Atoms']['jjs']['gds']
+    name = fabdata['Atoms']['jjs']['name']
+    layers = fabdata['Atoms']['jjs']['layers']
+    color = fabdata['Atoms']['jjs']['color']
+
+    jj = process.Junction(gds, name, layers, color)
+
+    jj.add_position(fabdata)
+    jj.add_width(fabdata)
+    jj.add_shunt_data(fabdata)
+    jj.add_ground_data(fabdata)
+
+    return jj
+
+
+def process_data(fabdata):
+    pdd = process.ProcessData('Hypres', fabdata)
+
+    pdd.add_parameters(fabdata['Params'])
+    pdd.add_atoms(fabdata['Atoms'])
+
+    pdd.add_wires()
+    pdd.add_vias()
+
+    jj = add_junction_component(fabdata)
+    pdd.add_component(jj)
+
+    return pdd
 
 def read_config(config_file):
     """ Reads the config file that is written in
@@ -19,7 +51,7 @@ def read_config(config_file):
     data = None
     with open(config_file) as data_file:
         data = json.load(data_file)
-    return data
+    return process_data(data)
 
 
 def print_cellrefs(cell):

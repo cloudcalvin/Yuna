@@ -25,36 +25,51 @@ from docopt import docopt
 from yuna import process
 from yuna import tools
 from yuna import modeling
-from yuna import structure
+
+from .datafield import DataField
 
 
-def geom_wirechain(datafield):
+def update_wirechain(geom, key, poly_list, wirechain, datafield):
     """
 
     """
 
-    geom = pygmsh.opencascade.Geometry()
+    gds = key[0]
+    datatype = key[1]
 
-    geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
-    geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.1;')
+    for i, poly1 in enumerate(poly_list):
+        for j, poly2 in enumerate(poly1.get_points()):
+            for points in poly2:
+                polyname = str(gds) + '_' + str(datatype) + '_' + str(j+i)
+                gp = geom.add_polygon(points, lcar=0.1, make_surface=True)
+                geom.add_physical_surface(gp.surface, label=polyname)
 
-    layers = datafield.get_polygons()
-
-    wirechain = list()
-    for key, value in layers.items():
-        if key[0] == 6:
-            for i, points in enumerate(layers[key]):
-                for pp in points:
-                    polyname = 'name' + '_' + str(i)
-                    poly = geom.add_polygon(pp, lcar=0.1, make_surface=True)
-                    geom.add_physical_surface(poly.surface, label=str(key)+str(i))
-                    wirechain.append(poly.surface)
-
-    geom.boolean_union(wirechain)
-
-    pygmsh.generate_mesh(geom, geo_filename='wirechain.geo')
+                if gds in wirechain:
+                    wirechain[gds].append(gp.surface)
+                else:
+                    wirechain[gds] = [gp.surface]
 
     # meshio.write('3d_model.vtk', *layer_mesh)
+
+
+def gmsh_wirechain(datafield):
+    wires = {**datafield.pcd.layers['ix'], **datafield.pcd.layers['res']}
+
+    for gds in wires.keys():
+        geom = pygmsh.opencascade.Geometry()
+
+        geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
+        geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.1;')
+
+        wirechain = {}
+
+        for datatype, poly_list in datafield.polygons[gds].items():
+            key = (gds, datatype)
+            update_wirechain(geom, key, poly_list, wirechain, datafield)
+
+        for key, value in wirechain.items():
+            geom.boolean_union(value)
+            pygmsh.generate_mesh(geom, geo_filename=str(gds) + '_wirechain.geo')
 
 
 def grand_summon(basedir, args):
@@ -103,15 +118,18 @@ def grand_summon(basedir, args):
     gdsii = gdsyuna.GdsLibrary()
     gdsii.read_gds(gds_file, unit=1.0e-12)
 
-    pdd = tools.read_config(config_file)
-
-    datafield = structure.DataField('Hypres')
+    datafield = DataField('Hypres', config_file)
 
     cell = gdsii.extract(cellname)
-    process.detect_components(cell, pdd, datafield)
-    process.create_wirechains(pdd, cell, datafield)
+    process.detect_components(cell, datafield)
+    process.create_wirechains(cell, datafield)
 
-    geom_wirechain(datafield)
+    gmsh_wirechain(datafield)
+
+    # TODO: unittest for data correctly connect to Polygon.
+    # for poly in datafield.polygons:
+    #     if poly.data:
+    #         print(poly.data.name)
 
     # if model is True:
     #     geom = pygmsh.opencascade.Geometry()
@@ -130,4 +148,4 @@ def grand_summon(basedir, args):
 
     tools.cyan_print('Yuna. Done.\n')
 
-    return my_cell, pdd
+    return datafield

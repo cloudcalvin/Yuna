@@ -2,7 +2,7 @@ from yuna import tools
 import gdsyuna
 from yuna import tools
 
-from yuna import structure
+from yuna import datafield
 
 
 def get_ntron_box(gds, poly):

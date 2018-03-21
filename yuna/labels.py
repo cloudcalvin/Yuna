@@ -2,7 +2,8 @@ import gdsyuna
 from yuna import tools
 
 from yuna import process
-from yuna import structure
+
+from .datafield import Label
 
 import itertools as it
 
@@ -13,7 +14,7 @@ def add_label(cell, element, name, datafield):
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
 
-    lbl = structure.Label('1', '2', name, (cx, cy), 0, layer=64)
+    lbl = Label('1', '2', name, (cx, cy), 0, layer=64)
     ll = gdsyuna.Label(name, (cx, cy), 0, layer=64)
 
     print(type(datafield))
@@ -32,7 +33,7 @@ def difference(a, b):
     return list(set(a) - set(b))
 
 
-def vias(cell, pdd, datafield):
+def vias(cell, datafield):
     print('--- flattening ' + cell.name)
     cell.flatten(single_datatype=1)
 
@@ -85,17 +86,17 @@ def vias(cell, pdd, datafield):
     #                 add_label(cell, poly, viadata.name, 1)
 
 
-    ttype = pdd.atoms['vias'][cell.name]['type']
+    ttype = datafield.pcd.atoms['vias'][cell.name]['type']
     add_label(cell, cell, cell.name, datafield)
 
 
-def junctions(cell, pdd, datafield):
+def junctions(cell, datafield):
     print('--- flattening ' + cell.name)
     cell.flatten(single_datatype=3)
 
-    ttype = pdd.atoms['jjs']['type']
+    ttype = datafield.pcd.atoms['jjs']['type']
 
-    for component in pdd.components:
+    for component in datafield.pcd.components:
         if isinstance(component, process.Junction):
             for element in cell.elements:
                 if isinstance(element, gdsyuna.PolygonSet):

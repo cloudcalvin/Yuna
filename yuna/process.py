@@ -12,8 +12,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from yuna import tools
-from yuna import structure
-from yuna import merge
+from .datafield import Label
+
+import collections as cl
 
 
 """
@@ -138,12 +139,6 @@ class Junction(object):
         self.ground = fabdata['Atoms']['jjs']['ground']
 
 
-class Via(object):
-
-    def __init__(self):
-        pass
-
-
 class Ntron(object):
 
     def __init__(self):
@@ -152,18 +147,32 @@ class Ntron(object):
 
 class ProcessData(object):
 
-    def __init__(self, name, fabdata):
-        self.name = name
-        self.fabdata = fabdata
+    def __init__(self):
         self.params = None
         self.atoms = None
 
-        self.wires = dict()
-        self.vias = dict()
-        self.resistors = dict()
-
+        self.layers = cl.defaultdict(dict)
         self.components = []
 
+    def add_parameters(self, params):
+        self.params = params
+
+    def add_atoms(self, atoms):
+        self.atoms = atoms
+
+    def get_term_gds(self):
+        return int(self.params['TERM']['gds'])
+
+    def add_layer(self, mtype, gds, value):
+        wd = WireData(value['name'], value['color'])
+
+        wd.set_z_start(value['position'])
+        wd.set_height(value['width'])
+
+        if 'wire' in value.keys():
+            wd.add_contact_layer(value['wire'])
+
+        self.layers[mtype][gds] = wd
 
     def add_component(self, component):
         """
@@ -184,51 +193,40 @@ class ProcessData(object):
 
         return self
 
-    def add_parameters(self, params):
-        self.params = params
 
-    def add_atoms(self, atoms):
-        self.atoms = atoms
-
-    def add_layer(self, gds, layerdata):
-        self.layers[(gds, 0)] = layerdata
-
-    def get_term_gds(self):
-        return int(self.params['TERM']['gds'])
-
-    def add_wires(self):
-        for gds, value in self.fabdata['inductive'].items():
-            wd = WireData(value['name'], value['color'])
-
-            wd.set_z_start(value['start'])
-            wd.set_height(value['height'])
-
-            if 'wire' in value.keys():
-                wd.add_contact_layer(value['wire'])
-
-            self.wires[(int(gds), 0)] = wd
-        for gds, value in self.fabdata['resistive'].items():
-            wd = WireData(value['name'], value['color'])
-
-            wd.set_z_start(value['start'])
-            wd.set_height(value['height'])
-
-            if 'wire' in value.keys():
-                wd.add_contact_layer(value['wire'])
-
-            self.wires[(int(gds), 0)] = wd
-
-    def add_vias(self):
-        for gds, value in self.fabdata['vias'].items():
-            wd = ViaData(value['name'], value['color'])
-
-            wd.set_z_start(value['start'])
-            wd.set_height(value['height'])
-
-            if 'wire' in value.keys():
-                wd.add_contact_layer(value['wire'])
-
-            self.vias[(int(gds), 0)] = wd
+    # def add_wires(self):
+    #     for gds, value in self.fabdata['ix'].items():
+    #         wd = WireData(value['name'], value['color'])
+    #
+    #         wd.set_z_start(value['position'])
+    #         wd.set_height(value['width'])
+    #
+    #         if 'wire' in value.keys():
+    #             wd.add_contact_layer(value['wire'])
+    #
+    #         self.wires[(int(gds), 0)] = wd
+    #     for gds, value in self.fabdata['res'].items():
+    #         wd = WireData(value['name'], value['color'])
+    #
+    #         wd.set_z_start(value['position'])
+    #         wd.set_height(value['width'])
+    #
+    #         if 'wire' in value.keys():
+    #             wd.add_contact_layer(value['wire'])
+    #
+    #         self.wires[(int(gds), 0)] = wd
+    #
+    # def add_vias(self):
+    #     for gds, value in self.fabdata['via'].items():
+    #         wd = ViaData(value['name'], value['color'])
+    #
+    #         wd.set_z_start(value['position'])
+    #         wd.set_height(value['width'])
+    #
+    #         if 'wire' in value.keys():
+    #             wd.add_contact_layer(value['wire'])
+    #
+    #         self.vias[(int(gds), 0)] = wd
 
 
 class WireData(object):
@@ -290,11 +288,11 @@ class ResistorData(object):
 
 def datafield_terminal_labels(cell, datafield):
     for lbl in cell.labels:
-        label = structure.Label('1', '2', lbl.text, lbl.position, rotation=lbl.rotation, layer=lbl.layer)
+        label = Label('1', '2', lbl.text, lbl.position, rotation=lbl.rotation, layer=lbl.layer)
         datafield.add(label)
 
 
-def detect_components(cell, pdd, datafield):
+def detect_components(cell, datafield):
     """
     Vias are primary components and are detected first.
     JJs and nTrons are defined as secondary components.
@@ -311,18 +309,18 @@ def detect_components(cell, pdd, datafield):
 
     for subcell in cell.get_dependencies(True):
         if subcell.name[:3] == 'via':
-            labels.vias(subcell, pdd, datafield)
+            labels.vias(subcell, datafield)
 
     for subcell in cell.get_dependencies(True):
         if subcell.name[:2] == 'jj':
-            labels.junctions(subcell, pdd, datafield)
+            labels.junctions(subcell, datafield)
 
     # for cell in cell_original.get_dependencies(True):
     #     if cell.name[:5] == 'ntron':
     #         labels.ntrons(my_cell, pdd)
 
 
-def add_terminals(pdd, cell_layout, poly, datafield):
+def add_terminals(cell_layout, poly, datafield):
     """
     Parameters
     ----------
@@ -332,14 +330,14 @@ def add_terminals(pdd, cell_layout, poly, datafield):
         The cell containing all the layer polygons merged
     """
 
-    key = (pdd.get_term_gds(), 0)
+    key = (datafield.pcd.get_term_gds(), 0)
 
     if key in poly:
         for jj in poly[key]:
-            datafield.add(structure.Polygon(jj, *key))
+            datafield.add(jj, key)
 
 
-def create_wirechains(pdd, cell, datafield):
+def create_wirechains(cell, df):
     """
     The wirechain for each gdsnumber is created in four phases:
 
@@ -370,9 +368,12 @@ def create_wirechains(pdd, cell, datafield):
 
     poly = cell_layout.get_polygons(True)
 
-    add_terminals(pdd, cell_layout, poly, datafield)
+    add_terminals(cell_layout, poly, df)
 
-    for key, layer in pdd.wires.items():
+    wires = {**df.pcd.layers['ix'], **df.pcd.layers['res']}
+
+    for gds, layer in wires.items():
+        key = (gds, 0)
         if key in poly:
             metals = tools.angusj(poly[key], poly[key], 'union')
 
@@ -381,11 +382,11 @@ def create_wirechains(pdd, cell, datafield):
                 if dkey in poly:
                     components = tools.angusj(poly[dkey], poly[dkey], 'union')
                     for pp in components:
-                        datafield.add(structure.Polygon(pp, *dkey))
+                        df.add(pp, dkey)
                     metals = tools.angusj(components, metals, 'difference')
 
             for pp in metals:
-                datafield.add(structure.Polygon(pp, *key))
+                df.add(pp, key)
 
     # polygons = cell_layout.get_polygons(True)
     #

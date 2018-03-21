@@ -12,14 +12,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from yuna import tools
-from yuna import structure
 
-def component(datafield, key, polygons, metals):
-    if key in polygons:
-        poly = polygons[key]
-        components = tools.angusj(poly, poly, 'union')
-
-        for pp in components:
-            datafield.add(structure.Polygon(pp, *key))
-
-        return tools.angusj(components, metals, 'difference')
+# def component(datafield, key, polygons, metals):
+#     if key in polygons:
+#         poly = polygons[key]
+#         components = tools.angusj(poly, poly, 'union')
+#
+#         for pp in components:
+#             datafield.add(structure.Polygon(pp, *key))
+#
+#         return tools.angusj(components, metals, 'difference')

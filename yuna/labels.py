@@ -8,6 +8,12 @@ from .datafield import Label
 import itertools as it
 
 
+def terminals(cell, datafield):
+    for lbl in cell.labels:
+        label = Label('1', '2', lbl.text, lbl.position, rotation=lbl.rotation, layer=lbl.layer)
+        datafield.add(label)
+
+
 def add_label(cell, element, name, datafield):
     print('--- Adding label')
     bb = element.get_bounding_box()
@@ -16,8 +22,6 @@ def add_label(cell, element, name, datafield):
 
     lbl = Label('1', '2', name, (cx, cy), 0, layer=64)
     ll = gdsyuna.Label(name, (cx, cy), 0, layer=64)
-
-    print(type(datafield))
 
     cell.add(ll)
     datafield.add(lbl)
@@ -41,7 +45,6 @@ def vias(cell, datafield):
     # connect = list(it.combinations(metals, 2))
     #
     # print(connect)
-
 
     # stacks = pdd.atoms['vias'][cell.name]['stack']
     #
@@ -69,7 +72,6 @@ def vias(cell, datafield):
     # awe = difference(emerge, intermitted_metals)
     # print(awe)
 
-
     # connections = set(all_wires[0]).intersection(*all_wires)
     # connections = set.intersection(*map(set, all_wires))
     # print(connections)
@@ -84,7 +86,6 @@ def vias(cell, datafield):
     #             for points in tools.angusj(polygons[gds], polygons[key], 'intersection'):
     #                 poly = gdsyuna.Polygon(points, gds[0], verbose=False)
     #                 add_label(cell, poly, viadata.name, 1)
-
 
     ttype = datafield.pcd.atoms['vias'][cell.name]['type']
     add_label(cell, cell, cell.name, datafield)

@@ -12,10 +12,15 @@ class DataField(gdsyuna.Cell):
 
     def __init__(self, name, pcf):
         self.name = name
-        self.pcd = self.read_config(pcf)
+
+        self.pcd, self.wires = self.read_config(pcf)
 
         self.polygons = cl.defaultdict(dict)
         self.labels = list()
+
+    def __str__(self):
+        return "DataField (\"{}\", {} polygons, {} labels)".format(
+            self.name, len(self.polygons.keys()), len(self.labels))
 
     def add_junction_component(self, fabdata):
         gds = fabdata['Atoms']['jjs']['gds']
@@ -41,30 +46,23 @@ class DataField(gdsyuna.Cell):
         with open(pcf) as data_file:
             fabdata = json.load(data_file)
 
-        pcd = process.ProcessData()
+        pcd = process.ProcessConfigData()
 
         pcd.add_parameters(fabdata['Params'])
         pcd.add_atoms(fabdata['Atoms'])
 
-        for mtype in ['ix', 'res', 'via', 'jj']:
+        for mtype in ['ix', 'res', 'via', 'jj', 'term']:
             for gds, value in fabdata[mtype].items():
                 pcd.add_layer(mtype, int(gds), value)
 
         jj = self.add_junction_component(fabdata)
         pcd.add_component(jj)
 
-        return pcd
+        wires = {**pcd.layers['ix'],
+                 **pcd.layers['res'],
+                 **pcd.layers['term']}
 
-    # def get_polygons(self):
-    #     polygons = {}
-    #     for poly in self.polygons:
-    #         key = (poly.layer, poly.datatype)
-    #         pp = tools.convert_node_to_3d([poly.points], 0)
-    #         if key in polygons:
-    #             polygons[key].append(pp)
-    #         else:
-    #             polygons[key] = [pp]
-    #     return polygons
+        return pcd, wires
 
     def add(self, element, key=None):
         """
@@ -85,9 +83,11 @@ class DataField(gdsyuna.Cell):
         if isinstance(element, Label):
             self.labels.append(element)
         else:
-            fabdata = {0: [self.pcd.layers['ix'], self.pcd.layers['res']],
-                       1: [self.pcd.layers['via']],
-                       3: [self.pcd.layers['jj']]}
+            fabdata = {**self.pcd.layers['ix'],
+                       **self.pcd.layers['res'],
+                       **self.pcd.layers['term'],
+                       **self.pcd.layers['via'],
+                       **self.pcd.layers['jj']}
 
             polygon = Polygon(key, element, fabdata)
             if key[1] in self.polygons[key[0]]:
@@ -95,16 +95,9 @@ class DataField(gdsyuna.Cell):
             else:
                 self.polygons[key[0]][key[1]] = [polygon]
 
-            # if key in self.polygons:
-            #     self.polygons[key].append(polygon)
-            # else:
-            #     self.polygons[key] = [polygon]
-
-        return self
-
     def parse_gdspy(self, cell):
 
-        for i in [34, 6, 9]:
+        for i in self.wires:
             for key, poly in self.polygons[i].items():
                 for pp in poly:
                     polygon = gdsyuna.Polygon(*pp.get_variables())
@@ -124,12 +117,13 @@ class Polygon(gdsyuna.Polygon):
         self.id = 'p{}'.format(Polygon._ID)
         Polygon._ID += 1
 
-        gds, datatype = key[0], key[1]
-
         self.data = None
-        for layers in fabdata[datatype]:
-            if gds in layers.keys():
-                self.data = layers[gds]
+        print('------ ' + str(key))
+        self.data = fabdata[int(key[0])]
+        print(self.data)
+
+        if self.data is None:
+            raise ValueError('Polygon data cannot be None.')
 
     def get_points(self, width=0):
         polygons = []

@@ -79,15 +79,20 @@ def layers(cell, datafield):
     for gds, layer in datafield.wires.items():
         key = (gds, 0)
         if key in poly:
+
+            if not isinstance(poly[key][0][0], np.ndarray):
+                raise TypeError("poly must be a 3D list")
+
             metals = tools.angusj(poly[key], poly[key], 'union')
 
             for datatype in [1, 3]:
-                dkey = (key[0], datatype)
+                dkey = (gds, datatype)
                 if dkey in poly:
                     components = tools.angusj(poly[dkey], poly[dkey], 'union')
+
                     for pp in components:
-                        print(dkey)
                         datafield.add(pp, dkey)
+
                     metals = tools.angusj(components, metals, 'difference')
 
             for pp in metals:

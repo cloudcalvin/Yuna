@@ -83,6 +83,11 @@ class DataField(gdsyuna.Cell):
         if isinstance(element, Label):
             self.labels.append(element)
         else:
+            if key is None:
+                raise TypeError('key cannot be None')
+
+            assert isinstance(element[0], list)
+
             fabdata = {**self.pcd.layers['ix'],
                        **self.pcd.layers['res'],
                        **self.pcd.layers['term'],
@@ -117,18 +122,14 @@ class Polygon(gdsyuna.Polygon):
         self.id = 'p{}'.format(Polygon._ID)
         Polygon._ID += 1
 
-        self.data = None
-        print('------ ' + str(key))
         self.data = fabdata[int(key[0])]
-        print(self.data)
 
         if self.data is None:
             raise ValueError('Polygon data cannot be None.')
 
     def get_points(self, width=0):
         polygons = []
-        layer = np.array([self.points]).tolist()
-        for pl in layer:
+        for pl in [self.points]:
             poly = [[float(y*10e-9) for y in x] for x in pl]
             for row in poly:
                 row.append(width)

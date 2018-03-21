@@ -62,7 +62,7 @@ def grand_summon(basedir, args):
     cwd = ''
 
     if not cellname:
-        raise ValueError('Please specify a valid cell name')
+        raise ValueError('please specify a valid cell name')
 
     gds_file, config_file = '', ''
     for root, dirs, files in os.walk(os.getcwd()):

@@ -59,6 +59,11 @@ class ProcessConfigData(object):
         if 'wire' in value.keys():
             wd.add_contact_layer(value['wire'])
 
+        if mtype not in ['ix', 'res', 'via', 'jj', 'term']:
+            raise TypeError("mtype `type` is not supported")
+
+        assert isinstance(gds, int)
+
         self.layers[mtype][gds] = wd
 
     def add_component(self, component):

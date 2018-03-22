@@ -16,7 +16,7 @@ class DataField(gdsyuna.Cell):
         self.pcd, self.wires = self.read_config(pcf)
 
         self.polygons = cl.defaultdict(dict)
-        self.labels = list()
+        self.labels = cl.defaultdict(dict)
 
     def __str__(self):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
@@ -109,8 +109,9 @@ class DataField(gdsyuna.Cell):
                     cell.add(polygon)
 
         for lbl in self.labels:
-            label = gdsyuna.Label(*lbl.get_variables())
-            cell.add(label)
+            for key, value in self.labels.items():
+                for label in value['labels']:
+                    cell.add(label)
 
 
 class Polygon(gdsyuna.Polygon):
@@ -143,12 +144,28 @@ class Polygon(gdsyuna.Polygon):
 class Label(gdsyuna.Label):
     _ID = 0
 
-    def __init__(self, ttype, metals, text, position, rotation, layer):
+    def __init__(self, metals, text, position, rotation=0, layer=0):
         super(Label, self).__init__(text, position, rotation=rotation, layer=layer)
 
         self.id = 'l{}'.format(Label._ID)
-        self.type = ttype
+        Label._ID += 1
+
+        # pre_label = text.split('_')[0]
+
+        # tt = ['P', 'via', 'jj', 'sht', 'gnd']
+        # if pre_label in tt:
+        #     self.type = pre_label
+        # else:
+        #     self.type = None
+        #
+        # if self.type is None:
+        #     raise TypeError("label type cannot be None")
+
         self.metals = metals
 
+    def update_position(self, position):
+        self.position = position
+
     def get_variables(self):
-        return (self.text, self.position, self.rotation, self.layer)
+        return (self.text, self.position, 'nw',
+                self.rotation, 0, False, self.layer)

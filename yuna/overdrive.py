@@ -97,6 +97,8 @@ def grand_summon(basedir, args):
     #
     #     tc = modeling.terminals(wc, geom, config, configdata)
 
+    print(datafield)
+
     datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 
     gdsyuna.LayoutViewer()

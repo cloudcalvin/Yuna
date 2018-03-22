@@ -10,8 +10,13 @@ import itertools as it
 
 def terminals(cell, datafield):
     for lbl in cell.labels:
-        label = Label('1', '2', lbl.text, lbl.position, rotation=lbl.rotation, layer=lbl.layer)
-        datafield.add(label)
+        datafield.labels[lbl.text]['name'] = datafield.pcd.layers['term'][63].name
+        datafield.labels[lbl.text]['color'] = datafield.pcd.layers['term'][63].color
+        datafield.labels[lbl.text]['type'] = 2
+        datafield.labels[lbl.text]['labels'] = []
+        datafield.labels[lbl.text]['labels'].append(lbl)
+
+    print(datafield.labels)
 
 
 def add_label(cell, element, name, datafield):
@@ -20,11 +25,11 @@ def add_label(cell, element, name, datafield):
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
 
-    lbl = Label('1', '2', name, (cx, cy), 0, layer=64)
-    ll = gdsyuna.Label(name, (cx, cy), 0, layer=64)
+    lbl = gdsyuna.Label(name, (cx, cy), 0, layer=64)
+    cell.add(lbl)
 
-    cell.add(ll)
-    datafield.add(lbl)
+    datafield.labels[lbl.text] = datafield.pcd.atoms['vias'][name]
+    datafield.labels[lbl.text]['type'] = 1
 
 
 def intersect(pair):
@@ -113,10 +118,12 @@ def junctions(cell, datafield):
 
                         add_label(cell, poly, cell.name, datafield)
 
-    # get_shunt_connections(cell, pdd.atoms['jjs'], ttype)
+    # jjs = datafield.pcd.atoms['jjs']
     #
-    # if tools.has_ground(cell, pdd.atoms['jjs']):
-    #     get_ground_connection(cell, pdd.atoms['jjs'], ttype)
+    # get_shunt_connections(cell, jjs, ttype)
+    #
+    # if tools.has_ground(cell, jjs):
+    #     get_ground_connection(cell, jjs, ttype)
 
 
 def get_shunt_connections(cell, jj_atom, ttype):

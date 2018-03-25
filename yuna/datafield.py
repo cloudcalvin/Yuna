@@ -22,20 +22,20 @@ class DataField(gdsyuna.Cell):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
             self.name, len(self.polygons.keys()), len(self.labels))
 
-    def add_junction_component(self, fabdata):
-        gds = fabdata['Atoms']['jjs']['gds']
-        name = fabdata['Atoms']['jjs']['name']
-        layers = fabdata['Atoms']['jjs']['layers']
-        color = fabdata['Atoms']['jjs']['color']
-
-        jj = process.Junction(gds, name, layers, color)
-
-        jj.add_position(fabdata)
-        jj.add_width(fabdata)
-        jj.add_shunt_data(fabdata)
-        jj.add_ground_data(fabdata)
-
-        return jj
+#     def add_junction_component(self, fabdata):
+#         gds = fabdata['Atoms']['jjs']['gds']
+#         name = fabdata['Atoms']['jjs']['name']
+#         layers = fabdata['Atoms']['jjs']['layers']
+#         color = fabdata['Atoms']['jjs']['color']
+# 
+#         jj = process.Junction(gds, name, layers, color)
+# 
+#         jj.add_position(fabdata)
+#         jj.add_width(fabdata)
+#         jj.add_shunt_data(fabdata)
+#         jj.add_ground_data(fabdata)
+# 
+#         return jj
 
     def read_config(self, pcf):
         """ Reads the config file that is written in
@@ -55,8 +55,8 @@ class DataField(gdsyuna.Cell):
             for gds, value in fabdata[mtype].items():
                 pcd.add_layer(mtype, int(gds), value)
 
-        jj = self.add_junction_component(fabdata)
-        pcd.add_component(jj)
+#         jj = self.add_junction_component(fabdata)
+#         pcd.add_component(jj)
 
         wires = {**pcd.layers['ix'],
                  **pcd.layers['res'],

@@ -9,6 +9,7 @@ import itertools as it
 
 
 def terminals(cell, datafield):
+    print('--- Terminals')
     for lbl in cell.labels:
         datafield.labels[lbl.text]['name'] = datafield.pcd.layers['term'][63].name
         datafield.labels[lbl.text]['color'] = datafield.pcd.layers['term'][63].color
@@ -16,10 +17,25 @@ def terminals(cell, datafield):
         datafield.labels[lbl.text]['labels'] = []
         datafield.labels[lbl.text]['labels'].append(lbl)
 
+        for gds, metal in datafield.pcd.layers['ix'].items():
+            m1 = lbl.text.split(' ')[1]
+            m2 = lbl.text.split(' ')[2]
+            if metal.name in [m1, m2]:
+                if 'metals' in datafield.labels[lbl.text]:
+                    datafield.labels[lbl.text]['metals'].append(int(gds))
+                else:
+                    datafield.labels[lbl.text]['metals'] = []
+                    datafield.labels[lbl.text]['metals'].append(int(gds))
+
+
+
+#         print('     .' + str(datafield.pcd.layers['ix']))
+#         res = dict((v['namnamee'], k) for k, v in datafield.pcd.layers['ix'].items())
+
     print(datafield.labels)
 
 
-def add_label(cell, element, name, datafield):
+def add_label(cell, element, name, datafield, ttype):
     print('--- Adding label')
     bb = element.get_bounding_box()
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
@@ -28,8 +44,18 @@ def add_label(cell, element, name, datafield):
     lbl = gdsyuna.Label(name, (cx, cy), 0, layer=64)
     cell.add(lbl)
 
-    datafield.labels[lbl.text] = datafield.pcd.atoms['vias'][name]
-    datafield.labels[lbl.text]['type'] = 1
+    if ttype == 1:
+        datafield.labels[lbl.text] = datafield.pcd.atoms['vias'][name]
+        datafield.labels[lbl.text]['type'] = 1
+    elif ttype == 3:
+        datafield.labels[lbl.text] = datafield.pcd.atoms['jjs'][name]
+        datafield.labels[lbl.text]['type'] = 3
+    elif ttype == 4:
+        datafield.labels[lbl.text] = datafield.pcd.atoms['jjs'][name]
+        datafield.labels[lbl.text]['type'] = 4
+    elif ttype == 5:
+        datafield.labels[lbl.text] = datafield.pcd.atoms['jjs'][name]
+        datafield.labels[lbl.text]['type'] = 5
 
 
 def intersect(pair):
@@ -93,66 +119,79 @@ def vias(cell, datafield):
     #                 add_label(cell, poly, viadata.name, 1)
 
     ttype = datafield.pcd.atoms['vias'][cell.name]['type']
-    add_label(cell, cell, cell.name, datafield)
+    add_label(cell, cell, cell.name, datafield, 1)
 
 
 def junctions(cell, datafield):
     print('--- flattening ' + cell.name)
     cell.flatten(single_datatype=3)
 
-    ttype = datafield.pcd.atoms['jjs']['type']
+    jjs = datafield.pcd.atoms['jjs']
+    print(jjs)
 
-    for component in datafield.pcd.components:
-        if isinstance(component, process.Junction):
-            for element in cell.elements:
-                if isinstance(element, gdsyuna.PolygonSet):
-                    if element.layers[0] == component.gds:
-                        jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-                        poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+    for element in cell.elements:
+        if isinstance(element, gdsyuna.PolygonSet):
+            if element.layers[0] == jjs[cell.name]['gds']:
+                jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+                poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
 
-                        add_label(cell, poly, cell.name, datafield)
-                elif isinstance(element, gdsyuna.Polygon):
-                    if element.layers == component.gds:
-                        jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-                        poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+                add_label(cell, poly, cell.name, datafield, 3)
+        elif isinstance(element, gdsyuna.Polygon):
+            if element.layers == jjs[cell.name]['gds']:
+                jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+                poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
 
-                        add_label(cell, poly, cell.name, datafield)
+                add_label(cell, poly, cell.name, datafield, 3)
 
-    # jjs = datafield.pcd.atoms['jjs']
-    #
-    # get_shunt_connections(cell, jjs, ttype)
-    #
-    # if tools.has_ground(cell, jjs):
-    #     get_ground_connection(cell, jjs, ttype)
+#     for component in datafield.pcd.components:
+#         if isinstance(component, process.Junction):
+#             for element in cell.elements:
+#                 if isinstance(element, gdsyuna.PolygonSet):
+#                     if element.layers[0] == component.gds:
+#                         jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+#                         poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+# 
+#                         add_label(cell, poly, cell.name, datafield)
+#                 elif isinstance(element, gdsyuna.Polygon):
+#                     if element.layers == component.gds:
+#                         jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
+#                         poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+# 
+#                         add_label(cell, poly, cell.name, datafield)
+
+    jjs = datafield.pcd.atoms['jjs']
+
+    get_shunt_connections(cell, jjs, datafield)
+
+    if tools.has_ground(cell, jjs):
+        get_ground_connection(cell, jjs, datafield)
 
 
-def get_shunt_connections(cell, jj_atom, ttype):
+def get_shunt_connections(cell, jj_atom, datafield):
     gds = jj_atom['shunt']['gds']
-    name = jj_atom['shunt']['name']
 
     polygons = cell.get_polygons(True)
 
     via_key = (int(gds), 3)
-    shunt_key = (int(jj_atom['shunt']['layers'][1]), 3)
+    shunt_key = (int(jj_atom['shunt']['metals'][1]), 3)
 
     for points in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
         poly = gdsyuna.Polygon(points, gds, verbose=False)
-        add_label(cell, poly, name, ttype)
+        add_label(cell, poly, 'shunt', datafield, 4)
 
 
-def get_ground_connection(cell, jj_atom, ttype):
+def get_ground_connection(cell, jj_atom, datafield):
     gds = jj_atom['ground']['gds']
-    name = jj_atom['ground']['name']
 
     polygons = cell.get_polygons(True)
 
     via_key = (int(gds), 3)
-    shunt_key = (int(jj_atom['ground']['layers'][1]), 3)
+    shunt_key = (int(jj_atom['ground']['metals'][0]), 3)
 
     if shunt_key != (30, 3):
         for points in tools.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
-            poly = gdsyuna.Polygon(points, gds, verbose=false)
-            add_label(cell, poly, name, ttype)
+            poly = gdsyuna.Polygon(points, gds, verbose=False)
+            add_label(cell, poly, 'ground', datafield, 5)
 
 
 # def loop_pcf_vias(cell, pdd):

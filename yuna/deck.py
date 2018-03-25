@@ -36,9 +36,9 @@ def components(cell, datafield):
         if subcell.name[:3] == 'via':
             labels.vias(subcell, datafield)
 
-    # for subcell in cell.get_dependencies(True):
-    #     if subcell.name[:2] == 'jj':
-    #         labels.junctions(subcell, datafield)
+    for subcell in cell.get_dependencies(True):
+        if subcell.name[:2] == 'jj':
+            labels.junctions(subcell, datafield)
 
     # for cell in cell_original.get_dependencies(True):
     #     if cell.name[:5] == 'ntron':

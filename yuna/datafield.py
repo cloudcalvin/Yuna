@@ -27,14 +27,14 @@ class DataField(gdsyuna.Cell):
 #         name = fabdata['Atoms']['jjs']['name']
 #         layers = fabdata['Atoms']['jjs']['layers']
 #         color = fabdata['Atoms']['jjs']['color']
-# 
+#
 #         jj = process.Junction(gds, name, layers, color)
-# 
+#
 #         jj.add_position(fabdata)
 #         jj.add_width(fabdata)
 #         jj.add_shunt_data(fabdata)
 #         jj.add_ground_data(fabdata)
-# 
+#
 #         return jj
 
     def read_config(self, pcf):

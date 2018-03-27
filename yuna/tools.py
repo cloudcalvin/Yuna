@@ -137,8 +137,8 @@ def angusj(clip, subj, method):
                           pyclipper.PFT_NONZERO,
                           pyclipper.PFT_NONZERO)
 
-    if not isinstance(subj[0][0], list):
-        raise TypeError("clippers subj must be a 3D list")
+    # if not isinstance(subj[0][0], list):
+    #     raise TypeError("clippers subj must be a 3D list")
 
     return subj
 

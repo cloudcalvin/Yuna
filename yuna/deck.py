@@ -38,9 +38,9 @@ def components(cell, datafield):
         if subcell.name[:2] == 'jj':
             labels.junctions(subcell, datafield)
 
-    # for cell in cell_original.get_dependencies(True):
-    #     if cell.name[:5] == 'ntron':
-    #         labels.ntrons(my_cell, pdd)
+    for subcell in cell.get_dependencies(True):
+        if subcell.name[:5] == 'ntron':
+            labels.ntrons(subcell, datafield)
 
     cell_layout = cell.copy('Label Flatten', deep_copy=True)
     cell_layout.flatten()
@@ -55,6 +55,44 @@ def components(cell, datafield):
             datafield.labels[lbl.text]['labels'].append(lbl)
 
     print(datafield.labels)
+
+
+def add_vias(gds, datatype, datafield, poly, metals):
+    dkey = (gds, datatype)
+    if dkey in poly:
+        components = tools.angusj(poly[dkey], poly[dkey], 'union')
+
+        for pp in components:
+            datafield.add(pp, dkey)
+
+        metals = tools.angusj(components, metals, 'difference')
+
+    return metals
+
+
+def add_junctions(gds, datatype, datafield, poly, metals):
+    dkey = (gds, datatype)
+    if dkey in poly:
+        components = tools.angusj(poly[dkey], poly[dkey], 'union')
+
+        for pp in components:
+            datafield.add(pp, dkey)
+
+        metals = tools.angusj(components, metals, 'difference')
+
+    return metals
+
+
+def add_ntrons(gds, datatype, datafield, poly, metals):
+    dkey = (gds, datatype)
+    if dkey in poly:
+        components = tools.angusj(poly[dkey], poly[dkey], 'union')
+
+        for pp in components:
+            datafield.add(pp, dkey)
+
+        metals = tools.angusj(components, metals, 'difference')
+    return metals
 
 
 def layers(cell, datafield):
@@ -97,15 +135,19 @@ def layers(cell, datafield):
 
             metals = tools.angusj(poly[key], poly[key], 'union')
 
-            for datatype in [1, 3]:
-                dkey = (gds, datatype)
-                if dkey in poly:
-                    components = tools.angusj(poly[dkey], poly[dkey], 'union')
+            metals = add_vias(gds, 1, datafield, poly, metals)
+            metals = add_junctions(gds, 3, datafield, poly, metals)
+            metals = add_ntrons(gds, 7, datafield, poly, metals)
 
-                    for pp in components:
-                        datafield.add(pp, dkey)
-
-                    metals = tools.angusj(components, metals, 'difference')
+            # for datatype in [1, 3]:
+            #     dkey = (gds, datatype)
+            #     if dkey in poly:
+            #         components = tools.angusj(poly[dkey], poly[dkey], 'union')
+            #
+            #         for pp in components:
+            #             datafield.add(pp, dkey)
+            #
+            #         metals = tools.angusj(components, metals, 'difference')
 
             for pp in metals:
                 datafield.add(pp, key)

@@ -14,11 +14,8 @@ Options:
 
 
 import os
-import json
-import meshio
 import pygmsh
 import gdsyuna
-import numpy as np
 
 from docopt import docopt
 
@@ -82,15 +79,17 @@ def grand_summon(basedir, args):
     deck.components(cell, datafield)
     deck.layers(cell, datafield)
 
-    # if model is True:
-    #     geom = pygmsh.opencascade.Geometry()
-    #
-    #     geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.05;')
-    #     geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.05;')
-    #
-    #     wc = modeling.wirechain(geom, cellname, config.auron_cell, configdata)
-    #
+    if model is True:
+        geom = pygmsh.opencascade.Geometry()
+
+        geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.01;')
+        geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.01;')
+
+        wc = modeling.wirechain(geom, datafield)
+
     #     tc = modeling.terminals(wc, geom, config, configdata)
+
+        meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
 
     datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 

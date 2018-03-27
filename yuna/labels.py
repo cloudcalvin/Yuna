@@ -118,7 +118,6 @@ def junctions(cell, datafield):
     cell.flatten(single_datatype=3)
 
     jjs = datafield.pcd.atoms['jjs']
-    print(jjs)
 
     for element in cell.elements:
         if isinstance(element, gdsyuna.PolygonSet):
@@ -188,10 +187,10 @@ def get_ground_connection(cell, jj_atom, datafield):
 #                     add_label(cell, poly, viadata.name, 1)
 
 
-def get_ntron_layer(cell, atom, ttype):
-    points = cell.get_polygons(True)[(42, 0)]
-    poly = gdsyuna.Polygon(points, 42, verbose=False)
-    add_label(cell, poly, 'via_PlugVia', ttype)
+# def get_ntron_layer(cell, atom, ttype):
+#     points = cell.get_polygons(True)[(42, 0)]
+#     poly = gdsyuna.Polygon(points, 42, verbose=False)
+#     add_label(cell, poly, 'via_PlugVia', ttype)
 
 
 def ntrons(cell, pdd):

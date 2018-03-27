@@ -1,18 +1,14 @@
 import gdsyuna
-from yuna import tools
-
-from yuna import process
-
-from .datafield import Label
-
 import itertools as it
+
+from yuna import tools
+from yuna import process
 
 
 def terminals(cell, datafield):
     print('--- Terminals')
     for lbl in cell.labels:
         datafield.labels[lbl.text]['name'] = datafield.pcd.layers['term'][63].name
-        datafield.labels[lbl.text]['color'] = datafield.pcd.layers['term'][63].color
         datafield.labels[lbl.text]['type'] = 2
         datafield.labels[lbl.text]['labels'] = []
         datafield.labels[lbl.text]['labels'].append(lbl)
@@ -26,11 +22,6 @@ def terminals(cell, datafield):
                 else:
                     datafield.labels[lbl.text]['metals'] = []
                     datafield.labels[lbl.text]['metals'].append(int(gds))
-
-
-
-#         print('     .' + str(datafield.pcd.layers['ix']))
-#         res = dict((v['namnamee'], k) for k, v in datafield.pcd.layers['ix'].items())
 
     print(datafield.labels)
 
@@ -143,22 +134,6 @@ def junctions(cell, datafield):
 
                 add_label(cell, poly, cell.name, datafield, 3)
 
-#     for component in datafield.pcd.components:
-#         if isinstance(component, process.Junction):
-#             for element in cell.elements:
-#                 if isinstance(element, gdsyuna.PolygonSet):
-#                     if element.layers[0] == component.gds:
-#                         jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-#                         poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
-# 
-#                         add_label(cell, poly, cell.name, datafield)
-#                 elif isinstance(element, gdsyuna.Polygon):
-#                     if element.layers == component.gds:
-#                         jj_poly = tools.angusj(element.polygons, element.polygons, 'union')
-#                         poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
-# 
-#                         add_label(cell, poly, cell.name, datafield)
-
     jjs = datafield.pcd.atoms['jjs']
 
     get_shunt_connections(cell, jjs, datafield)
@@ -221,4 +196,4 @@ def get_ntron_layer(cell, atom, ttype):
 
 def ntrons(cell, pdd):
     print('--- flattening ' + cell.name)
-    cell.flatten(single_datatype=4)
+    cell.flatten(single_datatype=7)

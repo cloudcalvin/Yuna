@@ -1,19 +1,13 @@
-import numpy as np
 import networkx as nx
 import itertools
 import json
 import gdsyuna
-import pyclipper
 
+from yuna import tools
 from yuna import labels
-from yuna import connect
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
-from yuna import tools
-from .datafield import Label
-
 import collections as cl
 
 
@@ -50,7 +44,7 @@ class ProcessConfigData(object):
         self.atoms = atoms
 
     def add_layer(self, mtype, gds, value):
-        wd = Layer(value['name'], value['color'])
+        wd = Layer(value['name'])
 
         if 'position' in value.keys():
             wd.set_z_start(value['position'])
@@ -59,32 +53,31 @@ class ProcessConfigData(object):
         if 'wire' in value.keys():
             wd.add_contact_layer(value['wire'])
 
-        if mtype not in ['ix', 'res', 'via', 'jj', 'term']:
+        if mtype not in ['ix', 'res', 'via', 'jj', 'term', 'ntron']:
             raise TypeError("mtype `type` is not supported")
 
         assert isinstance(gds, int)
 
         self.layers[mtype][gds] = wd
 
-    def add_component(self, component):
-        """
-        Add an element to the module.
-
-        Parameters
-        ----------
-        component : object
-            The component to be inserted in the module.
-
-        Returns
-        -------
-        out : ``Module``
-            This module.
-        """
-
-        self.components.append(component)
-
-        return self
-
+    # def add_component(self, component):
+    #     """
+    #     Add an element to the module.
+    #
+    #     Parameters
+    #     ----------
+    #     component : object
+    #         The component to be inserted in the module.
+    #
+    #     Returns
+    #     -------
+    #     out : ``Module``
+    #         This module.
+    #     """
+    #
+    #     self.components.append(component)
+    #
+    #     return self
 
     # def add_wires(self):
     #     for gds, value in self.fabdata['ix'].items():
@@ -123,11 +116,10 @@ class ProcessConfigData(object):
 
 class Layer(object):
 
-    def __init__(self, name, color):
+    def __init__(self, name):
         self.name = name
         self.z_start = None
         self.height = None
-        self.color = color
         self.wires = []
 
     def set_z_start(self, num):

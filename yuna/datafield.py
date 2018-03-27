@@ -51,12 +51,10 @@ class DataField(gdsyuna.Cell):
         pcd.add_parameters(fabdata['Params'])
         pcd.add_atoms(fabdata['Atoms'])
 
-        for mtype in ['ix', 'res', 'via', 'jj', 'term']:
-            for gds, value in fabdata[mtype].items():
-                pcd.add_layer(mtype, int(gds), value)
-
-#         jj = self.add_junction_component(fabdata)
-#         pcd.add_component(jj)
+        for mtype in ['ix', 'res', 'via', 'jj', 'term', 'ntron']:
+            if mtype in fabdata:
+                for gds, value in fabdata[mtype].items():
+                    pcd.add_layer(mtype, int(gds), value)
 
         wires = {**pcd.layers['ix'],
                  **pcd.layers['res'],
@@ -79,26 +77,23 @@ class DataField(gdsyuna.Cell):
             This cell.
         """
 
-        print('--------' + str(type(element)))
-        if isinstance(element, Label):
-            self.labels.append(element)
+        if key is None:
+            raise TypeError('key cannot be None')
+
+        assert isinstance(element[0], list)
+
+        fabdata = {**self.pcd.layers['ix'],
+                   **self.pcd.layers['res'],
+                   **self.pcd.layers['term'],
+                   **self.pcd.layers['via'],
+                   **self.pcd.layers['jj'],
+                   **self.pcd.layers['ntron']}
+
+        polygon = Polygon(key, element, fabdata)
+        if key[1] in self.polygons[key[0]]:
+            self.polygons[key[0]][key[1]].append(polygon)
         else:
-            if key is None:
-                raise TypeError('key cannot be None')
-
-            assert isinstance(element[0], list)
-
-            fabdata = {**self.pcd.layers['ix'],
-                       **self.pcd.layers['res'],
-                       **self.pcd.layers['term'],
-                       **self.pcd.layers['via'],
-                       **self.pcd.layers['jj']}
-
-            polygon = Polygon(key, element, fabdata)
-            if key[1] in self.polygons[key[0]]:
-                self.polygons[key[0]][key[1]].append(polygon)
-            else:
-                self.polygons[key[0]][key[1]] = [polygon]
+            self.polygons[key[0]][key[1]] = [polygon]
 
     def parse_gdspy(self, cell):
 
@@ -141,31 +136,31 @@ class Polygon(gdsyuna.Polygon):
         return (self.points, self.layer, self.datatype)
 
 
-class Label(gdsyuna.Label):
-    _ID = 0
-
-    def __init__(self, metals, text, position, rotation=0, layer=0):
-        super(Label, self).__init__(text, position, rotation=rotation, layer=layer)
-
-        self.id = 'l{}'.format(Label._ID)
-        Label._ID += 1
-
-        # pre_label = text.split('_')[0]
-
-        # tt = ['P', 'via', 'jj', 'sht', 'gnd']
-        # if pre_label in tt:
-        #     self.type = pre_label
-        # else:
-        #     self.type = None
-        #
-        # if self.type is None:
-        #     raise TypeError("label type cannot be None")
-
-        self.metals = metals
-
-    def update_position(self, position):
-        self.position = position
-
-    def get_variables(self):
-        return (self.text, self.position, 'nw',
-                self.rotation, 0, False, self.layer)
+# class Label(gdsyuna.Label):
+#     _ID = 0
+#
+#     def __init__(self, metals, text, position, rotation=0, layer=0):
+#         super(Label, self).__init__(text, position, rotation=rotation, layer=layer)
+#
+#         self.id = 'l{}'.format(Label._ID)
+#         Label._ID += 1
+#
+#         # pre_label = text.split('_')[0]
+#
+#         # tt = ['P', 'via', 'jj', 'sht', 'gnd']
+#         # if pre_label in tt:
+#         #     self.type = pre_label
+#         # else:
+#         #     self.type = None
+#         #
+#         # if self.type is None:
+#         #     raise TypeError("label type cannot be None")
+#
+#         self.metals = metals
+#
+#     def update_position(self, position):
+#         self.position = position
+#
+#     def get_variables(self):
+#         return (self.text, self.position, 'nw',
+#                 self.rotation, 0, False, self.layer)

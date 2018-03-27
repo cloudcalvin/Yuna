@@ -7,12 +7,10 @@ import pyclipper
 
 from yuna import labels
 from yuna import connect
+from yuna import tools
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
-from yuna import tools
-from .datafield import Label
 
 import collections as cl
 

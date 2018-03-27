@@ -82,11 +82,6 @@ def grand_summon(basedir, args):
     deck.components(cell, datafield)
     deck.layers(cell, datafield)
 
-    # TODO: unittest for data correctly connect to Polygon.
-    # for poly in datafield.polygons:
-    #     if poly.data:
-    #         print(poly.data.name)
-
     # if model is True:
     #     geom = pygmsh.opencascade.Geometry()
     #
@@ -96,8 +91,6 @@ def grand_summon(basedir, args):
     #     wc = modeling.wirechain(geom, cellname, config.auron_cell, configdata)
     #
     #     tc = modeling.terminals(wc, geom, config, configdata)
-
-    print(datafield)
 
     datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 

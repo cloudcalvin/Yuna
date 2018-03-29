@@ -59,7 +59,8 @@ def update_wirechain(geom, poly_list, wirechain, datafield):
                 for points in all_points:
                     pp = [[p[0], p[1], p[2] + z] for p in points]
                     polyname = str(poly.layer) + '_' + str(poly.datatype) + '_' + str(i)
-                    gp = geom.add_polygon(pp, lcar=0.01, make_surface=True)
+                    print(pp)
+                    gp = geom.add_polygon(pp, lcar=0.1, make_surface=True)
                     geom.add_physical_surface(gp.surface, label=polyname)
 
                     if wirechain:
@@ -118,15 +119,34 @@ def wirechain(geom, datafield):
 
     extruded_wirechain = dict()
 
-    for gds in datafield.wires.keys():
-        wirechain = dict()
+    for gds, layer in datafield.wires.items():
+        if gds == 6:
+            wirechain = dict()
 
-        for datatype, poly_list in datafield.polygons[gds].items():
-            update_wirechain(geom, poly_list, wirechain, datafield)
+            for datatype, poly_list in datafield.mask[gds].items():
+                update_wirechain(geom, poly_list, wirechain, datafield)
 
-        for key, value in wirechain.items():
-            merge = geom.boolean_union(value)
-            ex = geom.extrude(merge, [0, 0, key.width])
+            for key, value in wirechain.items():
+                # merge = geom.boolean_union(value)
+                # ex = geom.extrude(merge, [0, 0, key.width])
+
+                for v1 in value:
+                    surface_base = SurfaceBase(id0=v1.id, is_list=False)
+                    ex = geom.extrude(surface_base, [0, 0, key.width])
+
+    # for gds in datafield.nonwires.keys():
+    #     wirechain = dict()
+    #
+    #     for datatype, poly_list in datafield.mask[gds].items():
+    #         update_wirechain(geom, poly_list, wirechain, datafield)
+    #
+    #     for key, value in wirechain.items():
+    #         # merge = geom.boolean_union(value)
+    #         # ex = geom.extrude(merge, [0, 0, key.width])
+    #
+    #         for v1 in value:
+    #             surface_base = SurfaceBase(id0=v1.id, is_list=False)
+    #             ex = geom.extrude(surface_base, [0, 0, key.width])
 
     # for gds, layer in jsondata['Layers'].items():
     #     if layer['name'] not in ['J2', 'I0', 'I1BU']:

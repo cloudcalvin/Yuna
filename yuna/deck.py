@@ -193,17 +193,29 @@ def mask(cell, datafield):
     poly = cell.get_polygons(True)
 
     for key, layer in poly.items():
-        cc_poly = list()
-        for l1 in layer:
-            if pyclipper.Orientation(l1) is False:
-                cc_poly.append(pyclipper.ReversePath(l1))
-            else:
-                cc_poly.append(l1)
+        if key == (6, 0):
+            cc_poly = list()
+            for l1 in layer:
+                if pyclipper.Orientation(l1) is False:
+                    reverse_poly =  pyclipper.ReversePath(l1)
+                    offset_poly = tools.angusj_new_offset(reverse_poly, 'up')
+                    print(offset_poly[0][0][0])
+                    for mp in offset_poly:
+                        cc_poly.append(mp)
+                else:
+                    offset_poly = tools.angusj_new_offset(l1, 'up')
+                    for mp in offset_poly:
+                        cc_poly.append(mp)
 
-        upoly = tools.angusj(cc_poly, cc_poly, 'union')
+            # print(cc_poly)
+            upoly = tools.angusj(cc_poly, cc_poly, 'union')
+            # upoly = tools.angusj(layer, layer, 'union')
 
-        if not isinstance(upoly[0][0], list):
-            raise TypeError("poly must be a 3D list")
+            if not isinstance(upoly[0][0], list):
+                raise TypeError("poly must be a 3D list")
 
-        for pp in upoly:
-            myCell.add(gdsyuna.Polygon(pp, key[0], verbose=False))
+            for i, pp in enumerate(upoly):
+                # if len(pp) == 6:
+                    # print(pp)
+                datafield.add_mask(pp, key)
+                myCell.add(gdsyuna.Polygon(pp, key[0], verbose=False))

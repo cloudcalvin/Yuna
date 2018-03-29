@@ -88,14 +88,19 @@ def grand_summon(basedir, args):
     if model is True:
         geom = pygmsh.opencascade.Geometry()
 
-        geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.01;')
-        geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.01;')
+        geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
+        geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.1;')
+
+        geom.add_raw_code('Mesh.Algorithm = 100;')
+        geom.add_raw_code('Coherence Mesh;')
 
         wc = modeling.wirechain(geom, datafield)
 
     #     tc = modeling.terminals(wc, geom, config, configdata)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
+
+        # meshio.write('3D.vtu', *meshdata)
 
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)

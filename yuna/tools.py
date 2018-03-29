@@ -150,15 +150,34 @@ def angusj_offset(layer, size):
     solution = []
 
     for poly in layer:
+        print(layer)
+        PATH_SUBJ_1 = [[180, 200], [260, 200], [260, 150], [180, 150]]
         pco = pyclipper.PyclipperOffset()
-        pco.AddPath(poly, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
+        pco.AddPath(layer, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
         if size == 'down':
             solution.append(pco.Execute(-10000)[0])
             # solution.append(pco.Execute(-1000)[0])
         elif size == 'up':
-            solution.append(pco.Execute(10)[0])
+            # solution.append(pco.Execute2(10.0))
+            solution = pco.Execute(10.0)
+            # solution = pco.Execute2(pyclipper.CT_INTERSECTION, pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO)
         elif size == 'label':
             solution.append(pco.Execute(2000)[0])
 
     return solution
+
+
+def angusj_new_offset(layer, size):
+    """
+    Apply polygon offsetting using Angusj.
+    Either blow up polygons or blow it down.
+    """
+
+    pco = pyclipper.PyclipperOffset()
+    pco.AddPath(layer, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
+
+    if size == 'up':
+        return pco.Execute(10e1)
+    else:
+        raise ValueError('please select the Offset function to use')

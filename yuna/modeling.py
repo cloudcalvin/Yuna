@@ -37,7 +37,6 @@ class Sideconnect(gdsyuna.Polygon):
 
 def update_wirechain(geom, poly_list, wirechain, datafield):
     """
-
     Parameters
     ----------
     geom : object

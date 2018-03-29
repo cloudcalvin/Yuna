@@ -54,8 +54,6 @@ def components(cell, datafield):
             datafield.labels[lbl.text]['labels'] = []
             datafield.labels[lbl.text]['labels'].append(lbl)
 
-    print(datafield.labels)
-
 
 def add_vias(gds, datatype, datafield, poly, metals):
     dkey = (gds, datatype)
@@ -66,7 +64,6 @@ def add_vias(gds, datatype, datafield, poly, metals):
             datafield.add(pp, dkey)
 
         metals = tools.angusj(components, metals, 'difference')
-
     return metals
 
 
@@ -79,7 +76,6 @@ def add_junctions(gds, datatype, datafield, poly, metals):
             datafield.add(pp, dkey)
 
         metals = tools.angusj(components, metals, 'difference')
-
     return metals
 
 
@@ -126,28 +122,88 @@ def layers(cell, datafield):
 
     poly = cell_layout.get_polygons(True)
 
+    # for gds, layer in datafield.nonwires.items():
+    #     for i in [1, 3, 7]:
+    #         key = (gds, i)
+    #         if key in poly:
+    #             metals = tools.angusj(poly[key], poly[key], 'union')
+    #
+    #             for pp in metals:
+    #                 datafield.add(pp, key)
+
     for gds, layer in datafield.wires.items():
-        key = (gds, 0)
-        if key in poly:
+        for i in [0, 1, 3, 7]:
+            key = (gds, i)
+            if key in poly:
 
-            if not isinstance(poly[key][0][0], np.ndarray):
-                raise TypeError("poly must be a 3D list")
+                if not isinstance(poly[key][0][0], np.ndarray):
+                    raise TypeError("poly must be a 3D list")
 
-            metals = tools.angusj(poly[key], poly[key], 'union')
+                metals = tools.angusj(poly[key], poly[key], 'union')
 
-            metals = add_vias(gds, 1, datafield, poly, metals)
-            metals = add_junctions(gds, 3, datafield, poly, metals)
-            metals = add_ntrons(gds, 7, datafield, poly, metals)
+                if i == 1:
+                    metals = add_vias(gds, 1, datafield, poly, metals)
+                elif i == 3:
+                    metals = add_junctions(gds, 3, datafield, poly, metals)
+                elif i == 7:
+                    metals = add_ntrons(gds, 7, datafield, poly, metals)
 
-            # for datatype in [1, 3]:
-            #     dkey = (gds, datatype)
-            #     if dkey in poly:
-            #         components = tools.angusj(poly[dkey], poly[dkey], 'union')
-            #
-            #         for pp in components:
-            #             datafield.add(pp, dkey)
-            #
-            #         metals = tools.angusj(components, metals, 'difference')
+                # for datatype in [1, 3]:
+                #     dkey = (gds, datatype)
+                #     if dkey in poly:
+                #         components = tools.angusj(poly[dkey], poly[dkey], 'union')
+                #
+                #         for pp in components:
+                #             datafield.add(pp, dkey)
+                #
+                #         metals = tools.angusj(components, metals, 'difference')
 
-            for pp in metals:
-                datafield.add(pp, key)
+                for pp in metals:
+                    datafield.add(pp, key)
+
+
+def mask(cell, datafield):
+    """
+    The layer polygons for each gdsnumber is created in four phases:
+
+    1. Merge all the normal conducting wires.
+    2. Merge the polygons inside each component.
+    3. Find the difference between the conducting polygons
+       and the component polygons.
+    4. Add these polygons to the datafield object.
+
+    Parameters
+    ----------
+    cell_layout : gdspy Cell
+        The original layout cell flattened
+    datafield : gdspy Cell
+        The cell containing all the layer polygons merged
+
+    Arguments
+    ---------
+    metals : list
+        A list containing the points of the merged polygons.
+    components : list
+        The merged polygons of the specific layer in the components
+        that corresponds to the current datatype value.
+    """
+
+    myCell = gdsyuna.Cell('myCell')
+
+    poly = cell.get_polygons(True)
+
+    for key, layer in poly.items():
+        cc_poly = list()
+        for l1 in layer:
+            if pyclipper.Orientation(l1) is False:
+                cc_poly.append(pyclipper.ReversePath(l1))
+            else:
+                cc_poly.append(l1)
+
+        upoly = tools.angusj(cc_poly, cc_poly, 'union')
+
+        if not isinstance(upoly[0][0], list):
+            raise TypeError("poly must be a 3D list")
+
+        for pp in upoly:
+            myCell.add(gdsyuna.Polygon(pp, key[0], verbose=False))

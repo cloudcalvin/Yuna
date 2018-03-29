@@ -1,4 +1,5 @@
 import gdsyuna
+import pprint
 import yuna
 import numpy as np
 import os, sys, json
@@ -8,12 +9,12 @@ from yuna import tools
 from yuna import process
 
 
-class DataField(gdsyuna.Cell):
+class DataField(object):
 
     def __init__(self, name, pcf):
         self.name = name
 
-        self.pcd, self.wires = self.read_config(pcf)
+        self.pcd, self.wires, self.nonwires = self.read_config(pcf)
 
         self.polygons = cl.defaultdict(dict)
         self.labels = cl.defaultdict(dict)
@@ -60,7 +61,11 @@ class DataField(gdsyuna.Cell):
                  **pcd.layers['res'],
                  **pcd.layers['term']}
 
-        return pcd, wires
+        nonwires = {**pcd.layers['via'],
+                    **pcd.layers['jj'],
+                    **pcd.layers['ntron']}
+
+        return pcd, wires, nonwires
 
     def add(self, element, key=None):
         """
@@ -90,6 +95,7 @@ class DataField(gdsyuna.Cell):
                    **self.pcd.layers['ntron']}
 
         polygon = Polygon(key, element, fabdata)
+
         if key[1] in self.polygons[key[0]]:
             self.polygons[key[0]][key[1]].append(polygon)
         else:
@@ -102,6 +108,19 @@ class DataField(gdsyuna.Cell):
                 for pp in poly:
                     polygon = gdsyuna.Polygon(*pp.get_variables())
                     cell.add(polygon)
+
+        # for i in self.nonwires:
+        #     for key, poly in self.mask[i].items():
+        #         for pp in poly:
+        #             polygon = gdsyuna.Polygon(*pp.get_variables())
+        #             cell.add(polygon)
+
+        # for tt, value in self.pcd.layers.items():
+        #     for i, value2 in value.items():
+        #         for key, poly in self.mask[i].items():
+        #             for pp in poly:
+        #                 polygon = gdsyuna.Polygon(*pp.get_variables())
+        #                 cell.add(polygon)
 
         for lbl in self.labels:
             for key, value in self.labels.items():

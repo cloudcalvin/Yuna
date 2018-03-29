@@ -74,10 +74,16 @@ def grand_summon(basedir, args):
     gdsii.read_gds(gds_file, unit=1.0e-12)
     cell = gdsii.extract(cellname)
 
+    cell_origin = cell.copy('Original', deep_copy=True)
+    cell_origin.flatten()
+
     datafield = DataField('Hypres', config_file)
 
     deck.components(cell, datafield)
     deck.layers(cell, datafield)
+    deck.mask(cell_origin, datafield)
+
+    datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 
     if model is True:
         geom = pygmsh.opencascade.Geometry()
@@ -90,8 +96,6 @@ def grand_summon(basedir, args):
     #     tc = modeling.terminals(wc, geom, config, configdata)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
-
-    datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)

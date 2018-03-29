@@ -2,7 +2,6 @@ from __future__ import print_function # lace this in setup.
 from termcolor import colored
 from collections import defaultdict
 
-
 import os
 import sys
 import json
@@ -11,7 +10,6 @@ import pyclipper
 import numpy as np
 
 from yuna import process
-
 
 
 def print_cellrefs(cell):

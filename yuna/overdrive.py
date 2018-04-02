@@ -14,6 +14,7 @@ Options:
 
 
 import os
+import meshio
 import pygmsh
 import gdsyuna
 
@@ -94,13 +95,22 @@ def grand_summon(basedir, args):
         geom.add_raw_code('Mesh.Algorithm = 100;')
         geom.add_raw_code('Coherence Mesh;')
 
-        wc = modeling.wirechain(geom, datafield)
+        extruded = dict()
+        for gds, layer in datafield.wires.items():
+            if gds in [42, 44, 45]:
+                modeling.wirechain(geom, gds, layer, datafield, extruded)
+            
+        for gds, layer in datafield.nonwires.items():
+            if gds in [40]:
+                modeling.wirechain(geom, gds, layer, datafield, extruded)
 
-    #     tc = modeling.terminals(wc, geom, config, configdata)
+        # tc = modeling.terminals(wc, geom, config, configdata)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
-
-        # meshio.write('3D.vtu', *meshdata)
+        
+        meshio.write('3D.vtu', *meshdata)
+        
+        tools.cyan_print('3D modeling setup finished\n')
 
     gdsyuna.LayoutViewer()
     gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)

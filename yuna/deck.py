@@ -122,15 +122,6 @@ def layers(cell, datafield):
 
     poly = cell_layout.get_polygons(True)
 
-    # for gds, layer in datafield.nonwires.items():
-    #     for i in [1, 3, 7]:
-    #         key = (gds, i)
-    #         if key in poly:
-    #             metals = tools.angusj(poly[key], poly[key], 'union')
-    #
-    #             for pp in metals:
-    #                 datafield.add(pp, key)
-
     for gds, layer in datafield.wires.items():
         for i in [0, 1, 3, 7]:
             key = (gds, i)
@@ -147,16 +138,6 @@ def layers(cell, datafield):
                     metals = add_junctions(gds, 3, datafield, poly, metals)
                 elif i == 7:
                     metals = add_ntrons(gds, 7, datafield, poly, metals)
-
-                # for datatype in [1, 3]:
-                #     dkey = (gds, datatype)
-                #     if dkey in poly:
-                #         components = tools.angusj(poly[dkey], poly[dkey], 'union')
-                #
-                #         for pp in components:
-                #             datafield.add(pp, dkey)
-                #
-                #         metals = tools.angusj(components, metals, 'difference')
 
                 for pp in metals:
                     datafield.add(pp, key)
@@ -193,29 +174,23 @@ def mask(cell, datafield):
     poly = cell.get_polygons(True)
 
     for key, layer in poly.items():
-        if key == (6, 0):
+        print(key)
+        if key[0] == 45:
             cc_poly = list()
             for l1 in layer:
                 if pyclipper.Orientation(l1) is False:
-                    reverse_poly =  pyclipper.ReversePath(l1)
-                    offset_poly = tools.angusj_new_offset(reverse_poly, 'up')
-                    print(offset_poly[0][0][0])
-                    for mp in offset_poly:
-                        cc_poly.append(mp)
+                    reverse_poly = pyclipper.ReversePath(l1)
+                    cc_poly.append(reverse_poly)
                 else:
-                    offset_poly = tools.angusj_new_offset(l1, 'up')
-                    for mp in offset_poly:
-                        cc_poly.append(mp)
-
-            # print(cc_poly)
-            upoly = tools.angusj(cc_poly, cc_poly, 'union')
-            # upoly = tools.angusj(layer, layer, 'union')
+                    cc_poly.append(l1)
+                    
+            union = tools.angusj(subj=cc_poly, method='union')
+            upoly = pyclipper.CleanPolygons(union)
 
             if not isinstance(upoly[0][0], list):
                 raise TypeError("poly must be a 3D list")
 
             for i, pp in enumerate(upoly):
-                # if len(pp) == 6:
-                    # print(pp)
                 datafield.add_mask(pp, key)
                 myCell.add(gdsyuna.Polygon(pp, key[0], verbose=False))
+            

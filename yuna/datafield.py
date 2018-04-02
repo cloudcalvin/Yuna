@@ -2,7 +2,9 @@ import gdsyuna
 import pprint
 import yuna
 import numpy as np
-import os, sys, json
+import os
+import sys
+import json
 import collections as cl
 
 from yuna import tools

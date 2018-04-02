@@ -109,12 +109,16 @@ def convert_node_to_3d(wire, z_start):
     return polygons
 
 
-def angusj(clip, subj, method):
+def angusj(subj, clip=None, method=None):
     """ Angusj clipping library """
 
     pc = pyclipper.Pyclipper()
+    
+    setattr(pc, 'StrictlySimple', True)
 
-    pc.AddPaths(clip, pyclipper.PT_CLIP, True)
+    if clip is not None:
+        pc.AddPaths(clip, pyclipper.PT_CLIP, True)
+        
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
 
     subj = None
@@ -134,6 +138,8 @@ def angusj(clip, subj, method):
         subj = pc.Execute(pyclipper.CT_XOR,
                           pyclipper.PFT_NONZERO,
                           pyclipper.PFT_NONZERO)
+    else:
+        raise ValueError('please specify a clipping method')
 
     # if not isinstance(subj[0][0], list):
     #     raise TypeError("clippers subj must be a 3D list")

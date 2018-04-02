@@ -57,16 +57,18 @@ def update_wirechain(geom, poly_list, wirechain, datafield):
 
             for all_points in poly.get_points():
                 for points in all_points:
-                    pp = [[p[0], p[1], p[2] + z] for p in points]
                     polyname = str(poly.layer) + '_' + str(poly.datatype) + '_' + str(i)
-                    print(pp)
+                    
+                    pp = [[p[0], p[1], p[2] + z] for p in points]
                     gp = geom.add_polygon(pp, lcar=0.1, make_surface=True)
-                    geom.add_physical_surface(gp.surface, label=polyname)
+                    
+                    Surface = namedtuple('Surface', ['surface', 'label'])
+                    ss = Surface(surface=gp.surface, label=polyname)
 
                     if wirechain:
-                        wirechain[ll].append(gp.surface)
+                        wirechain[ll].append(ss)
                     else:
-                        wirechain[ll] = [gp.surface]
+                        wirechain[ll] = [ss]
 
 
 def geom_extrude_wirechain(layer, gds, layer_polygons, geom):
@@ -99,7 +101,7 @@ def geom_extrude_wirechain(layer, gds, layer_polygons, geom):
     return extruded
 
 
-def wirechain(geom, datafield):
+def wirechain(geom, gds, layer, datafield, extruded):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -117,49 +119,21 @@ def wirechain(geom, datafield):
         Process configuration data from .json file
     """
 
-    extruded_wirechain = dict()
+    wirechain = dict()
 
-    for gds, layer in datafield.wires.items():
-        if gds == 6:
-            wirechain = dict()
+    if gds in datafield.mask:
+        for datatype, poly_list in datafield.mask[gds].items():
+            update_wirechain(geom, poly_list, wirechain, datafield)
 
-            for datatype, poly_list in datafield.mask[gds].items():
-                update_wirechain(geom, poly_list, wirechain, datafield)
-
-            for key, value in wirechain.items():
-                # merge = geom.boolean_union(value)
-                # ex = geom.extrude(merge, [0, 0, key.width])
-
-                for v1 in value:
-                    surface_base = SurfaceBase(id0=v1.id, is_list=False)
-                    ex = geom.extrude(surface_base, [0, 0, key.width])
-
-    # for gds in datafield.nonwires.keys():
-    #     wirechain = dict()
-    #
-    #     for datatype, poly_list in datafield.mask[gds].items():
-    #         update_wirechain(geom, poly_list, wirechain, datafield)
-    #
-    #     for key, value in wirechain.items():
-    #         # merge = geom.boolean_union(value)
-    #         # ex = geom.extrude(merge, [0, 0, key.width])
-    #
-    #         for v1 in value:
-    #             surface_base = SurfaceBase(id0=v1.id, is_list=False)
-    #             ex = geom.extrude(surface_base, [0, 0, key.width])
-
-    # for gds, layer in jsondata['Layers'].items():
-    #     if layer['name'] not in ['J2', 'I0', 'I1BU']:
-    #         if (int(gds), 0) in cell_wirechain.get_polygons(True):
-    #             tools.green_print('Constructing layer: ' + layer['name'])
-    #
-    #             layer_polygons = cell_wirechain.get_polygons(True)[(int(gds), 0)]
-    #             extruded_wirechain[int(gds)] = geom_extrude_wirechain(layer, int(gds), layer_polygons, geom)
-
-    tools.cyan_print('3D modeling setup finished\n')
-
-    return extruded_wirechain
-
+        for key, surfaces in wirechain.items():
+            for ss in surfaces:
+                ex = geom.extrude(ss.surface, [0, 0, key.width])
+                
+                geom.add_physical_surface(ss.surface, ss.label)
+                geom.add_physical_volume(ex[1], ss.label)
+                
+                extruded[gds] = ex
+                
 
 def terminals(extruded_wirechain, geom, config, jsondata):
     """

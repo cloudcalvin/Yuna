@@ -11,6 +11,9 @@ from yuna import tools
 from yuna import process
 
 
+nm = 10e-9
+
+
 class DataField(object):
 
     def __init__(self, name, pcf):
@@ -71,7 +74,7 @@ class DataField(object):
 
         return pcd, wires, nonwires
 
-    def add_mask(self, element, key=None):
+    def add_mask(self, element, key=None, holes=None):
         """
         Add a new element or list of elements to this cell.
 
@@ -99,7 +102,7 @@ class DataField(object):
                    **self.pcd.layers['jj'],
                    **self.pcd.layers['ntron']}
 
-        polygon = Polygon(key, element, fabdata)
+        polygon = Polygon(key, element, fabdata, holes)
 
         if key[1] in self.mask[key[0]]:
             self.mask[key[0]][key[1]].append(polygon)
@@ -169,10 +172,17 @@ class DataField(object):
 
 
 class Polygon(gdsyuna.Polygon):
+    """
+    Holes can only be a list of points, since it is only a hole
+    and has no other properties.
+    """
+
     _ID = 0
 
-    def __init__(self, key, points, fabdata):
+    def __init__(self, key, points, fabdata, holes=None):
         super(Polygon, self).__init__(points, *key, verbose=False)
+
+        self.holes = holes
 
         self.id = 'p{}'.format(Polygon._ID)
         Polygon._ID += 1
@@ -182,14 +192,11 @@ class Polygon(gdsyuna.Polygon):
         if self.data is None:
             raise ValueError('Polygon data cannot be None.')
 
-    def get_points(self, width=0):
-        polygons = []
-        for pl in [self.points]:
-            poly = [[float(y*10e-9) for y in x] for x in pl]
-            for row in poly:
-                row.append(width)
-            polygons.append(poly)
-        return [polygons]
+    def get_holes(self, z):
+        return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
+
+    def get_points(self, z):
+        return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
 
     def get_variables(self):
         return (self.points, self.layer, self.datatype)

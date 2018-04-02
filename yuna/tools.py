@@ -113,12 +113,12 @@ def angusj(subj, clip=None, method=None):
     """ Angusj clipping library """
 
     pc = pyclipper.Pyclipper()
-    
+
     setattr(pc, 'StrictlySimple', True)
 
     if clip is not None:
         pc.AddPaths(clip, pyclipper.PT_CLIP, True)
-        
+
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
 
     subj = None

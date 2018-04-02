@@ -99,7 +99,7 @@ def grand_summon(basedir, args):
         for gds, layer in datafield.wires.items():
             if gds in [42, 44, 45]:
                 modeling.wirechain(geom, gds, layer, datafield, extruded)
-            
+
         for gds, layer in datafield.nonwires.items():
             if gds in [40]:
                 modeling.wirechain(geom, gds, layer, datafield, extruded)
@@ -107,9 +107,9 @@ def grand_summon(basedir, args):
         # tc = modeling.terminals(wc, geom, config, configdata)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
-        
+
         meshio.write('3D.vtu', *meshdata)
-        
+
         tools.cyan_print('3D modeling setup finished\n')
 
     gdsyuna.LayoutViewer()

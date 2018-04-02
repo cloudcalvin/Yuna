@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 import collections as cl
+from collections import namedtuple
 
 
 def components(cell, datafield):
@@ -174,23 +175,68 @@ def mask(cell, datafield):
     poly = cell.get_polygons(True)
 
     for key, layer in poly.items():
-        print(key)
-        if key[0] == 45:
-            cc_poly = list()
-            for l1 in layer:
-                if pyclipper.Orientation(l1) is False:
-                    reverse_poly = pyclipper.ReversePath(l1)
-                    cc_poly.append(reverse_poly)
+        cc_poly = list()
+
+        for l1 in layer:
+            if pyclipper.Orientation(l1) is False:
+                reverse_poly = pyclipper.ReversePath(l1)
+                cc_poly.append(reverse_poly)
+            else:
+                cc_poly.append(l1)
+
+        union = tools.angusj(subj=cc_poly, method='union')
+        upoly = pyclipper.CleanPolygons(union)
+
+        if not isinstance(upoly[0][0], list):
+            raise TypeError("poly must be a 3D list")
+
+        create_mask(key, upoly, datafield, myCell)
+
+
+def create_mask(key, union, datafield, myCell):
+
+    named_layers = cl.defaultdict(dict)
+
+    for l1 in union:
+        Polygon = namedtuple('Polygon', ['area', 'points'])
+        pp = Polygon(area=pyclipper.Area(l1), points=l1)
+
+        if pp.area < 0:
+            if 'holes' in named_layers:
+                named_layers['holes'].append(pp)
+            else:
+                named_layers['holes'] = [pp]
+        elif pp.area > 0:
+            if 'polygon' in named_layers:
+                named_layers['polygon'].append(pp)
+            else:
+                named_layers['polygon'] = [pp]
+        else:
+            raise ValueError('polygon area cannot be zero')
+
+    # print('\n--- holes --------------')
+    #
+    # for hole in named_layers['holes']:
+    #     print(hole)
+    #
+    # print('\n--- polygons --------------')
+    #
+    # for poly in named_layers['polygon']:
+    #     print(poly)
+
+    for poly in named_layers['polygon']:
+        for hole in named_layers['holes']:
+            if abs(hole.area) < abs(poly.area):
+
+                ishole = True
+                for point in hole.points:
+                    if pyclipper.PointInPolygon(point, poly.points) != 1:
+                        ishole = False
+
+                if ishole:
+                    datafield.add_mask(poly.points, key, hole.points)
+                    myCell.add(gdsyuna.Polygon(hole.points, layer=81))
                 else:
-                    cc_poly.append(l1)
-                    
-            union = tools.angusj(subj=cc_poly, method='union')
-            upoly = pyclipper.CleanPolygons(union)
+                    datafield.add_mask(poly.points, key)
 
-            if not isinstance(upoly[0][0], list):
-                raise TypeError("poly must be a 3D list")
-
-            for i, pp in enumerate(upoly):
-                datafield.add_mask(pp, key)
-                myCell.add(gdsyuna.Polygon(pp, key[0], verbose=False))
-            
+        myCell.add(gdsyuna.Polygon(poly.points, key[0], verbose=False))

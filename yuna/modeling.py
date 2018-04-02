@@ -55,20 +55,26 @@ def update_wirechain(geom, poly_list, wirechain, datafield):
             Layer = namedtuple('Layer', ['width', 'height'])
             ll = Layer(width=h, height=z)
 
-            for all_points in poly.get_points():
-                for points in all_points:
-                    polyname = str(poly.layer) + '_' + str(poly.datatype) + '_' + str(i)
-                    
-                    pp = [[p[0], p[1], p[2] + z] for p in points]
-                    gp = geom.add_polygon(pp, lcar=0.1, make_surface=True)
-                    
-                    Surface = namedtuple('Surface', ['surface', 'label'])
-                    ss = Surface(surface=gp.surface, label=polyname)
+            polyname = str(poly.layer) + '_' + str(poly.datatype) + '_' + str(i)
 
-                    if wirechain:
-                        wirechain[ll].append(ss)
-                    else:
-                        wirechain[ll] = [ss]
+            pp = poly.get_points(z)
+
+            if poly.holes:
+                print('     .hole detected')
+
+                hh = poly.get_holes(z)
+                mhole = geom.add_polygon(hh, lcar=0.1, make_surface=False)
+                gp = geom.add_polygon(pp, lcar=0.1, holes=[mhole.line_loop], make_surface=True)
+            else:
+                gp = geom.add_polygon(pp, lcar=0.1, make_surface=True)
+
+            Surface = namedtuple('Surface', ['surface', 'label'])
+            ss = Surface(surface=gp.surface, label=polyname)
+
+            if wirechain:
+                wirechain[ll].append(ss)
+            else:
+                wirechain[ll] = [ss]
 
 
 def geom_extrude_wirechain(layer, gds, layer_polygons, geom):
@@ -114,7 +120,7 @@ def wirechain(geom, gds, layer, datafield, extruded):
     cellname : string
         Name of the cell that has to be extracted
     cell_wirechain : Cell
-        GDSpy library cell object after polygon manipulations
+        gdspy library cell object after polygon manipulations
     jsondata : dict()
         Process configuration data from .json file
     """
@@ -128,12 +134,12 @@ def wirechain(geom, gds, layer, datafield, extruded):
         for key, surfaces in wirechain.items():
             for ss in surfaces:
                 ex = geom.extrude(ss.surface, [0, 0, key.width])
-                
+
                 geom.add_physical_surface(ss.surface, ss.label)
                 geom.add_physical_volume(ex[1], ss.label)
-                
+
                 extruded[gds] = ex
-                
+
 
 def terminals(extruded_wirechain, geom, config, jsondata):
     """

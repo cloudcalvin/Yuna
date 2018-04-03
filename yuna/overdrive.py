@@ -28,6 +28,40 @@ from yuna import deck
 from .datafield import DataField
 
 
+# def test_all():
+#     geom = pygmsh.opencascade.Geometry(
+#         characteristic_length_min=0.1,
+#         characteristic_length_max=0.1,
+#         )
+#
+#     rectangle = geom.add_rectangle([-1.0, -1.0, 0.0], 2.0, 2.0)
+#     disk1 = geom.add_disk([-1.0, 0.0, 0.0], 0.5)
+#     disk2 = geom.add_disk([+1.0, 0.0, 0.0], 0.5)
+#     union = geom.boolean_union([rectangle, disk1, disk2])
+#
+#     disk3 = geom.add_disk([0.0, -1.0, 0.0], 0.5)
+#     disk4 = geom.add_disk([0.0, +1.0, 0.0], 0.5)
+#     geom.boolean_difference([union], [disk3, disk4])
+#
+#     ref = 4.0
+#     union = pygmsh.generate_mesh(geom, geo_filename='differnce.geo')
+#
+#
+# def test_union():
+#     geom = pygmsh.opencascade.Geometry(
+#         characteristic_length_min=0.1,
+#         characteristic_length_max=0.1,
+#         )
+#
+#     rectangle = geom.add_rectangle([-1.0, -1.0, 0.0], 2.0, 2.0)
+#     disk_w = geom.add_disk([-1.0, 0.0, 0.0], 0.5)
+#     disk_e = geom.add_disk([+1.0, 0.0, 0.0], 0.5)
+#
+#     frags = geom.boolean_fragments([rectangle], [disk_w, disk_e])
+#
+#     union = pygmsh.generate_mesh(geom, geo_filename='union.geo')
+
+
 def grand_summon(basedir, args):
     """
     Read in the layers from the GDS file,
@@ -86,6 +120,9 @@ def grand_summon(basedir, args):
 
     datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 
+    # test_union()
+    # test_all()
+
     if model is True:
         geom = pygmsh.opencascade.Geometry()
 
@@ -96,18 +133,20 @@ def grand_summon(basedir, args):
         geom.add_raw_code('Coherence Mesh;')
 
         extruded = dict()
-        for gds, layer in datafield.wires.items():
-            if gds in [42, 44, 45]:
-                modeling.wirechain(geom, gds, layer, datafield, extruded)
 
-        for gds, layer in datafield.nonwires.items():
-            if gds in [40]:
-                modeling.wirechain(geom, gds, layer, datafield, extruded)
+        # TODO: Fix the nTron fuckup.
+        mask_layers = {**datafield.pcd.layers['ix'],
+                       **datafield.pcd.layers['res'],
+                       **datafield.pcd.layers['term'],
+                       **datafield.pcd.layers['via'],
+                       **datafield.pcd.layers['jj']}
+
+        for gds, layer in mask_layers.items():
+            modeling.wirechain(geom, gds, layer, datafield, extruded)
 
         # tc = modeling.terminals(wc, geom, config, configdata)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
-
         meshio.write('3D.vtu', *meshdata)
 
         tools.cyan_print('3D modeling setup finished\n')

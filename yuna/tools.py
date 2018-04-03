@@ -78,25 +78,6 @@ def list_layout_cells(gds):
     print('')
 
 
-def is_layer_active(Layers, atom):
-    all_layers = True
-    for layer in atom['check']:
-        if Layers[layer]['active'] == 'False':
-            all_layers = False
-    return all_layers
-
-
-def make_active(Layers, layer):
-    """
-        This function changes the 'active' state of
-        the layer in the 'Layers' object in the
-        config.json file.
-    """
-
-    if layer in Layers:
-        Layers[layer]['active'] = True
-
-
 def convert_node_to_3d(wire, z_start):
     layer = np.array(wire).tolist()
 
@@ -141,9 +122,6 @@ def angusj(subj, clip=None, method=None):
     else:
         raise ValueError('please specify a clipping method')
 
-    # if not isinstance(subj[0][0], list):
-    #     raise TypeError("clippers subj must be a 3D list")
-
     return subj
 
 
@@ -156,34 +134,24 @@ def angusj_offset(layer, size):
     solution = []
 
     for poly in layer:
-        print(layer)
-        PATH_SUBJ_1 = [[180, 200], [260, 200], [260, 150], [180, 150]]
         pco = pyclipper.PyclipperOffset()
         pco.AddPath(layer, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
         if size == 'down':
             solution.append(pco.Execute(-10000)[0])
-            # solution.append(pco.Execute(-1000)[0])
         elif size == 'up':
-            # solution.append(pco.Execute2(10.0))
             solution = pco.Execute(10.0)
-            # solution = pco.Execute2(pyclipper.CT_INTERSECTION, pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO)
         elif size == 'label':
             solution.append(pco.Execute(2000)[0])
+        else:
+            raise ValueError('please select the Offset function to use')
 
     return solution
 
 
-def angusj_new_offset(layer, size):
-    """
-    Apply polygon offsetting using Angusj.
-    Either blow up polygons or blow it down.
-    """
-
-    pco = pyclipper.PyclipperOffset()
-    pco.AddPath(layer, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
-
-    if size == 'up':
-        return pco.Execute(10e1)
-    else:
-        raise ValueError('please select the Offset function to use')
+def is_nested_polygons(hole, poly):
+    ishole = True
+    for point in hole.points:
+        if pyclipper.PointInPolygon(point, poly.points) != 1:
+            ishole = False
+    return ishole

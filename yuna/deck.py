@@ -61,7 +61,7 @@ def add_vias(key, datafield, poly, metals):
 
     for pp in components:
         datafield.add(pp, key)
-        
+
     return tools.angusj(metals, components, 'difference')
 
 
@@ -116,18 +116,10 @@ def layers(cell, datafield):
     poly = cell_layout.get_polygons(True)
 
     for gds, layer in datafield.wires.items():
-        # if gds == 6:
-        metals = list()
-        
-        k1 = (gds, 0)
-        if k1 in poly:
 
-            if not isinstance(poly[k1][0][0], np.ndarray):
-                raise TypeError("poly must be a 3D list")
+        if (gds, 0) in poly:
+            metals = merge_metal_layers(poly[(gds, 0)])
 
-            metals = tools.angusj(poly[k1], poly[k1], 'union')
-        
-        if metals:
             for i in [1, 3, 7]:
                 key = (gds, i)
                 if key in poly:
@@ -138,8 +130,8 @@ def layers(cell, datafield):
                     elif i == 7:
                         metals = add_ntrons(key, datafield, poly, metals)
 
-        for pp in metals:
-            datafield.add(pp, k1)
+            for pp in metals:
+                datafield.add(pp, (gds, 0))
 
 
 def mask(cell, datafield):
@@ -172,23 +164,12 @@ def mask(cell, datafield):
 
     poly = cell.get_polygons(True)
 
-    for key, layer in poly.items():
-        cc_poly = list()
+    mask_layers = {**datafield.wires, **datafield.nonwires}
 
-        for l1 in layer:
-            if pyclipper.Orientation(l1) is False:
-                reverse_poly = pyclipper.ReversePath(l1)
-                cc_poly.append(reverse_poly)
-            else:
-                cc_poly.append(l1)
-
-        union = tools.angusj(subj=cc_poly, method='union')
-        upoly = pyclipper.CleanPolygons(union)
-
-        if not isinstance(upoly[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        create_mask(key, upoly, datafield, myCell)
+    for gds, layer in mask_layers.items():
+        if (gds, 0) in poly:
+            metals = merge_metal_layers(poly[(gds, 0)])
+            create_mask((gds, 0), metals, datafield, myCell)
 
 
 def create_mask(key, union, datafield, myCell):
@@ -223,19 +204,42 @@ def create_mask(key, union, datafield, myCell):
     #     print(poly)
 
     for poly in named_layers['polygon']:
+        add_to_mask = True
+
         for hole in named_layers['holes']:
             if abs(hole.area) < abs(poly.area):
 
-                ishole = True
-                for point in hole.points:
-                    if pyclipper.PointInPolygon(point, poly.points) != 1:
-                        ishole = False
-
-                if ishole:
+                if tools.is_nested_polygons(hole, poly):
                     datafield.add_mask(poly.points, key, hole.points)
                     myCell.add(gdsyuna.Polygon(hole.points, layer=81))
+                    add_to_mask = False
                 else:
                     datafield.add_mask(poly.points, key)
+                    add_to_mask = False
 
-        # datafield.add_mask(poly.points, key)
+        if add_to_mask:
+            datafield.add_mask(poly.points, key)
+
         myCell.add(gdsyuna.Polygon(poly.points, key[0], verbose=False))
+
+
+def merge_metal_layers(polygons):
+    if not isinstance(polygons[0][0], np.ndarray):
+        raise TypeError("poly must be a 3D list")
+
+    cc_poly = list()
+
+    for poly in polygons:
+        if pyclipper.Orientation(poly) is False:
+            reverse_poly = pyclipper.ReversePath(poly)
+            cc_poly.append(reverse_poly)
+        else:
+            cc_poly.append(poly)
+
+    union = tools.angusj(subj=cc_poly, method='union')
+    metals = pyclipper.CleanPolygons(union)
+
+    if not isinstance(metals[0][0], list):
+        raise TypeError("poly must be a 3D list")
+
+    return metals

@@ -19,7 +19,7 @@ class DataField(object):
     def __init__(self, name, pcf):
         self.name = name
 
-        self.pcd, self.wires, self.nonwires = self.read_config(pcf)
+        self.pcd, self.wires, self.nonwires, self.holes = self.read_config(pcf)
 
         self.mask = cl.defaultdict(dict)
         self.polygons = cl.defaultdict(dict)
@@ -68,11 +68,12 @@ class DataField(object):
                  **pcd.layers['term']}
 
         nonwires = {**pcd.layers['via'],
-                    **pcd.layers['hole'],
                     **pcd.layers['jj'],
                     **pcd.layers['ntron']}
 
-        return pcd, wires, nonwires
+        holes = {**pcd.layers['hole']}
+
+        return pcd, wires, nonwires, holes
 
     def add_mask(self, element, key=None, holes=None):
         """

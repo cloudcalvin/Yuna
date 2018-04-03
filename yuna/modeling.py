@@ -33,15 +33,15 @@ class Sideconnect(gdsyuna.Polygon):
 
     def set_terminal_name(self, name):
         pass
-        
-        
+
+
 class SurfaceLabel(object):
     _ID = 0
-    
+
     def __init__(self, gds, datatype, id0=None):
         self.gds = gds
         self.datatype = datatype
-        
+
         if id0 is None:
             self.id = 's{{{}}}{{{}}}{{{}}}'.format(self.gds, self.datatype, SurfaceLabel._ID)
             SurfaceLabel._ID += 1

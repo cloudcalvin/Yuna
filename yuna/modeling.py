@@ -142,17 +142,18 @@ def wirechain(geom, gds, layer, datafield, extruded):
     wirechain = dict()
 
     if gds in datafield.mask:
-        for datatype, poly_list in datafield.mask[gds].items():
-            update_wirechain(geom, poly_list, wirechain, datafield)
+        if gds in [21, 6]:
+            for datatype, poly_list in datafield.mask[gds].items():
+                update_wirechain(geom, poly_list, wirechain, datafield)
 
-        for key, surfaces in wirechain.items():
-            for ss in surfaces:
-                ex = geom.extrude(ss.surface, [0, 0, key.width])
+            for key, surfaces in wirechain.items():
+                for ss in surfaces:
+                    ex = geom.extrude(ss.surface, [0, 0, key.width])
 
-                geom.add_physical_surface(ss.surface, ss.label)
-                geom.add_physical_volume(ex[1], ss.label)
+                    geom.add_physical_surface(ss.surface, ss.label)
+                    geom.add_physical_volume(ex[1], ss.label)
 
-                extruded[gds] = ex
+                    extruded[gds] = ex
 
 
 def terminals(extruded_wirechain, geom, config, jsondata):

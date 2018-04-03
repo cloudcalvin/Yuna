@@ -33,6 +33,20 @@ class Sideconnect(gdsyuna.Polygon):
 
     def set_terminal_name(self, name):
         pass
+        
+        
+class SurfaceLabel(object):
+    _ID = 0
+    
+    def __init__(self, gds, datatype, id0=None):
+        self.gds = gds
+        self.datatype = datatype
+        
+        if id0 is None:
+            self.id = 's{{{}}}{{{}}}{{{}}}'.format(self.gds, self.datatype, SurfaceLabel._ID)
+            SurfaceLabel._ID += 1
+        else:
+            self.id0
 
 
 def update_wirechain(geom, poly_list, wirechain, datafield):
@@ -55,7 +69,7 @@ def update_wirechain(geom, poly_list, wirechain, datafield):
             Layer = namedtuple('Layer', ['width', 'height'])
             ll = Layer(width=h, height=z)
 
-            polyname = str(poly.layer) + '_' + str(poly.datatype) + '_' + str(i)
+            surface_label = SurfaceLabel(poly.layer, poly.datatype)
 
             pp = poly.get_points(z)
 
@@ -69,7 +83,7 @@ def update_wirechain(geom, poly_list, wirechain, datafield):
                 gp = geom.add_polygon(pp, lcar=0.1, make_surface=True)
 
             Surface = namedtuple('Surface', ['surface', 'label'])
-            ss = Surface(surface=gp.surface, label=polyname)
+            ss = Surface(surface=gp.surface, label=surface_label.id)
 
             if wirechain:
                 wirechain[ll].append(ss)

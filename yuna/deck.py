@@ -56,40 +56,32 @@ def components(cell, datafield):
             datafield.labels[lbl.text]['labels'].append(lbl)
 
 
-def add_vias(gds, datatype, datafield, poly, metals):
-    dkey = (gds, datatype)
-    if dkey in poly:
-        components = tools.angusj(poly[dkey], poly[dkey], 'union')
+def add_vias(key, datafield, poly, metals):
+    components = tools.angusj(poly[key], poly[key], 'union')
 
-        for pp in components:
-            datafield.add(pp, dkey)
-
-        metals = tools.angusj(components, metals, 'difference')
-    return metals
+    for pp in components:
+        datafield.add(pp, key)
+        
+    return tools.angusj(metals, components, 'difference')
 
 
-def add_junctions(gds, datatype, datafield, poly, metals):
-    dkey = (gds, datatype)
-    if dkey in poly:
-        components = tools.angusj(poly[dkey], poly[dkey], 'union')
+def add_junctions(key, datafield, poly, metals):
+    print('--- Adding junction ---------')
+    components = tools.angusj(poly[key], poly[key], 'union')
 
-        for pp in components:
-            datafield.add(pp, dkey)
+    for pp in components:
+        datafield.add(pp, key)
 
-        metals = tools.angusj(components, metals, 'difference')
-    return metals
+    return tools.angusj(metals, components, 'difference')
 
 
-def add_ntrons(gds, datatype, datafield, poly, metals):
-    dkey = (gds, datatype)
-    if dkey in poly:
-        components = tools.angusj(poly[dkey], poly[dkey], 'union')
+def add_ntrons(key, datafield, poly, metals):
+    components = tools.angusj(poly[key], poly[key], 'union')
 
-        for pp in components:
-            datafield.add(pp, dkey)
+    for pp in components:
+        datafield.add(pp, key)
 
-        metals = tools.angusj(components, metals, 'difference')
-    return metals
+    return tools.angusj(metals, components, 'difference')
 
 
 def layers(cell, datafield):
@@ -124,24 +116,30 @@ def layers(cell, datafield):
     poly = cell_layout.get_polygons(True)
 
     for gds, layer in datafield.wires.items():
-        for i in [0, 1, 3, 7]:
-            key = (gds, i)
-            if key in poly:
+        # if gds == 6:
+        metals = list()
+        
+        k1 = (gds, 0)
+        if k1 in poly:
 
-                if not isinstance(poly[key][0][0], np.ndarray):
-                    raise TypeError("poly must be a 3D list")
+            if not isinstance(poly[k1][0][0], np.ndarray):
+                raise TypeError("poly must be a 3D list")
 
-                metals = tools.angusj(poly[key], poly[key], 'union')
+            metals = tools.angusj(poly[k1], poly[k1], 'union')
+        
+        if metals:
+            for i in [1, 3, 7]:
+                key = (gds, i)
+                if key in poly:
+                    if i == 1:
+                        metals = add_vias(key, datafield, poly, metals)
+                    elif i == 3:
+                        metals = add_junctions(key, datafield, poly, metals)
+                    elif i == 7:
+                        metals = add_ntrons(key, datafield, poly, metals)
 
-                if i == 1:
-                    metals = add_vias(gds, 1, datafield, poly, metals)
-                elif i == 3:
-                    metals = add_junctions(gds, 3, datafield, poly, metals)
-                elif i == 7:
-                    metals = add_ntrons(gds, 7, datafield, poly, metals)
-
-                for pp in metals:
-                    datafield.add(pp, key)
+        for pp in metals:
+            datafield.add(pp, k1)
 
 
 def mask(cell, datafield):
@@ -239,4 +237,5 @@ def create_mask(key, union, datafield, myCell):
                 else:
                     datafield.add_mask(poly.points, key)
 
+        # datafield.add_mask(poly.points, key)
         myCell.add(gdsyuna.Polygon(poly.points, key[0], verbose=False))

@@ -115,9 +115,15 @@ def layers(cell, datafield):
 
     poly = cell_layout.get_polygons(True)
 
-    for gds, layer in datafield.wires.items():
+    # for gds, layerbase in datafield.terms.items():
+    #     print(gds)
+    #     if (gds, 0) in poly:
+    #         print('     . adding terminal -> ' + str(gds))
+    #         datafield.add_terminal(poly[(gds, 0)], gds, layerbase)
 
+    for gds, layer in datafield.wires.items():
         if (gds, 0) in poly:
+            print('awe ' + str(gds))
             metals = merge_metal_layers(poly[(gds, 0)])
 
             for i in [1, 3, 7]:

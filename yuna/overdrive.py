@@ -144,6 +144,7 @@ def grand_summon(basedir, args):
         for gds, layer in mask_layers.items():
             modeling.wirechain(geom, gds, layer, datafield, extruded)
 
+        # modeling.union_terminals(geom, cell, datafield)
         modeling.terminals(geom, datafield)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')

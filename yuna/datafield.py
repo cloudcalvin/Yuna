@@ -64,8 +64,8 @@ class DataField(object):
                     pcd.add_layer(mtype, int(gds), value)
 
         wires = {**pcd.layers['ix'],
-                 **pcd.layers['res'],
-                 **pcd.layers['term']}
+                 **pcd.layers['term'],
+                 **pcd.layers['res']}
 
         nonwires = {**pcd.layers['via'],
                     **pcd.layers['jj'],
@@ -74,6 +74,36 @@ class DataField(object):
         holes = {**pcd.layers['hole']}
 
         return pcd, wires, nonwires, holes
+
+    def get_terminals(self):
+        terminals = dict()
+
+        for gds, polydata in self.polygons.items():
+            for datatype, polygons in polydata.items():
+                for poly in polygons:
+                    if poly.data.type == 'term':
+                        key = (gds, datatype)
+                        if key in terminals:
+                            terminals[key].append(np.array(poly.points))
+                        else:
+                            terminals[key] = [np.array(poly.points)]
+
+        return terminals
+
+    def get_metals(self):
+        metals = dict()
+
+        for gds, polydata in self.polygons.items():
+            for datatype, polygons in polydata.items():
+                for poly in polygons:
+                    if poly.data.type in ['ix', 'res']:
+                        key = (gds, datatype)
+                        if key in metals:
+                            metals[key].append(np.array(poly.points))
+                        else:
+                            metals[key] = [np.array(poly.points)]
+
+        return metals
 
     def add_mask(self, element, key=None, holes=None):
         """
@@ -146,7 +176,6 @@ class DataField(object):
             self.polygons[key[0]][key[1]] = [polygon]
 
     def parse_gdspy(self, cell):
-
         for i in self.wires:
             for key, poly in self.polygons[i].items():
                 for pp in poly:
@@ -189,6 +218,8 @@ class Polygon(gdsyuna.Polygon):
         Polygon._ID += 1
 
         self.data = fabdata[int(key[0])]
+
+        # print(self.data.name)
 
         if self.data is None:
             raise ValueError('Polygon data cannot be None.')

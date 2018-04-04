@@ -44,7 +44,7 @@ class ProcessConfigData(object):
         self.atoms = atoms
 
     def add_layer(self, mtype, gds, value):
-        wd = Layer(value['name'])
+        wd = Layer(value['name'], mtype)
 
         if 'position' in value.keys():
             wd.set_z_start(value['position'])
@@ -116,8 +116,9 @@ class ProcessConfigData(object):
 
 class Layer(object):
 
-    def __init__(self, name):
+    def __init__(self, name, mtype):
         self.name = name
+        self.type = mtype
         self.z_start = None
         self.height = None
         self.wires = []

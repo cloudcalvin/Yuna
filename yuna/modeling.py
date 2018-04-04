@@ -156,7 +156,7 @@ def wirechain(geom, gds, layer, datafield, extruded):
                     extruded[gds] = ex
 
 
-def terminals(extruded_wirechain, geom, config, jsondata):
+def terminals(geom, datafield):
     """
     Extract the terminals on the edges of a layer.
 
@@ -169,63 +169,86 @@ def terminals(extruded_wirechain, geom, config, jsondata):
     sideconnects = list()
 
     side_cell = gdsyuna.Cell('Sideconnect Cell')
-
-    gds_term = int(jsondata['Params']['TERM']['gds'])
-
-    if (gds_term, 0) not in config.yuna_polygons:
-        raise ValueError('No terminals found')
-
-    # TODO: Test for multiple layers in the wirechain.
-    for gds, layer in jsondata['Layers'].items():
-        if layer['type'] == 'wire' and (int(gds), 0) in config.yuna_polygons:
-            points = config.yuna_polygons[(int(gds), 0)]
-            points = np.vstack([points[0], points[0][0]])
-
-            for p1, p2 in zip(points[:-1], points[1:]):
-
-                bb = np.array([p1, p2, p2, p1])
-
-                sc_width = 10e4
-
-                for i in [0, 1]:
-                    if abs(p1[i] - p2[i]) < 1e-9:
+    
+    for gds, polygons in datafield.polygons.items():
+        print(gds)
+        
+        datatype = 0
+        if datatype in polygons:
+            for poly in polygons[datatype]:
+                points = np.vstack([poly.points, poly.points[0]])
+        
+                for p1, p2 in zip(points[:-1], points[1:]):
+                
+                    bb = np.array([p1, p2, p2, p1])
+                
+                    sc_width = 10e4
+                
+                    for i in [0, 1]:
+                        # if abs(p1[i] - p2[i]) < 1e-6:
                         bb[0][i] += sc_width
                         bb[1][i] += sc_width
                         bb[2][i] -= sc_width
                         bb[3][i] -= sc_width
+                
+                    polygon = gdsyuna.Polygon(bb, layer=99, datatype=0, verbose=False)
+                    side_cell.add(polygon)
+                
+                    side = Sideconnect([p1, p2], bb, layer=99, datatype=0, verbose=False)
+                    sideconnects.append(side)
 
-                polygon = gdsyuna.Polygon(bb, layer=99, datatype=0, verbose=False)
-                side_cell.add(polygon)
+    # # TODO: Test for multiple layers in the wirechain.
+    # for gds, layer in jsondata['Layers'].items():
+    #     if layer['type'] == 'wire' and (int(gds), 0) in config.yuna_polygons:
+    #         points = config.yuna_polygons[(int(gds), 0)]
+    #         points = np.vstack([points[0], points[0][0]])
+    # 
+    #         for p1, p2 in zip(points[:-1], points[1:]):
+    # 
+    #             bb = np.array([p1, p2, p2, p1])
+    # 
+    #             sc_width = 10e4
+    # 
+    #             for i in [0, 1]:
+    #                 if abs(p1[i] - p2[i]) < 1e-9:
+    #                     bb[0][i] += sc_width
+    #                     bb[1][i] += sc_width
+    #                     bb[2][i] -= sc_width
+    #                     bb[3][i] -= sc_width
+    # 
+    #             polygon = gdsyuna.Polygon(bb, layer=99, datatype=0, verbose=False)
+    #             side_cell.add(polygon)
+    # 
+    #             side = Sideconnect([p1, p2], bb, layer=99, datatype=0, verbose=False)
+    #             sideconnects.append(side)
 
-                side = Sideconnect([p1, p2], bb, layer=99, datatype=0, verbose=False)
-                sideconnects.append(side)
-
-    terminal_line(extruded_wirechain, geom, config, sideconnects, jsondata)
+    terminal_line(geom, sideconnects, datafield)
 
 
-def terminal_line(ex, geom, config, sideconnects, jsondata):
+def terminal_line(geom, sideconnects, datafield):
     """
     Notes
     -----
     The y-direction sideconnects have a key entry of (99, 0).
     The x-direction sideconnects have a key entry of (99, 1).
     """
-
-    polygons = config.auron_cell.get_polygons(True)
+    
+    print('--- running terminal lines ---------')
 
     terminal_sides = list()
 
     for side in sideconnects:
-        if (63, 0) in polygons:
-            for ipoly in tools.angusj(polygons[(63, 0)], [side.points], 'intersection'):
+        for polygon in datafield.polygons[63][0]:
+            print(side.points)
+            print(polygon.points)
+            print('')
+            for ipoly in tools.angusj([polygon.points], [side.points], 'intersection'):
                 poly = gdsyuna.Polygon(ipoly, layer=99, datatype=2, verbose=False)
                 if poly.area() > (0.7 * side.area()):
                     terminal_sides.append(side)
-        else:
-            print('... no terminals found in IC layout')
 
     check_terminal_sides(terminal_sides)
-    geom_extrude_terminals(ex, geom, terminal_sides, jsondata)
+    # geom_extrude_terminals(geom, terminal_sides, datafield)
 
 
 # TODO: Future test maybe?
@@ -257,12 +280,12 @@ def square_loop(geom, p_arrays):
     return line_loop
 
 
-def geom_extrude_terminals(ex, geom, sideconnects, jsondata):
+def geom_extrude_terminals(geom, terminal_sides, datafield):
     """
 
     """
 
-    for i, side in enumerate(sideconnects):
+    for i, side in enumerate(terminal_sides):
         c1 = [c*10e-9 for c in side.edge[0]]
         c2 = [c*10e-9 for c in side.edge[1]]
 
@@ -283,10 +306,5 @@ def geom_extrude_terminals(ex, geom, sideconnects, jsondata):
 
         # geo_object.boolean_fragments([surf1], [surf2])
 
-        extrude_id = ex[1][0][0]
-        geom.boolean_difference([extrude_id], [surf1], delete_other=False)
-
-    # TODO: Error occurs when I return a value.
-    pygmsh.generate_mesh(geom, geo_filename='sideconnects.geo')
-
-    # meshio.write('3d_model.vtk', *layer_mesh)
+        # extrude_id = ex[1][0][0]
+        # geom.boolean_difference([extrude_id], [surf1], delete_other=False)

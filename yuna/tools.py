@@ -97,11 +97,14 @@ def angusj(subj, clip=None, method=None):
 
     setattr(pc, 'StrictlySimple', True)
 
+    print(subj)
+    print(clip)
+
     if clip is not None:
         pc.AddPaths(clip, pyclipper.PT_CLIP, True)
 
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
-
+    
     subj = None
     if method == 'difference':
         subj = pc.Execute(pyclipper.CT_DIFFERENCE,

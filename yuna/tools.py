@@ -90,20 +90,17 @@ def convert_node_to_3d(wire, z_start):
     return polygons
 
 
-def angusj(subj, clip=None, method=None):
+def angusj(subj, clip=None, method=None, closed=True):
     """ Angusj clipping library """
 
     pc = pyclipper.Pyclipper()
 
     setattr(pc, 'StrictlySimple', True)
 
-    print(subj)
-    print(clip)
-
     if clip is not None:
         pc.AddPaths(clip, pyclipper.PT_CLIP, True)
 
-    pc.AddPaths(subj, pyclipper.PT_SUBJECT, True)
+    pc.AddPaths(subj, pyclipper.PT_SUBJECT, closed)
     
     subj = None
     if method == 'difference':

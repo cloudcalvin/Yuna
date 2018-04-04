@@ -2,6 +2,7 @@ import gdsyuna
 import pygmsh
 import meshio
 import numpy as np
+import pyclipper
 
 from yuna import tools
 from collections import namedtuple
@@ -179,7 +180,6 @@ def terminals(geom, datafield):
                 points = np.vstack([poly.points, poly.points[0]])
         
                 for p1, p2 in zip(points[:-1], points[1:]):
-                
                     bb = np.array([p1, p2, p2, p1])
                 
                     sc_width = 10e4
@@ -194,7 +194,7 @@ def terminals(geom, datafield):
                     polygon = gdsyuna.Polygon(bb, layer=99, datatype=0, verbose=False)
                     side_cell.add(polygon)
                 
-                    side = Sideconnect([p1, p2], bb, layer=99, datatype=0, verbose=False)
+                    side = Sideconnect([p1.tolist(), p2.tolist()], bb, layer=99, datatype=0, verbose=False)
                     sideconnects.append(side)
 
     # # TODO: Test for multiple layers in the wirechain.
@@ -238,26 +238,55 @@ def terminal_line(geom, sideconnects, datafield):
     terminal_sides = list()
 
     for side in sideconnects:
+        paths = None
         for polygon in datafield.polygons[63][0]:
-            print(side.points)
-            print(polygon.points)
+            # print(side.edge)
+            # print(polygon.points)
+            # print('')
+            
+            pc = pyclipper.Pyclipper()
+
+            pc.AddPaths([side.edge], pyclipper.PT_SUBJECT, False)
+            pc.AddPaths([polygon.points], pyclipper.PT_CLIP, True)
+            
+            solution = pc.Execute2(pyclipper.CT_INTERSECTION, 
+                                   pyclipper.PFT_NONZERO, 
+                                   pyclipper.PFT_NONZERO)
+
+            paths = pyclipper.PolyTreeToPaths(solution)
+            
+        if paths:
+            terminal_sides.append(side.edge)
+            print(paths)
             print('')
-            for ipoly in tools.angusj([polygon.points], [side.points], 'intersection'):
-                poly = gdsyuna.Polygon(ipoly, layer=99, datatype=2, verbose=False)
-                if poly.area() > (0.7 * side.area()):
-                    terminal_sides.append(side)
+            
+            # if paths:
+            #     terminal_sides.append(side.edge)
+            
+            # for ipoly in tools.angusj([side.edge], [polygon.points], 'intersection', closed=False):
+            # for ipoly in tools.angusj([polygon.points], [side.edge], 'intersection'):
+                # print(ipoly)
+                # terminal_sides.append(ipoly)
+                # if poly.area() > (0.7 * side.area()):
+                    # terminal_sides.append(side)
 
     check_terminal_sides(terminal_sides)
     # geom_extrude_terminals(geom, terminal_sides, datafield)
 
 
 # TODO: Future test maybe?
-def check_terminal_sides(sideconnects):
+def check_terminal_sides(terminal_sides):
     term_side_cell = gdsyuna.Cell('Termrinal Sideconnect Cell')
-
-    for side in sideconnects:
-        poly = gdsyuna.Polygon(side.points, layer=side.layer, datatype=side.datatype)
+    
+    for path in terminal_sides:
+        print(path)
+        print('')
+        poly = gdsyuna.Polygon(path, layer=99, datatype=0)
         term_side_cell.add(poly)
+
+    # for side in sideconnects:
+    #     poly = gdsyuna.Polygon(side.edge, layer=side.layer, datatype=side.datatype)
+    #     term_side_cell.add(poly)
 
 
 def square_loop(geom, p_arrays):

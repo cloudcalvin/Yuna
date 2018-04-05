@@ -17,6 +17,7 @@ import os
 import meshio
 import pygmsh
 import gdsyuna
+import pyclipper
 
 from docopt import docopt
 
@@ -25,6 +26,7 @@ from yuna import tools
 from yuna import modeling
 from yuna import deck
 
+from .terminals import Terminal
 from .datafield import DataField
 
 
@@ -145,7 +147,21 @@ def grand_summon(basedir, args):
             modeling.wirechain(geom, gds, layer, datafield, extruded)
 
         # modeling.union_terminals(geom, cell, datafield)
-        modeling.terminals(geom, datafield)
+        # modeling.terminals(geom, datafield)
+        
+        terminals = dict()
+        for key, polygons in datafield.get_terminals().items():
+            for points in polygons:
+                for lbl in cell.labels:
+                    if pyclipper.PointInPolygon(lbl.position, points) == 1:
+                        print('     .label detected: ' + lbl.text)
+                        
+                        terminal = Terminal([points])
+                        terminals[lbl.text] = terminal
+                
+        for name, term in terminals.items():
+            print(name, term)
+            term.metal_connection(cell, datafield, name)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
         meshio.write('3D.vtu', *meshdata)

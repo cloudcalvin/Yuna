@@ -123,7 +123,6 @@ def layers(cell, datafield):
 
     for gds, layer in datafield.wires.items():
         if (gds, 0) in poly:
-            print('awe ' + str(gds))
             metals = merge_metal_layers(poly[(gds, 0)])
 
             for i in [1, 3, 7]:

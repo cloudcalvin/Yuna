@@ -90,6 +90,27 @@ def convert_node_to_3d(wire, z_start):
     return polygons
 
 
+def write_cell(key, name, terminals):
+    cell = gdsyuna.Cell(name)
+
+    for name, term in terminals.items():
+        poly = gdsyuna.Polygon(term.edge, *key)
+        cell.add(poly)
+        
+
+def angusj_path(subj, clip):
+    pc = pyclipper.Pyclipper()
+
+    pc.AddPaths([subj], pyclipper.PT_SUBJECT, False)
+    pc.AddPaths([clip], pyclipper.PT_CLIP, True)
+
+    solution = pc.Execute2(pyclipper.CT_INTERSECTION,
+                           pyclipper.PFT_NONZERO,
+                           pyclipper.PFT_NONZERO)
+
+    return pyclipper.PolyTreeToPaths(solution)
+
+
 def angusj(subj, clip=None, method=None, closed=True):
     """ Angusj clipping library """
 
@@ -101,7 +122,7 @@ def angusj(subj, clip=None, method=None, closed=True):
         pc.AddPaths(clip, pyclipper.PT_CLIP, True)
 
     pc.AddPaths(subj, pyclipper.PT_SUBJECT, closed)
-    
+
     subj = None
     if method == 'difference':
         subj = pc.Execute(pyclipper.CT_DIFFERENCE,

@@ -148,20 +148,23 @@ def grand_summon(basedir, args):
 
         # modeling.union_terminals(geom, cell, datafield)
         # modeling.terminals(geom, datafield)
-        
+
         terminals = dict()
         for key, polygons in datafield.get_terminals().items():
             for points in polygons:
                 for lbl in cell.labels:
                     if pyclipper.PointInPolygon(lbl.position, points) == 1:
                         print('     .label detected: ' + lbl.text)
-                        
                         terminal = Terminal([points])
                         terminals[lbl.text] = terminal
-                
+
         for name, term in terminals.items():
             print(name, term)
+            term.set_vector()
             term.metal_connection(cell, datafield, name)
+            term.metal_edges(datafield)
+
+        tools.write_cell((99, 0), 'Terminal Edges', terminals)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
         meshio.write('3D.vtu', *meshdata)

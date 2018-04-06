@@ -143,7 +143,8 @@ def wirechain(geom, gds, layer, datafield, extruded):
     wirechain = dict()
 
     if gds in datafield.mask:
-        if gds in [21, 6]:
+        # TODO: Fix this hardcode
+        if gds in [21, 6, 1]:
             for datatype, poly_list in datafield.mask[gds].items():
                 update_wirechain(geom, poly_list, wirechain, datafield)
 

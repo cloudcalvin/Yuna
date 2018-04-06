@@ -96,17 +96,24 @@ def write_cell(key, name, terminals):
     for name, term in terminals.items():
         poly = gdsyuna.Polygon(term.edge, *key)
         cell.add(poly)
-        
+
 
 def angusj_path(subj, clip):
     pc = pyclipper.Pyclipper()
 
-    pc.AddPaths([subj], pyclipper.PT_SUBJECT, False)
-    pc.AddPaths([clip], pyclipper.PT_CLIP, True)
+    print(subj)
+    print(clip)
+
+    pc.AddPath(subj, pyclipper.PT_SUBJECT, False)
+    pc.AddPath(clip, pyclipper.PT_CLIP, True)
 
     solution = pc.Execute2(pyclipper.CT_INTERSECTION,
+    # solution = pc.Execute2(pyclipper.CT_INTERSECTION,
                            pyclipper.PFT_NONZERO,
                            pyclipper.PFT_NONZERO)
+
+    path = pyclipper.PolyTreeToPaths(solution)
+    print(path)
 
     return pyclipper.PolyTreeToPaths(solution)
 

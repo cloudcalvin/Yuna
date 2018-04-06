@@ -163,6 +163,7 @@ def grand_summon(basedir, args):
             term.set_vector()
             term.metal_connection(cell, datafield, name)
             term.metal_edges(datafield)
+            term.square_loop(geom, datafield)
 
         tools.write_cell((99, 0), 'Terminal Edges', terminals)
 

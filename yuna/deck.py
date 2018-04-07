@@ -1,12 +1,11 @@
 import numpy as np
 import networkx as nx
 import itertools
-import json
 import gdsyuna
 import pyclipper
 
 from yuna import labels
-from yuna import tools
+from yuna import utils
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -26,7 +25,8 @@ def components(cell, datafield):
         The flattened version of original cell with labeled components
     """
 
-    tools.print_cellrefs(cell)
+    if len(cell.elements) == 0:
+        utils.print_cellrefs(cell)
 
     labels.terminals(cell, datafield)
 
@@ -42,10 +42,13 @@ def components(cell, datafield):
         if subcell.name[:5] == 'ntron':
             labels.ntrons(subcell, datafield)
 
-    cell_layout = cell.copy('Label Flatten', deep_copy=True)
-    cell_layout.flatten()
+    cl = cell.copy('Label Flatten', deep_copy=True)
+    cl.flatten()
 
-    cell_labels = cell_layout.get_labels(0)
+    cell_labels = cl.get_labels(0)
+
+    if len(cell_labels) > 0:
+        utils.print_labels(cell_labels)
 
     for lbl in cell_labels:
         if 'labels' in datafield.labels[lbl.text]:
@@ -56,34 +59,34 @@ def components(cell, datafield):
 
 
 def add_vias(key, datafield, poly, metals):
-    components = tools.angusj(poly[key], poly[key], 'union')
+    components = utils.angusj(poly[key], poly[key], 'union')
 
     for pp in components:
         datafield.add(pp, key)
 
-    return tools.angusj(metals, components, 'difference')
+    return utils.angusj(metals, components, 'difference')
 
 
 def add_junctions(key, datafield, poly, metals):
     print('--- Adding junction ---------')
-    components = tools.angusj(poly[key], poly[key], 'union')
+    components = utils.angusj(poly[key], poly[key], 'union')
 
     for pp in components:
         datafield.add(pp, key)
 
-    return tools.angusj(metals, components, 'difference')
+    return utils.angusj(metals, components, 'difference')
 
 
 def add_ntrons(key, datafield, poly, metals):
-    components = tools.angusj(poly[key], poly[key], 'union')
+    components = utils.angusj(poly[key], poly[key], 'union')
 
     for pp in components:
         datafield.add(pp, key)
 
-    return tools.angusj(metals, components, 'difference')
+    return utils.angusj(metals, components, 'difference')
 
 
-def layers(cell, datafield):
+def lvs_mask(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
 
@@ -118,6 +121,8 @@ def layers(cell, datafield):
         if (gds, 0) in poly:
             metals = merge_metal_layers(poly[(gds, 0)])
 
+            add indiv. component to datafiedl like in gdspy
+
             for i in [1, 3, 7]:
                 key = (gds, i)
                 if key in poly:
@@ -132,7 +137,7 @@ def layers(cell, datafield):
                 datafield.add(pp, (gds, 0))
 
 
-def mask(cell, datafield):
+def full_mask(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
 
@@ -194,23 +199,13 @@ def create_mask(key, union, datafield, myCell):
         else:
             raise ValueError('polygon area cannot be zero')
 
-    # print('\n--- holes --------------')
-    #
-    # for hole in named_layers['holes']:
-    #     print(hole)
-    #
-    # print('\n--- polygons --------------')
-    #
-    # for poly in named_layers['polygon']:
-    #     print(poly)
-
     for poly in named_layers['polygon']:
         add_to_mask = True
 
         for hole in named_layers['holes']:
             if abs(hole.area) < abs(poly.area):
 
-                if tools.is_nested_polygons(hole, poly):
+                if utils.is_nested_polygons(hole, poly):
                     datafield.add_mask(poly.points, key, hole.points)
                     myCell.add(gdsyuna.Polygon(hole.points, layer=81))
                     add_to_mask = False
@@ -237,7 +232,7 @@ def merge_metal_layers(polygons):
         else:
             cc_poly.append(poly)
 
-    union = tools.angusj(subj=cc_poly, method='union')
+    union = utils.angusj(subj=cc_poly, method='union')
     metals = pyclipper.CleanPolygons(union)
 
     if not isinstance(metals[0][0], list):

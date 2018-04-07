@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-from setuptools import setup, find_packages
+from setuputils import setup, find_packages
 from termcolor import colored
 from pprint import pprint
 from yuna import __version__
@@ -26,7 +26,7 @@ setup(
     install_requires=[
         'gdsyuna', 
         'pyclipper', 
-        'setuptools', 
+        'setuputils', 
         'numpy', 
         'matplotlib', 
         'docopt', 

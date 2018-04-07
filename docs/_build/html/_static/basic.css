@@ -127,7 +127,7 @@ table.contentstable {
 }
 
 table.contentstable p.biglink {
-    line-height: 150%;
+    line-width: 150%;
 }
 
 a.biglink {
@@ -162,7 +162,7 @@ table.indextable > tbody > tr > td > ul {
 }
 
 table.indextable tr.pcap {
-    height: 10px;
+    width: 10px;
 }
 
 table.indextable tr.cap {

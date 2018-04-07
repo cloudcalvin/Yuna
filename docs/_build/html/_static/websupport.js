@@ -29,15 +29,15 @@
   };
 
   $.fn.autogrow.resize = function(textarea) {
-    var lineHeight = parseInt($(textarea).css('line-height'), 10);
+    var linewidth = parseInt($(textarea).css('line-width'), 10);
     var lines = textarea.value.split('\n');
     var columns = textarea.cols;
     var lineCount = 0;
     $.each(lines, function() {
       lineCount += Math.ceil(this.length / columns) || 1;
     });
-    var height = lineHeight * (lineCount + 1);
-    $(textarea).css('height', height);
+    var width = linewidth * (lineCount + 1);
+    $(textarea).css('width', width);
   };
 })(jQuery);
 

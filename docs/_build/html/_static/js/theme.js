@@ -11,8 +11,8 @@ function ThemeNav () {
         winResize: false,
         linkScroll: false,
         winPosition: 0,
-        winHeight: null,
-        docHeight: null,
+        winwidth: null,
+        docwidth: null,
         isRunning: false
     };
 
@@ -126,10 +126,10 @@ function ThemeNav () {
     nav.onScroll = function () {
         this.winScroll = false;
         var newWinPosition = this.win.scrollTop(),
-            winBottom = newWinPosition + this.winHeight,
+            winBottom = newWinPosition + this.winwidth,
             navPosition = this.navBar.scrollTop(),
             newNavPosition = navPosition + (newWinPosition - this.winPosition);
-        if (newWinPosition < 0 || winBottom > this.docHeight) {
+        if (newWinPosition < 0 || winBottom > this.docwidth) {
             return;
         }
         this.navBar.scrollTop(newNavPosition);
@@ -138,8 +138,8 @@ function ThemeNav () {
 
     nav.onResize = function () {
         this.winResize = false;
-        this.winHeight = this.win.height();
-        this.docHeight = $(document).height();
+        this.winwidth = this.win.width();
+        this.docwidth = $(document).width();
     };
 
     nav.hashChange = function () {

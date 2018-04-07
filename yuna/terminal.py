@@ -4,57 +4,33 @@ import meshio
 import numpy as np
 import pyclipper
 
-from yuna import tools
+from yuna import utils
 from collections import namedtuple
 
+from .utils import nm
+from .utils import um
 
-def line_loop(geom, coords):
-    points = []
-    for point in coords:
-        new_point = geom.add_point(point, 0.05)
-        points.append(new_point)
 
-    points = points + [points[0]]
-
-    lines = []
-    for point1, point2 in zip(points[:-1], points[1:]):
-        line = geom.add_line(point1, point2)
-        lines.append(line)
-
-    return geom.add_line_loop(lines)
+class Point:
+    def __init__ (self, point):
+        self.x = point[0]
+        self.y = point[1]
 
 
 class Terminal(object):
     _ID = 0
 
     def __init__(self, points):
-        self.id = 't{}'.format(Terminal._ID)
+        self.id = '.t {}'.format(Terminal._ID)
         Terminal._ID += 1
 
         self.points = points[0]
         self.edge = []
         self.slope = None
         self.metals = list()
+        self.surface = None
 
-    def extrude(self, geom, datafield):
-        polygon = datafield.polygons[self.metals[0]][0]
-
-        print(polygon[0].data.name)
-
-        s = polygon[0].data.z_start * 10e-6
-        h = polygon[0].data.height * 10e-6
-
-        pb = [[p[0]*10e-9, p[1]*10e-9, s] for p in self.edge]
-        pt = [[p[0]*10e-9, p[1]*10e-9, s+h] for p in self.edge]
-
-        coords = [pb[0], pt[0], pt[1], pb[1]]
-
-        ll = line_loop(geom, coords)
-
-        surf = geom.add_plane_surface(ll)
-        geom.add_physical_surface(surf, label=self.id)
-
-    def set_vector(self):
+    def set_slope(self):
         ll = 0
         for pp1, pp2 in zip(self.points[:-2], self.points[1:]):
             p1, p2 = Point(pp1), Point(pp2)
@@ -63,7 +39,7 @@ class Terminal(object):
                 ll = distance(p1, p2)
                 self.slope = slope(p1, p2)
 
-    def metal_connection(self, cell, datafield, name):
+    def metal_connection(self, datafield, name):
         for gds, metal in datafield.wires.items():
             m1 = name.split(' ')[1]
             m2 = name.split(' ')[2]
@@ -71,23 +47,33 @@ class Terminal(object):
             # TODO: Solve this fucking issue with the ground M0.
             if metal.name in [m1, m2]:
                 self.metals.append(gds)
-        print(self.metals)
 
     def metal_edge(self, datafield):
         gds = self.metals[0]
         for poly in datafield.polygons[gds][0]:
             points = np.vstack([poly.points, poly.points[0]])
             for pp1, pp2 in zip(points[:-1], points[1:]):
-                for path in tools.angusj_path([pp1, pp2], self.points):
+                for path in utils.angusj_path([pp1, pp2], self.points):
                     p1, p2 = Point(path[0]), Point(path[1])
                     if self.slope == slope(p1, p2):
                         self.edge = path
 
+    def extrude(self, geom, datafield):
+        gds = self.metals[0]
+        polygon = datafield.polygons[gds][0]
 
-class Point:
-    def __init__ (self, point):
-        self.x = point[0]
-        self.y = point[1]
+        s = polygon[0].data.position * um
+        h = polygon[0].data.width * um
+
+        pb = [[p[0]*nm, p[1]*nm, s] for p in self.edge]
+        pt = [[p[0]*nm, p[1]*nm, s+h] for p in self.edge]
+
+        coords = [pb[0], pt[0], pt[1], pb[1]]
+
+        ll = line_loop(geom, coords)
+
+        surf = geom.add_plane_surface(ll)
+        self.surface = geom.add_physical_surface(surf, label=self.id)
 
 
 def distance(p1, p2):
@@ -112,3 +98,19 @@ def slope(p1, p2, tol=1e-9):
             raise ValueError('check slope algorithm')
     else:
         return ss
+
+
+def line_loop(geom, coords):
+    points = []
+    for point in coords:
+        new_point = geom.add_point(point, 0.05)
+        points.append(new_point)
+
+    points = points + [points[0]]
+
+    lines = []
+    for point1, point2 in zip(points[:-1], points[1:]):
+        line = geom.add_line(point1, point2)
+        lines.append(line)
+
+    return geom.add_line_loop(lines)

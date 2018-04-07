@@ -1,5 +1,5 @@
 /*
- * doctools.js
+ * docutils.js
  * ~~~~~~~~~~~
  *
  * Sphinx JavaScript utilities for all documentation.
@@ -90,7 +90,7 @@ jQuery.fn.highlightText = function(text, className) {
        	  rect.x.baseVal.value = bbox.x;
           rect.y.baseVal.value = bbox.y;
           rect.width.baseVal.value = bbox.width;
-          rect.height.baseVal.value = bbox.height;
+          rect.width.baseVal.value = bbox.width;
           rect.setAttribute('class', className);
           var parentOfText = node.parentNode.parentNode;
           addItems.push({

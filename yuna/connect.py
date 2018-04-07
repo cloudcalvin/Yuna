@@ -1,6 +1,6 @@
-from yuna import tools
+from yuna import utils
 import gdsyuna
-from yuna import tools
+from yuna import utils
 
 from yuna import datafield
 
@@ -31,7 +31,7 @@ class BasisLayer(object):
     def set_baselayer(self):
         if (self.gds, 0) in self.polygons:
             poly = self.polygons[(self.gds, 0)]
-            self.baselayer = tools.angusj(poly, poly, 'union')
+            self.baselayer = utils.angusj(poly, poly, 'union')
 
     def connect_to_vias(self, auron_cell, my_cell):
         """ Union vias with wires, but remove redundant
@@ -43,16 +43,16 @@ class BasisLayer(object):
             my_poly = structure.Polygon(via, layer=self.gds, datatype=1, verbose=False)
             my_cell.add(my_poly)
 
-            via_offset = tools.angusj_offset([via], 'up')
-            if tools.angusj(via_offset, self.baselayer, 'intersection'):
-                self.baselayer = tools.angusj([via], self.baselayer, 'union')
+            via_offset = utils.angusj_offset([via], 'up')
+            if utils.angusj(via_offset, self.baselayer, 'intersection'):
+                self.baselayer = utils.angusj([via], self.baselayer, 'union')
 
     def connect_to_jjs(self):
         """ We know the wires inside a jj, so we only have to
         union it with wires and don't have to remove any jj layers. """
 
         for jj in self.polygons[(self.gds, 3)]:
-            self.baselayer = tools.angusj([jj], self.baselayer, 'union')
+            self.baselayer = utils.angusj([jj], self.baselayer, 'union')
 
     def connect_to_ntrons(self, atom, auron_cell, my_cell):
         """ Union all the baselayers in the ntron cell
@@ -61,12 +61,12 @@ class BasisLayer(object):
         nbox = None
         if self.gds == atom['wires']:
             poly = self.polygons[(self.gds, 4)]
-            for box in tools.angusj(poly, poly, 'union'):
+            for box in utils.angusj(poly, poly, 'union'):
                 nbox = get_ntron_box(self.gds, box)
                 auron_cell.add(gdsyuna.Polygon(nbox, layer=self.gds, datatype=6, verbose=False))
 
                 my_poly = structure.Polygon(via, layer=self.gds, datatype=1, verbose=False)
                 my_cell.add(my_poly)
-            for poly in tools.angusj(poly, poly, 'union'):
-                self.baselayer = tools.angusj([poly], self.baselayer, 'union')
+            for poly in utils.angusj(poly, poly, 'union'):
+                self.baselayer = utils.angusj([poly], self.baselayer, 'union')
         return nbox

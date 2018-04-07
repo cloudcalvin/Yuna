@@ -12,6 +12,11 @@ import numpy as np
 from yuna import process
 
 
+um = 10e-6
+nm = 10e-9
+pm = 10e-12
+
+
 def print_cellrefs(cell):
     print('')
     magenta_print('CellReferences')
@@ -21,13 +26,11 @@ def print_cellrefs(cell):
             print('')
 
 
-def has_ground(cell, jj_atom):
-    key = (int(jj_atom['ground']['gds']), 3)
-
-    if key in cell.get_polygons(True):
-        return True
-    else:
-        return False
+def print_labels(labels):
+    print('')
+    magenta_print('Labels')
+    for label in labels:
+        print(label.text)
 
 
 def midpoint(x1, y1, x2, y2):
@@ -49,8 +52,13 @@ def red_print(header):
 
 def magenta_print(header):
     """ Python package header (Purple) """
-    print ('\n' + '--- ' + colored(header, 'red', attrs=['bold']) + ' ', end='')
+    print ('\n\n' + '--- ' + colored(header, 'red', attrs=['bold']) + ' ', end='')
     print ('----------')
+    print('')
+
+
+def end_print():
+    print ('\n--------------------------')
 
 
 def green_print(header):
@@ -61,7 +69,7 @@ def green_print(header):
 
 def cyan_print(header):
     """ Function header (Green) """
-    print ('\n[' + colored('+++', 'cyan', attrs=['bold']) + '] ', end='')
+    print ('\n\n[' + colored('+++', 'cyan', attrs=['bold']) + '] ', end='')
     print(header)
 
 
@@ -78,14 +86,14 @@ def list_layout_cells(gds):
     print('')
 
 
-def convert_node_to_3d(wire, z_start):
+def convert_node_to_3d(wire, position):
     layer = np.array(wire).tolist()
 
     polygons = []
     for pl in layer:
         poly = [[float(y*10e-9) for y in x] for x in pl]
         for row in poly:
-            row.append(z_start)
+            row.append(position)
         polygons.append(poly)
     return polygons
 
@@ -101,21 +109,18 @@ def write_cell(key, name, terminals):
 def angusj_path(subj, clip):
     pc = pyclipper.Pyclipper()
 
-    print(subj)
-    print(clip)
-
     pc.AddPath(subj, pyclipper.PT_SUBJECT, False)
     pc.AddPath(clip, pyclipper.PT_CLIP, True)
 
     solution = pc.Execute2(pyclipper.CT_INTERSECTION,
-    # solution = pc.Execute2(pyclipper.CT_INTERSECTION,
                            pyclipper.PFT_NONZERO,
                            pyclipper.PFT_NONZERO)
 
     path = pyclipper.PolyTreeToPaths(solution)
-    print(path)
 
-    return pyclipper.PolyTreeToPaths(solution)
+    #TODO: Add check here.
+
+    return path
 
 
 def angusj(subj, clip=None, method=None, closed=True):
@@ -159,27 +164,20 @@ def angusj_offset(layer, size):
     Either blow up polygons or blow it down.
     """
 
-    solution = []
-
     for poly in layer:
         pco = pyclipper.PyclipperOffset()
         pco.AddPath(layer, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
         if size == 'down':
-            solution.append(pco.Execute(-10000)[0])
+            return pco.Execute(-10000)[0]
         elif size == 'up':
-            solution = pco.Execute(10.0)
-        elif size == 'label':
-            solution.append(pco.Execute(2000)[0])
+            return pco.Execute(10.0)
         else:
             raise ValueError('please select the Offset function to use')
 
-    return solution
-
 
 def is_nested_polygons(hole, poly):
-    ishole = True
     for point in hole.points:
         if pyclipper.PointInPolygon(point, poly.points) != 1:
-            ishole = False
-    return ishole
+            return False
+    return True

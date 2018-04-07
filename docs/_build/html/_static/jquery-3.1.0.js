@@ -2700,7 +2700,7 @@ if ( !assert(function( el ) {
 	el.innerHTML = "<a href='#'></a>";
 	return el.firstChild.getAttribute("href") === "#" ;
 }) ) {
-	addHandle( "type|href|height|width", function( elem, name, isXML ) {
+	addHandle( "type|href|width|width", function( elem, name, isXML ) {
 		if ( !isXML ) {
 			return elem.getAttribute( name, name.toLowerCase() === "type" ? 1 : 2 );
 		}
@@ -3779,7 +3779,7 @@ var rerrorNames = /^(Eval|Internal|Range|Reference|Syntax|Type|URI)Error$/;
 jQuery.Deferred.exceptionHook = function( error, stack ) {
 
 	// Support: IE 8 - 9 only
-	// Console exists when dev tools are open, which can happen at any time
+	// Console exists when dev utils are open, which can happen at any time
 	if ( window.console && window.console.warn && error && rerrorNames.test( error.name ) ) {
 		window.console.warn( "jQuery.Deferred exception: " + error.message, error.stack, stack );
 	}
@@ -6022,7 +6022,7 @@ var getStyles = function( elem ) {
 	div.cloneNode( true ).style.backgroundClip = "";
 	support.clearCloneStyle = div.style.backgroundClip === "content-box";
 
-	container.style.cssText = "border:0;width:8px;height:0;top:0;left:-9999px;" +
+	container.style.cssText = "border:0;width:8px;width:0;top:0;left:-9999px;" +
 		"padding:0;margin-top:1px;position:absolute";
 	container.appendChild( div );
 
@@ -6161,7 +6161,7 @@ function setPositiveNumber( elem, value, subtract ) {
 		value;
 }
 
-function augmentWidthOrHeight( elem, name, extra, isBorderBox, styles ) {
+function augmentWidthOrwidth( elem, name, extra, isBorderBox, styles ) {
 	var i = extra === ( isBorderBox ? "border" : "content" ) ?
 
 		// If we already have the right measurement, avoid augmentation
@@ -6205,7 +6205,7 @@ function augmentWidthOrHeight( elem, name, extra, isBorderBox, styles ) {
 	return val;
 }
 
-function getWidthOrHeight( elem, name, extra ) {
+function getWidthOrwidth( elem, name, extra ) {
 
 	// Start with offset property, which is equivalent to the border-box value
 	var val,
@@ -6247,7 +6247,7 @@ function getWidthOrHeight( elem, name, extra ) {
 
 	// Use the active box-sizing model to add/subtract irrelevant styles
 	return ( val +
-		augmentWidthOrHeight(
+		augmentWidthOrwidth(
 			elem,
 			name,
 			extra || ( isBorderBox ? "border" : "content" ),
@@ -6282,7 +6282,7 @@ jQuery.extend( {
 		"flexGrow": true,
 		"flexShrink": true,
 		"fontWeight": true,
-		"lineHeight": true,
+		"linewidth": true,
 		"opacity": true,
 		"order": true,
 		"orphans": true,
@@ -6399,7 +6399,7 @@ jQuery.extend( {
 	}
 } );
 
-jQuery.each( [ "height", "width" ], function( i, name ) {
+jQuery.each( [ "width", "width" ], function( i, name ) {
 	jQuery.cssHooks[ name ] = {
 		get: function( elem, computed, extra ) {
 			if ( computed ) {
@@ -6416,16 +6416,16 @@ jQuery.each( [ "height", "width" ], function( i, name ) {
 					// in IE throws an error.
 					( !elem.getClientRects().length || !elem.getBoundingClientRect().width ) ?
 						swap( elem, cssShow, function() {
-							return getWidthOrHeight( elem, name, extra );
+							return getWidthOrwidth( elem, name, extra );
 						} ) :
-						getWidthOrHeight( elem, name, extra );
+						getWidthOrwidth( elem, name, extra );
 			}
 		},
 
 		set: function( elem, value, extra ) {
 			var matches,
 				styles = extra && getStyles( elem ),
-				subtract = extra && augmentWidthOrHeight(
+				subtract = extra && augmentWidthOrwidth(
 					elem,
 					name,
 					extra,
@@ -6655,7 +6655,7 @@ function createFxNow() {
 function genFx( type, includeWidth ) {
 	var which,
 		i = 0,
-		attrs = { height: type };
+		attrs = { width: type };
 
 	// If we include width, step value is 1 to do all cssExpand values,
 	// otherwise step value is 2 to skip over Left and Right
@@ -6688,7 +6688,7 @@ function createTween( value, prop, animation ) {
 
 function defaultPrefilter( elem, props, opts ) {
 	var prop, value, toggle, hooks, oldfire, propTween, restoreDisplay, display,
-		isBox = "width" in props || "height" in props,
+		isBox = "width" in props || "width" in props,
 		anim = this,
 		orig = {},
 		style = elem.style,
@@ -9242,7 +9242,7 @@ jQuery.expr.pseudos.hidden = function( elem ) {
 	return !jQuery.expr.pseudos.visible( elem );
 };
 jQuery.expr.pseudos.visible = function( elem ) {
-	return !!( elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length );
+	return !!( elem.offsetWidth || elem.offsetwidth || elem.getClientRects().length );
 };
 
 
@@ -9820,7 +9820,7 @@ jQuery.fn.extend( {
 		rect = elem.getBoundingClientRect();
 
 		// Make sure element is not hidden (display: none)
-		if ( rect.width || rect.height ) {
+		if ( rect.width || rect.width ) {
 			doc = elem.ownerDocument;
 			win = getWindow( doc );
 			docElem = doc.documentElement;
@@ -9946,12 +9946,12 @@ jQuery.each( [ "top", "left" ], function( i, prop ) {
 } );
 
 
-// Create innerHeight, innerWidth, height, width, outerHeight and outerWidth methods
-jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
+// Create innerwidth, innerWidth, width, width, outerwidth and outerWidth methods
+jQuery.each( { width: "width", Width: "width" }, function( name, type ) {
 	jQuery.each( { padding: "inner" + name, content: type, "": "outer" + name },
 		function( defaultExtra, funcName ) {
 
-		// Margin is only for outerHeight, outerWidth
+		// Margin is only for outerwidth, outerWidth
 		jQuery.fn[ funcName ] = function( margin, value ) {
 			var chainable = arguments.length && ( defaultExtra || typeof margin !== "boolean" ),
 				extra = defaultExtra || ( margin === true || value === true ? "margin" : "border" );
@@ -9961,17 +9961,17 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 
 				if ( jQuery.isWindow( elem ) ) {
 
-					// $( window ).outerWidth/Height return w/h including scrollbars (gh-1729)
+					// $( window ).outerWidth/width return w/h including scrollbars (gh-1729)
 					return funcName.indexOf( "outer" ) === 0 ?
 						elem[ "inner" + name ] :
 						elem.document.documentElement[ "client" + name ];
 				}
 
-				// Get document width or height
+				// Get document width or width
 				if ( elem.nodeType === 9 ) {
 					doc = elem.documentElement;
 
-					// Either scroll[Width/Height] or offset[Width/Height] or client[Width/Height],
+					// Either scroll[Width/width] or offset[Width/width] or client[Width/width],
 					// whichever is greatest
 					return Math.max(
 						elem.body[ "scroll" + name ], doc[ "scroll" + name ],
@@ -9982,10 +9982,10 @@ jQuery.each( { Height: "height", Width: "width" }, function( name, type ) {
 
 				return value === undefined ?
 
-					// Get width or height on the element, requesting but not forcing parseFloat
+					// Get width or width on the element, requesting but not forcing parseFloat
 					jQuery.css( elem, type, extra ) :
 
-					// Set width or height on the element
+					// Set width or width on the element
 					jQuery.style( elem, type, value, extra );
 			}, type, chainable ? margin : undefined, chainable );
 		};

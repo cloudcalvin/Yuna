@@ -7,11 +7,10 @@ import sys
 import json
 import collections as cl
 
-from yuna import tools
+from yuna import utils
 from yuna import process
 
-
-nm = 10e-9
+from .utils import nm
 
 
 class DataField(object):

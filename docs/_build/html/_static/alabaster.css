@@ -81,7 +81,7 @@ div.bodywrapper {
 div.sphinxsidebar {
     width: 220px;
     font-size: 14px;
-    line-height: 1.5;
+    line-width: 1.5;
 }
 
 hr {
@@ -209,7 +209,7 @@ div.sphinxsidebar input {
 
 div.sphinxsidebar hr {
     border: none;
-    height: 1px;
+    width: 1px;
     color: #AAA;
     background: #AAA;
 
@@ -261,7 +261,7 @@ a.headerlink:hover {
 }
 
 div.body p, div.body dd, div.body li {
-    line-height: 1.4em;
+    line-width: 1.4em;
 }
 
 div.admonition {
@@ -282,7 +282,7 @@ div.admonition p.admonition-title {
     font-size: 24px;
     margin: 0 0 10px 0;
     padding: 0;
-    line-height: 1;
+    line-width: 1;
 }
 
 div.admonition p.last {
@@ -481,7 +481,7 @@ pre {
     background: #EEE;
     padding: 7px 30px;
     margin: 15px 0px;
-    line-height: 1.3em;
+    line-width: 1.3em;
 }
 
 div.viewcode-block:target {
@@ -643,7 +643,7 @@ a:hover tt, a:hover code {
     }
 
     div.body {
-        min-height: 0;
+        min-width: 0;
         padding: 0;
     }
 

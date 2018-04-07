@@ -16,7 +16,7 @@ connection mistakes made by the designer.
 .. figure:: figures/hole.png
     :width: 540px
     :align: center
-    :height: 300px
+    :width: 300px
     :alt: alternate text
     :figclass: align-center
     

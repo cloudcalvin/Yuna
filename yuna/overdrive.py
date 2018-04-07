@@ -1,7 +1,7 @@
 """
 
 Usage:
-    yuna <process> <testname> <ldf> [--cell=<cellname>] [--union] [--model]
+    yuna <process> <testname> <ldf> --cell=<cellname [--union] [--model=<modelname>]
     yuna (-h | --help)
     yuna (-V | --version)
 
@@ -22,8 +22,8 @@ import pyclipper
 from docopt import docopt
 
 from yuna import process
-from yuna import tools
-from yuna import modeling
+from yuna import utils
+from yuna import model
 from yuna import deck
 
 from .datafield import DataField
@@ -83,7 +83,6 @@ def init_geom():
     return geom
 
 
-
 def viewing(datafield):
     datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 
@@ -116,11 +115,11 @@ def grand_summon(basedir, args):
         If True then a 3D model of the cell must be created.
     """
 
-    tools.cyan_print('Summoning Yuna...')
+    utils.cyan_print('Summoning Yuna...')
 
     cellname = args['--cell']
     config_name = args['<configname>']
-    model = args['--model']
+    modelname = args['--model']
     cwd = ''
 
     if not cellname:
@@ -139,54 +138,31 @@ def grand_summon(basedir, args):
 
     cell = read_cell(gds_file, cellname)
 
-    deck.mask(cell, datafield)
+    deck.full_mask(cell, datafield)
     deck.components(cell, datafield)
-    deck.layers(cell, datafield)
+    deck.lvs_mask(cell, datafield)
 
     # test_union()
     # test_all()
 
-    if model is True:
+    if modelname:
+        utils.magenta_print('3D Model')
+
         geom = init_geom()
 
-        extruded = dict()
+        model.metals(geom, datafield)
+        model.terminals(geom, cell, datafield)
 
-        # TODO: Fix the nTron fuckup.
-        mask_layers = {**datafield.pcd.layers['ix'],
-                       **datafield.pcd.layers['res'],
-                       **datafield.pcd.layers['term'],
-                       **datafield.pcd.layers['via'],
-                       **datafield.pcd.layers['jj']}
+        meshdata = pygmsh.generate_mesh(geom,
+                                        verbose=False,
+                                        geo_filename=modelname + '.geo')
 
-        for gds, layer in mask_layers.items():
-            modeling.wirechain(geom, gds, layer, datafield, extruded)
+        meshio.write(modelname + '.vtu', *meshdata)
 
-        modeling.terminals(geom, cell, datafield)
-
-        # for key, polygons in datafield.get_terminals().items():
-        #     for points in polygons:
-        #         for lbl in cell.labels:
-        #             if pyclipper.PointInPolygon(lbl.position, points) == 1:
-        #                 print('     .label detected: ' + lbl.text)
-        #                 terminal = Terminal([points])
-        #                 terminals[lbl.text] = terminal
-        #
-        # for name, term in terminals.items():
-        #     print(name, term)
-        #     term.set_vector()
-        #     term.metal_connection(cell, datafield, name)
-        #     term.metal_edge(datafield)
-        #     term.extrude(geom, datafield)
-        #
-        # tools.write_cell((99, 0), 'Terminal Edges', terminals)
-
-        meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
-        meshio.write('3D.vtu', *meshdata)
-
-        tools.cyan_print('3D modeling setup finished\n')
+        utils.end_print()
 
     viewing(datafield)
 
-    tools.cyan_print('Yuna. Done.\n')
+    utils.cyan_print('Yuna. Done.\n')
 
     return datafield

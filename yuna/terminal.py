@@ -8,6 +8,22 @@ from yuna import tools
 from collections import namedtuple
 
 
+def line_loop(geom, coords):
+    points = []
+    for point in coords:
+        new_point = geom.add_point(point, 0.05)
+        points.append(new_point)
+
+    points = points + [points[0]]
+
+    lines = []
+    for point1, point2 in zip(points[:-1], points[1:]):
+        line = geom.add_line(point1, point2)
+        lines.append(line)
+
+    return geom.add_line_loop(lines)
+
+
 class Terminal(object):
     _ID = 0
 
@@ -20,7 +36,7 @@ class Terminal(object):
         self.slope = None
         self.metals = list()
 
-    def square_loop(self, geom, datafield):
+    def extrude(self, geom, datafield):
         polygon = datafield.polygons[self.metals[0]][0]
 
         print(polygon[0].data.name)
@@ -31,29 +47,12 @@ class Terminal(object):
         pb = [[p[0]*10e-9, p[1]*10e-9, s] for p in self.edge]
         pt = [[p[0]*10e-9, p[1]*10e-9, s+h] for p in self.edge]
 
-        print(pb)
-        print(pt)
+        coords = [pb[0], pt[0], pt[1], pb[1]]
 
-        p_array = [pb[0], pt[0], pt[1], pb[1]]
+        ll = line_loop(geom, coords)
 
-        points = []
-        for point in p_array:
-            new_point = geom.add_point(point, 0.05)
-            points.append(new_point)
-
-        points = points + [points[0]]
-
-        lines = []
-        for point1, point2 in zip(points[:-1], points[1:]):
-            line = geom.add_line(point1, point2)
-            lines.append(line)
-
-        line_loop = geom.add_line_loop(lines)
-
-        surf1 = geom.add_plane_surface(line_loop)
-        geom.add_physical_surface(surf1, label=self.id)
-
-        # return line_loop
+        surf = geom.add_plane_surface(ll)
+        geom.add_physical_surface(surf, label=self.id)
 
     def set_vector(self):
         ll = 0
@@ -74,7 +73,7 @@ class Terminal(object):
                 self.metals.append(gds)
         print(self.metals)
 
-    def metal_edges(self, datafield):
+    def metal_edge(self, datafield):
         gds = self.metals[0]
         for poly in datafield.polygons[gds][0]:
             points = np.vstack([poly.points, poly.points[0]])

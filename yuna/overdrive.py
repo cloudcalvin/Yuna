@@ -26,7 +26,6 @@ from yuna import tools
 from yuna import modeling
 from yuna import deck
 
-from .terminals import Terminal
 from .datafield import DataField
 
 
@@ -62,6 +61,35 @@ from .datafield import DataField
 #     frags = geom.boolean_fragments([rectangle], [disk_w, disk_e])
 #
 #     union = pygmsh.generate_mesh(geom, geo_filename='union.geo')
+
+
+def read_cell(gds_file, cellname):
+    gdsii = gdsyuna.GdsLibrary()
+
+    gdsii.read_gds(gds_file, unit=1.0e-12)
+
+    return gdsii.extract(cellname)
+
+
+def init_geom():
+    geom = pygmsh.opencascade.Geometry()
+
+    geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
+    geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.1;')
+
+    geom.add_raw_code('Mesh.Algorithm = 100;')
+    geom.add_raw_code('Coherence Mesh;')
+
+    return geom
+
+
+
+def viewing(datafield):
+    datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
+
+    gdsyuna.LayoutViewer()
+
+    gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
 
 
 def grand_summon(basedir, args):
@@ -107,32 +135,19 @@ def grand_summon(basedir, args):
                 if file == config_name:
                     config_file = basedir + '/' + file
 
-    gdsii = gdsyuna.GdsLibrary()
-    gdsii.read_gds(gds_file, unit=1.0e-12)
-    cell = gdsii.extract(cellname)
-
-    cell_origin = cell.copy('Original', deep_copy=True)
-    cell_origin.flatten()
-
     datafield = DataField('Hypres', config_file)
 
+    cell = read_cell(gds_file, cellname)
+
+    deck.mask(cell, datafield)
     deck.components(cell, datafield)
     deck.layers(cell, datafield)
-    deck.mask(cell_origin, datafield)
-
-    datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
 
     # test_union()
     # test_all()
 
     if model is True:
-        geom = pygmsh.opencascade.Geometry()
-
-        geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
-        geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.1;')
-
-        geom.add_raw_code('Mesh.Algorithm = 100;')
-        geom.add_raw_code('Coherence Mesh;')
+        geom = init_geom()
 
         extruded = dict()
 
@@ -146,34 +161,31 @@ def grand_summon(basedir, args):
         for gds, layer in mask_layers.items():
             modeling.wirechain(geom, gds, layer, datafield, extruded)
 
-        # modeling.union_terminals(geom, cell, datafield)
-        # modeling.terminals(geom, datafield)
+        modeling.terminals(geom, cell, datafield)
 
-        terminals = dict()
-        for key, polygons in datafield.get_terminals().items():
-            for points in polygons:
-                for lbl in cell.labels:
-                    if pyclipper.PointInPolygon(lbl.position, points) == 1:
-                        print('     .label detected: ' + lbl.text)
-                        terminal = Terminal([points])
-                        terminals[lbl.text] = terminal
-
-        for name, term in terminals.items():
-            print(name, term)
-            term.set_vector()
-            term.metal_connection(cell, datafield, name)
-            term.metal_edges(datafield)
-            term.square_loop(geom, datafield)
-
-        tools.write_cell((99, 0), 'Terminal Edges', terminals)
+        # for key, polygons in datafield.get_terminals().items():
+        #     for points in polygons:
+        #         for lbl in cell.labels:
+        #             if pyclipper.PointInPolygon(lbl.position, points) == 1:
+        #                 print('     .label detected: ' + lbl.text)
+        #                 terminal = Terminal([points])
+        #                 terminals[lbl.text] = terminal
+        #
+        # for name, term in terminals.items():
+        #     print(name, term)
+        #     term.set_vector()
+        #     term.metal_connection(cell, datafield, name)
+        #     term.metal_edge(datafield)
+        #     term.extrude(geom, datafield)
+        #
+        # tools.write_cell((99, 0), 'Terminal Edges', terminals)
 
         meshdata = pygmsh.generate_mesh(geom, verbose=False, geo_filename='3D.geo')
         meshio.write('3D.vtu', *meshdata)
 
         tools.cyan_print('3D modeling setup finished\n')
 
-    gdsyuna.LayoutViewer()
-    gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
+    viewing(datafield)
 
     tools.cyan_print('Yuna. Done.\n')
 

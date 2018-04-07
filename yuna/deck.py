@@ -6,7 +6,6 @@ import gdsyuna
 import pyclipper
 
 from yuna import labels
-from yuna import connect
 from yuna import tools
 
 import matplotlib.pyplot as plt
@@ -115,12 +114,6 @@ def layers(cell, datafield):
 
     poly = cell_layout.get_polygons(True)
 
-    # for gds, layerbase in datafield.terms.items():
-    #     print(gds)
-    #     if (gds, 0) in poly:
-    #         print('     . adding terminal -> ' + str(gds))
-    #         datafield.add_terminal(poly[(gds, 0)], gds, layerbase)
-
     for gds, layer in datafield.wires.items():
         if (gds, 0) in poly:
             metals = merge_metal_layers(poly[(gds, 0)])
@@ -167,7 +160,10 @@ def mask(cell, datafield):
 
     myCell = gdsyuna.Cell('myCell')
 
-    poly = cell.get_polygons(True)
+    cell_origin = cell.copy('Original', deep_copy=True)
+    cell_origin.flatten()
+
+    poly = cell_origin.get_polygons(True)
 
     mask_layers = {**datafield.wires, **datafield.nonwires}
 

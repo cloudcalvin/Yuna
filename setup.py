@@ -24,13 +24,13 @@ setup(
     packages=['yuna'],
     package_dir={'yuna': 'yuna'},
     install_requires=[
-        'gdsyuna', 
-        'pyclipper', 
-        'setuputils', 
-        'numpy', 
-        'matplotlib', 
-        'docopt', 
-        'future', 
+        'gdspy',
+        'pyclipper',
+        'setuputils',
+        'numpy',
+        'matplotlib',
+        'docopt',
+        'future',
         'termcolor'
     ],
     entry_points={

@@ -1,7 +1,7 @@
-GDSYuna
+gdspy
 =======
 
-The `GDSYuna <https://github.com/rubenvanstaden/gdsyuna>`_ package is a 
+The `gdspy <https://github.com/rubenvanstaden/gdspy>`_ package is a 
 new package introduced for solving LVS problems for memory cell technology. 
 It is a fork from the open source GDSPY library with multiple bug-fixes 
 and some added extensions. A list of changes made to in this fork is given below:

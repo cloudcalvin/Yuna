@@ -7,7 +7,7 @@ Environment Setup
 Yuna package descriptions:
 
 * `docopt <http://docopt.org>`_ Command-line interface library.
-* `gdsyuna <https://github.com/rubenvanstaden/gdsyuna>`_ Library for GDS file manipulations.
+* `gdspy <https://github.com/rubenvanstaden/gdspy>`_ Library for GDS file manipulations.
 * `pyclipper <https://github.com/greginvm/pyclipper>`_ Python wrapper for Angusj Clipper library.
 * `termcolor <https://pypi.python.org/pypi/termcolor>`_ Package for color outputs in the terminal.
 

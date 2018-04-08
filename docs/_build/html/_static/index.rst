@@ -11,7 +11,7 @@ Welcome to Yuna's documentation!
    :caption: Contents:
    
    overview
-   gdsyuna
+   gdspy
    baselayers
    cell_labels
    installation

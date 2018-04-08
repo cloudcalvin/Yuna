@@ -1,7 +1,7 @@
 Cell Labels
 ===========
 
-Using the GDSYuna library all cells in the GDS layout are recursively looped and 
+Using the gdspy library all cells in the GDS layout are recursively looped and 
 if-statements are used to with the cell-type, which is the string in the 
 beginning of the name of the cell (‘via\_’, ‘jj\_’, ‘ntron\_’, etc). 
 All via cells are first detected and processed before looking to device 

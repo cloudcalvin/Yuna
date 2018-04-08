@@ -16,7 +16,7 @@ Options:
 import os
 import meshio
 import pygmsh
-import gdsyuna
+import gdspy
 import pyclipper
 
 from docopt import docopt
@@ -64,7 +64,7 @@ from .datafield import DataField
 
 
 def read_cell(gds_file, cellname):
-    gdsii = gdsyuna.GdsLibrary()
+    gdsii = gdspy.GdsLibrary()
 
     gdsii.read_gds(gds_file, unit=1.0e-12)
 
@@ -84,11 +84,11 @@ def init_geom():
 
 
 def viewing(datafield):
-    datafield.parse_gdspy(gdsyuna.Cell('View Cell Test'))
+    datafield.parse_gdspy(gdspy.Cell('View Cell Test'))
 
-    gdsyuna.LayoutViewer()
+    gdspy.LayoutViewer()
 
-    gdsyuna.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
+    gdspy.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
 
 
 def grand_summon(basedir, args):

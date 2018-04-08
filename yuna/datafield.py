@@ -1,4 +1,4 @@
-import gdsyuna
+import gdspy
 import pprint
 import yuna
 import numpy as np
@@ -137,20 +137,20 @@ class DataField(object):
         for i in wires:
             for key, poly in self.polygons[i].items():
                 for pp in poly:
-                    polygon = gdsyuna.Polygon(*pp.get_variables())
+                    polygon = gdspy.Polygon(*pp.get_variables())
                     cell.add(polygon)
 
         # for i in self.nonwires:
         #     for key, poly in self.mask[i].items():
         #         for pp in poly:
-        #             polygon = gdsyuna.Polygon(*pp.get_variables())
+        #             polygon = gdspy.Polygon(*pp.get_variables())
         #             cell.add(polygon)
 
         # for tt, value in self.pcd.layers.items():
         #     for i, value2 in value.items():
         #         for key, poly in self.mask[i].items():
         #             for pp in poly:
-        #                 polygon = gdsyuna.Polygon(*pp.get_variables())
+        #                 polygon = gdspy.Polygon(*pp.get_variables())
         #                 cell.add(polygon)
 
         for lbl in self.labels:
@@ -159,7 +159,7 @@ class DataField(object):
                     cell.add(label)
 
 
-class Polygon(gdsyuna.Polygon):
+class Polygon(gdspy.Polygon):
     """
     Holes can only be a list of points, since it is only a hole
     and has no other properties.
@@ -192,7 +192,7 @@ class Polygon(gdsyuna.Polygon):
         return (self.points, self.layer, self.datatype)
 
 
-# class Label(gdsyuna.Label):
+# class Label(gdspy.Label):
 #     _ID = 0
 #
 #     def __init__(self, metals, text, position, rotation=0, layer=0):

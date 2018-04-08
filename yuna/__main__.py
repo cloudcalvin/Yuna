@@ -17,7 +17,7 @@
 # 
 # import os
 # import json
-# import gdsyuna
+# import gdspy
 # 
 # from docopt import docopt
 # from yuna import process
@@ -62,8 +62,8 @@
 #     else:
 #         print('Please specify a Cell')
 # 
-#     gdsyuna.LayoutViewer()
-#     gdsyuna.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
+#     gdspy.LayoutViewer()
+#     gdspy.write_gds('bbn_basic_cell.gds', unit=1.0e-6, precision=1.0e-6)
 # 
 #     utils.cyan_print('Yuna. Done.')
 # 

@@ -1,6 +1,6 @@
 # Yuna
 
-Yuna uses the *gdsyuna* package to read and manipulate the GDS layers.
+Yuna uses the *gdspy* package to read and manipulate the GDS layers.
 
 ## User 
 
@@ -12,7 +12,7 @@ Setup for the normal user.
 
 `pyclipper` Python wrapper for Angusj Clipper library.
 `termcolor` Package for color outputs in the terminal.
-`gdsyuna` Python library for GDS file handeling.
+`gdspy` Python library for GDS file handeling.
 `docopt` Library for user arguments in the terminal.
 
 Make sure Python is installed on your system:

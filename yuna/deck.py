@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 import itertools
-import gdsyuna
+import gdspy
 import pyclipper
 
 from yuna import labels
@@ -71,7 +71,7 @@ class Metal(object):
 
                     if utils.is_nested_polygons(hole, poly):
                         datafield.add(poly.points, self.key, holes=hole.points, model='model')
-                        myCell.add(gdsyuna.Polygon(hole.points, layer=81))
+                        myCell.add(gdspy.Polygon(hole.points, layer=81))
                         add_to_mask = False
                     else:
                         datafield.add(poly.points, self.key, model='model')
@@ -80,7 +80,7 @@ class Metal(object):
             if add_to_mask:
                 datafield.add(poly.points, self.key, model='model')
 
-            myCell.add(gdsyuna.Polygon(poly.points, self.key[0], verbose=False))
+            myCell.add(gdspy.Polygon(poly.points, self.key[0], verbose=False))
 
     def add(self, element):
         self.points = utils.angusj(self.points, element.points, 'difference')
@@ -314,7 +314,7 @@ def model_mask(cell, datafield):
         that corresponds to the current datatype value.
     """
 
-    myCell = gdsyuna.Cell('myCell')
+    myCell = gdspy.Cell('myCell')
 
     cell_origin = cell.copy('Original', deep_copy=True)
     cell_origin.flatten()

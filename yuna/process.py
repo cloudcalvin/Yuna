@@ -1,7 +1,7 @@
 import networkx as nx
 import itertools
 import json
-import gdsyuna
+import gdspy
 
 from yuna import utils
 from yuna import labels

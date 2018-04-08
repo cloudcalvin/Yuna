@@ -12,7 +12,7 @@ Welcome to Yuna's documentation!
    
    installation
    overview
-   gdsyuna
+   gdspy
    cell_labels
    baselayers
 

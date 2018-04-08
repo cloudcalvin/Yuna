@@ -2,7 +2,7 @@ setuputils
 numpy
 matplotlib
 future; python_version < "3"
-gdsyuna
+gdspy
 pyclipper
 docopt
 termcolor

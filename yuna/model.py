@@ -1,4 +1,4 @@
-import gdsyuna
+import gdspy
 import pygmsh
 import meshio
 import numpy as np

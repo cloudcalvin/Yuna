@@ -1,4 +1,4 @@
-import gdsyuna
+import gdspy
 
 
 class Mask(object):

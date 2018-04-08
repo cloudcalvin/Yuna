@@ -1,5 +1,5 @@
 from yuna import utils
-import gdsyuna
+import gdspy
 from yuna import utils
 
 from yuna import datafield
@@ -7,7 +7,7 @@ from yuna import datafield
 
 def get_ntron_box(gds, poly):
         """  """
-        box_poly = gdsyuna.Polygon(poly, layer=gds, datatype=4, verbose=False)
+        box_poly = gdspy.Polygon(poly, layer=gds, datatype=4, verbose=False)
         bb = box_poly.get_bounding_box()
         nbox = [[bb[0][0], bb[0][1]],
                 [bb[1][0], bb[0][1]],
@@ -38,7 +38,7 @@ class BasisLayer(object):
         vias that are not connected to any wires. """
 
         for via in self.polygons[(self.gds, 1)]:
-            auron_cell.add(gdsyuna.Polygon(via, layer=self.gds, datatype=1, verbose=False))
+            auron_cell.add(gdspy.Polygon(via, layer=self.gds, datatype=1, verbose=False))
 
             my_poly = structure.Polygon(via, layer=self.gds, datatype=1, verbose=False)
             my_cell.add(my_poly)
@@ -63,7 +63,7 @@ class BasisLayer(object):
             poly = self.polygons[(self.gds, 4)]
             for box in utils.angusj(poly, poly, 'union'):
                 nbox = get_ntron_box(self.gds, box)
-                auron_cell.add(gdsyuna.Polygon(nbox, layer=self.gds, datatype=6, verbose=False))
+                auron_cell.add(gdspy.Polygon(nbox, layer=self.gds, datatype=6, verbose=False))
 
                 my_poly = structure.Polygon(via, layer=self.gds, datatype=1, verbose=False)
                 my_cell.add(my_poly)

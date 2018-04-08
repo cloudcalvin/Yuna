@@ -1,4 +1,4 @@
-import gdsyuna
+import gdspy
 import itertools as it
 
 from yuna import utils
@@ -29,7 +29,7 @@ def add_label(cell, element, name, datafield, ttype):
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
 
-    lbl = gdsyuna.Label(name, (cx, cy), 0, layer=64)
+    lbl = gdspy.Label(name, (cx, cy), 0, layer=64)
     cell.add(lbl)
 
     if ttype == 1:
@@ -103,7 +103,7 @@ def vias(cell, datafield):
     #
     #         if gds in polygons and key in polygons:
     #             for points in utils.angusj(polygons[gds], polygons[key], 'intersection'):
-    #                 poly = gdsyuna.Polygon(points, gds[0], verbose=False)
+    #                 poly = gdspy.Polygon(points, gds[0], verbose=False)
     #                 add_label(cell, poly, viadata.name, 1)
 
     ttype = datafield.pcd.atoms['vias'][cell.name]['type']
@@ -117,16 +117,16 @@ def junctions(cell, datafield):
     jjs = datafield.pcd.atoms['jjs']
 
     for element in cell.elements:
-        if isinstance(element, gdsyuna.PolygonSet):
+        if isinstance(element, gdspy.PolygonSet):
             if element.layers[0] == jjs[cell.name]['gds']:
                 jj_poly = utils.angusj(element.polygons, element.polygons, 'union')
-                poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+                poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
 
                 add_label(cell, poly, cell.name, datafield, 3)
-        elif isinstance(element, gdsyuna.Polygon):
+        elif isinstance(element, gdspy.Polygon):
             if element.layers == jjs[cell.name]['gds']:
                 jj_poly = utils.angusj(element.polygons, element.polygons, 'union')
-                poly = gdsyuna.Polygon(jj_poly, element.layers[0], verbose=False)
+                poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
 
                 add_label(cell, poly, cell.name, datafield, 3)
 
@@ -147,7 +147,7 @@ def get_shunt_connections(cell, jj_atom, datafield):
     shunt_key = (int(jj_atom['shunt']['metals'][1]), 3)
 
     for points in utils.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
-        poly = gdsyuna.Polygon(points, gds, verbose=False)
+        poly = gdspy.Polygon(points, gds, verbose=False)
         add_label(cell, poly, 'shunt', datafield, 4)
 
 
@@ -161,7 +161,7 @@ def get_ground_connection(cell, jj_atom, datafield):
 
     if shunt_key != (30, 3):
         for points in utils.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
-            poly = gdsyuna.Polygon(points, gds, verbose=False)
+            poly = gdspy.Polygon(points, gds, verbose=False)
             add_label(cell, poly, 'ground', datafield, 5)
 
 
@@ -180,13 +180,13 @@ def get_ground_connection(cell, jj_atom, datafield):
 #
 #             if gds in polygons and key in polygons:
 #                 for points in utils.angusj(polygons[gds], polygons[key], 'intersection'):
-#                     poly = gdsyuna.Polygon(points, gds[0], verbose=False)
+#                     poly = gdspy.Polygon(points, gds[0], verbose=False)
 #                     add_label(cell, poly, viadata.name, 1)
 
 
 # def get_ntron_layer(cell, atom, ttype):
 #     points = cell.get_polygons(True)[(42, 0)]
-#     poly = gdsyuna.Polygon(points, 42, verbose=False)
+#     poly = gdspy.Polygon(points, 42, verbose=False)
 #     add_label(cell, poly, 'via_PlugVia', ttype)
 
 

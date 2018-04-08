@@ -5,7 +5,7 @@ from collections import defaultdict
 import os
 import sys
 import json
-import gdsyuna
+import gdspy
 import pyclipper
 import numpy as np
 
@@ -21,7 +21,7 @@ def print_cellrefs(cell):
     print('')
     magenta_print('CellReferences')
     for element in cell.elements:
-        if isinstance(element, gdsyuna.CellReference):
+        if isinstance(element, gdspy.CellReference):
             print(element)
             print('')
 
@@ -76,7 +76,7 @@ def cyan_print(header):
 def list_layout_cells(gds):
     """ List the Cells in the GDS layout. """
 
-    gdsii = gdsyuna.GdsLibrary()
+    gdsii = gdspy.GdsLibrary()
     gdsii.read_gds(gds, unit=1.0e-12)
 
     print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
@@ -99,10 +99,10 @@ def convert_node_to_3d(wire, position):
 
 
 def write_cell(key, name, terminals):
-    cell = gdsyuna.Cell(name)
+    cell = gdspy.Cell(name)
 
     for name, term in terminals.items():
-        poly = gdsyuna.Polygon(term.edge, *key)
+        poly = gdspy.Polygon(term.edge, *key)
         cell.add(poly)
 
 

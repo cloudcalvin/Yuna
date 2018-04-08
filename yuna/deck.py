@@ -228,7 +228,6 @@ def lvs_mask(cell, datafield):
     metals = cl.defaultdict(dict)
 
     wires = {**datafield.pcd.layers['ix'],
-             **datafield.pcd.layers['term'],
              **datafield.pcd.layers['res']}
 
     for gds, layer in wires.items():
@@ -261,12 +260,12 @@ def lvs_mask(cell, datafield):
     # metals[6].update_mask(datafield)
 
     for gds, metal in metals.items():
-        for via in vias.values():
-            metal.add(via)
-        for jj in jjs.values():
-            metal.add(jj)
-        for ntron in ntrons.values():
-            metal.add(ntron)
+        if gds in vias:
+            metal.add(vias[gds])
+        if gds in jjs:
+            metal.add(jjs[gds])
+        if gds in ntrons:
+            metal.add(ntrons[gds])
 
         metal.update_mask(datafield)
 

@@ -134,8 +134,8 @@ def junctions(cell, datafield):
 
     get_shunt_connections(cell, jjs, datafield)
 
-    if utils.has_ground(cell, jjs):
-        get_ground_connection(cell, jjs, datafield)
+    # if utils.has_ground(cell, jjs):
+    #     get_ground_connection(cell, jjs, datafield)
 
 
 def get_shunt_connections(cell, jj_atom, datafield):

@@ -14,6 +14,24 @@ import collections as cl
 from collections import namedtuple
 
 
+class Via(object):
+
+    def __init__(self):
+        pass
+
+
+class Junction(object):
+
+    def __init__(self):
+        pass
+
+
+class Ntron(object):
+
+    def __init__(self):
+        pass
+
+
 def components(cell, datafield):
     """
     Vias are primary components and are detected first.
@@ -121,8 +139,6 @@ def lvs_mask(cell, datafield):
         if (gds, 0) in poly:
             metals = merge_metal_layers(poly[(gds, 0)])
 
-            add indiv. component to datafiedl like in gdspy
-
             for i in [1, 3, 7]:
                 key = (gds, i)
                 if key in poly:
@@ -137,7 +153,7 @@ def lvs_mask(cell, datafield):
                 datafield.add(pp, (gds, 0))
 
 
-def full_mask(cell, datafield):
+def model_mask(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
 

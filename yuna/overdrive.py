@@ -138,7 +138,7 @@ def grand_summon(basedir, args):
 
     cell = read_cell(gds_file, cellname)
 
-    deck.full_mask(cell, datafield)
+    deck.model_mask(cell, datafield)
     deck.components(cell, datafield)
     deck.lvs_mask(cell, datafield)
 

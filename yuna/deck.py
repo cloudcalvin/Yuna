@@ -14,22 +14,140 @@ import collections as cl
 from collections import namedtuple
 
 
+class Metal(object):
+
+    def __init__(self, gds, poly):
+        self.key = (gds, 0)
+        self.raw_points = poly[(gds, 0)]
+        self.points = self.union()
+
+    def union(self):
+        if not isinstance(self.raw_points[0][0], np.ndarray):
+            raise TypeError("poly must be a 3D list")
+
+        cc_poly = list()
+
+        for poly in self.raw_points:
+            if pyclipper.Orientation(poly) is False:
+                reverse_poly = pyclipper.ReversePath(poly)
+                cc_poly.append(reverse_poly)
+            else:
+                cc_poly.append(poly)
+
+        union = utils.angusj(subj=cc_poly, method='union')
+        points = pyclipper.CleanPolygons(union)
+
+        if not isinstance(points[0][0], list):
+            raise TypeError("poly must be a 3D list")
+
+        return points
+
+    def create_mask(self, datafield, myCell):
+
+        named_layers = cl.defaultdict(dict)
+
+        for l1 in self.points:
+            Polygon = namedtuple('Polygon', ['area', 'points'])
+            pp = Polygon(area=pyclipper.Area(l1), points=l1)
+
+            if pp.area < 0:
+                if 'holes' in named_layers:
+                    named_layers['holes'].append(pp)
+                else:
+                    named_layers['holes'] = [pp]
+            elif pp.area > 0:
+                if 'polygon' in named_layers:
+                    named_layers['polygon'].append(pp)
+                else:
+                    named_layers['polygon'] = [pp]
+            else:
+                raise ValueError('polygon area cannot be zero')
+
+        for poly in named_layers['polygon']:
+            add_to_mask = True
+
+            for hole in named_layers['holes']:
+                if abs(hole.area) < abs(poly.area):
+
+                    if utils.is_nested_polygons(hole, poly):
+                        datafield.add(poly.points, self.key, holes=hole.points, model='model')
+                        myCell.add(gdsyuna.Polygon(hole.points, layer=81))
+                        add_to_mask = False
+                    else:
+                        datafield.add(poly.points, self.key, model='model')
+                        add_to_mask = False
+
+            if add_to_mask:
+                datafield.add(poly.points, self.key, model='model')
+
+            myCell.add(gdsyuna.Polygon(poly.points, self.key[0], verbose=False))
+
+    def add(self, element):
+        self.points = utils.angusj(self.points, element.points, 'difference')
+
+    def update_mask(self, datafield):
+        for pp in self.points:
+            datafield.add(pp, self.key)
+
+
 class Via(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, gds, poly):
+        self.key = (gds, 1)
+        self.raw_points = poly[(gds, 1)]
+        self.points = self.union()
+
+    def union(self):
+        points = utils.angusj(subj=self.raw_points, method='union')
+
+        if not isinstance(points[0][0], list):
+            raise TypeError("poly must be a 3D list")
+
+        return points
+
+    def update_mask(self, datafield):
+        for pp in self.points:
+            datafield.add(pp, self.key)
 
 
 class Junction(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, gds, poly):
+        self.key = (gds, 3)
+        self.raw_points = poly[(gds, 3)]
+        self.points = self.union()
+
+    def union(self):
+        points = utils.angusj(subj=self.raw_points, method='union')
+
+        if not isinstance(points[0][0], list):
+            raise TypeError("poly must be a 3D list")
+
+        return points
+
+    def update_mask(self, datafield):
+        for pp in self.points:
+            datafield.add(pp, self.key)
 
 
 class Ntron(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, gds, poly):
+        self.key = (gds, 7)
+        self.raw_points = poly[(gds, 7)]
+        self.points = self.union()
+
+    def union(self):
+        points = utils.angusj(subj=self.raw_points, method='union')
+
+        if not isinstance(points[0][0], list):
+            raise TypeError("poly must be a 3D list")
+
+        return points
+
+    def update_mask(self, datafield):
+        for pp in self.points:
+            datafield.add(pp, self.key)
 
 
 def components(cell, datafield):
@@ -76,34 +194,6 @@ def components(cell, datafield):
             datafield.labels[lbl.text]['labels'].append(lbl)
 
 
-def add_vias(key, datafield, poly, metals):
-    components = utils.angusj(poly[key], poly[key], 'union')
-
-    for pp in components:
-        datafield.add(pp, key)
-
-    return utils.angusj(metals, components, 'difference')
-
-
-def add_junctions(key, datafield, poly, metals):
-    print('--- Adding junction ---------')
-    components = utils.angusj(poly[key], poly[key], 'union')
-
-    for pp in components:
-        datafield.add(pp, key)
-
-    return utils.angusj(metals, components, 'difference')
-
-
-def add_ntrons(key, datafield, poly, metals):
-    components = utils.angusj(poly[key], poly[key], 'union')
-
-    for pp in components:
-        datafield.add(pp, key)
-
-    return utils.angusj(metals, components, 'difference')
-
-
 def lvs_mask(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
@@ -135,22 +225,68 @@ def lvs_mask(cell, datafield):
 
     poly = cell_layout.get_polygons(True)
 
-    for gds, layer in datafield.wires.items():
+    metals = cl.defaultdict(dict)
+
+    wires = {**datafield.pcd.layers['ix'],
+             **datafield.pcd.layers['term'],
+             **datafield.pcd.layers['res']}
+
+    for gds, layer in wires.items():
         if (gds, 0) in poly:
-            metals = merge_metal_layers(poly[(gds, 0)])
+            metals[gds] = Metal(gds, poly)
 
-            for i in [1, 3, 7]:
-                key = (gds, i)
-                if key in poly:
-                    if i == 1:
-                        metals = add_vias(key, datafield, poly, metals)
-                    elif i == 3:
-                        metals = add_junctions(key, datafield, poly, metals)
-                    elif i == 7:
-                        metals = add_ntrons(key, datafield, poly, metals)
+    vias = cl.defaultdict(dict)
+    jjs = cl.defaultdict(dict)
+    ntrons = cl.defaultdict(dict)
 
-            for pp in metals:
-                datafield.add(pp, (gds, 0))
+    for gds, layer in wires.items():
+        if gds in metals:
+            if (gds, 1) in poly:
+                via = Via(gds, poly)
+                via.update_mask(datafield)
+                vias[gds] = via
+
+            if (gds, 3) in poly:
+                jj = Junction(gds, poly)
+                jj.update_mask(datafield)
+                jjs[gds] = jj
+
+            if (gds, 7) in poly:
+                ntron = Ntron(gds, poly)
+                ntron.update_mask(datafield)
+                ntrons[gds] = ntron
+
+    # # TODO: We use a dict so that we can do individual unittests like this.
+    # metals[6].add(vias[6])
+    # metals[6].update_mask(datafield)
+
+    for gds, metal in metals.items():
+        for via in vias.values():
+            metal.add(via)
+        for jj in jjs.values():
+            metal.add(jj)
+        for ntron in ntrons.values():
+            metal.add(ntron)
+
+        metal.update_mask(datafield)
+
+    # for gds, layer in datafield.wires.items():
+    #     if (gds, 0) in poly:
+    #         metals = merge_metal_layers(poly[(gds, 0)])
+    #
+    #         for i in [1, 3, 7]:
+    #             key = (gds, i)
+    #             if key in poly:
+    #                 if i == 1:
+    #                     via = Via(key, datafield, poly)
+    #                     # metals = add_vias(key, datafield, poly, metals)
+    #                 elif i == 3:
+    #                     # metals = add_junctions(key, datafield, poly, metals)
+    #                 elif i == 7:
+    #                     # metals = add_ntrons(key, datafield, poly, metals)
+    #
+    #         # for pp in metals:
+    #         #     datafield.add(pp, (gds, 0))
 
 
 def model_mask(cell, datafield):
@@ -186,72 +322,16 @@ def model_mask(cell, datafield):
 
     poly = cell_origin.get_polygons(True)
 
-    mask_layers = {**datafield.wires, **datafield.nonwires}
+    mask_layers = {**datafield.pcd.layers['ix'],
+                   **datafield.pcd.layers['term'],
+                   **datafield.pcd.layers['res'],
+                   **datafield.pcd.layers['via'],
+                   **datafield.pcd.layers['jj'],
+                   **datafield.pcd.layers['ntron']}
+
+    metals = cl.defaultdict(dict)
 
     for gds, layer in mask_layers.items():
         if (gds, 0) in poly:
-            metals = merge_metal_layers(poly[(gds, 0)])
-            create_mask((gds, 0), metals, datafield, myCell)
-
-
-def create_mask(key, union, datafield, myCell):
-
-    named_layers = cl.defaultdict(dict)
-
-    for l1 in union:
-        Polygon = namedtuple('Polygon', ['area', 'points'])
-        pp = Polygon(area=pyclipper.Area(l1), points=l1)
-
-        if pp.area < 0:
-            if 'holes' in named_layers:
-                named_layers['holes'].append(pp)
-            else:
-                named_layers['holes'] = [pp]
-        elif pp.area > 0:
-            if 'polygon' in named_layers:
-                named_layers['polygon'].append(pp)
-            else:
-                named_layers['polygon'] = [pp]
-        else:
-            raise ValueError('polygon area cannot be zero')
-
-    for poly in named_layers['polygon']:
-        add_to_mask = True
-
-        for hole in named_layers['holes']:
-            if abs(hole.area) < abs(poly.area):
-
-                if utils.is_nested_polygons(hole, poly):
-                    datafield.add_mask(poly.points, key, hole.points)
-                    myCell.add(gdsyuna.Polygon(hole.points, layer=81))
-                    add_to_mask = False
-                else:
-                    datafield.add_mask(poly.points, key)
-                    add_to_mask = False
-
-        if add_to_mask:
-            datafield.add_mask(poly.points, key)
-
-        myCell.add(gdsyuna.Polygon(poly.points, key[0], verbose=False))
-
-
-def merge_metal_layers(polygons):
-    if not isinstance(polygons[0][0], np.ndarray):
-        raise TypeError("poly must be a 3D list")
-
-    cc_poly = list()
-
-    for poly in polygons:
-        if pyclipper.Orientation(poly) is False:
-            reverse_poly = pyclipper.ReversePath(poly)
-            cc_poly.append(reverse_poly)
-        else:
-            cc_poly.append(poly)
-
-    union = utils.angusj(subj=cc_poly, method='union')
-    metals = pyclipper.CleanPolygons(union)
-
-    if not isinstance(metals[0][0], list):
-        raise TypeError("poly must be a 3D list")
-
-    return metals
+            metals[gds] = Metal(gds, poly)
+            metals[gds].create_mask(datafield, myCell)

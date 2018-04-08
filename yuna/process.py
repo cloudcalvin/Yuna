@@ -44,21 +44,21 @@ class ProcessConfigData(object):
         self.atoms = atoms
 
     def add_layer(self, mtype, gds, value):
-        wd = Layer(value['name'], mtype)
+        layer = Layer(value['name'], mtype)
 
         if 'position' in value.keys():
-            wd.set_position(value['position'])
+            layer.set_position(value['position'])
         if 'width' in value.keys():
-            wd.set_width(value['width'])
+            layer.set_width(value['width'])
         if 'wire' in value.keys():
-            wd.add_contact_layer(value['wire'])
+            layer.add_contact_layer(value['wire'])
 
         if mtype not in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron']:
             raise TypeError("mtype `type` is not supported")
 
         assert isinstance(gds, int)
 
-        self.layers[mtype][gds] = wd
+        self.layers[mtype][gds] = layer
 
 
 class Layer(object):

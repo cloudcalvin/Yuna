@@ -17,8 +17,7 @@ class DataField(object):
 
     def __init__(self, name, pcf):
         self.name = name
-
-        self.pcd, self.wires, self.nonwires, self.holes = self.read_config(pcf)
+        self.pcd = self.read_config(pcf)
 
         self.mask = cl.defaultdict(dict)
         self.polygons = cl.defaultdict(dict)
@@ -27,21 +26,6 @@ class DataField(object):
     def __str__(self):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
             self.name, len(self.polygons.keys()),len(self.labels))
-
-#     def add_junction_component(self, fabdata):
-#         gds = fabdata['Atoms']['jjs']['gds']
-#         name = fabdata['Atoms']['jjs']['name']
-#         layers = fabdata['Atoms']['jjs']['layers']
-#         color = fabdata['Atoms']['jjs']['color']
-#
-#         jj = process.Junction(gds, name, layers, color)
-#
-#         jj.add_position(fabdata)
-#         jj.add_width(fabdata)
-#         jj.add_shunt_data(fabdata)
-#         jj.add_ground_data(fabdata)
-#
-#         return jj
 
     def read_config(self, pcf):
         """ Reads the config file that is written in
@@ -62,17 +46,17 @@ class DataField(object):
                 for gds, value in fabdata[mtype].items():
                     pcd.add_layer(mtype, int(gds), value)
 
-        wires = {**pcd.layers['ix'],
-                 **pcd.layers['term'],
-                 **pcd.layers['res']}
+        # wires = {**pcd.layers['ix'],
+        #          **pcd.layers['term'],
+        #          **pcd.layers['res']}
+        #
+        # nonwires = {**pcd.layers['via'],
+        #             **pcd.layers['jj'],
+        #             **pcd.layers['ntron']}
+        #
+        # holes = {**pcd.layers['hole']}
 
-        nonwires = {**pcd.layers['via'],
-                    **pcd.layers['jj'],
-                    **pcd.layers['ntron']}
-
-        holes = {**pcd.layers['hole']}
-
-        return pcd, wires, nonwires, holes
+        return pcd
 
     def get_terminals(self):
         terminals = dict()
@@ -104,7 +88,7 @@ class DataField(object):
 
         return metals
 
-    def add_mask(self, element, key=None, holes=None):
+    def add(self, element, key=None, holes=None, model='lvs'):
         """
         Add a new element or list of elements to this cell.
 
@@ -134,48 +118,23 @@ class DataField(object):
 
         polygon = Polygon(key, element, fabdata, holes)
 
-        if key[1] in self.mask[key[0]]:
-            self.mask[key[0]][key[1]].append(polygon)
-        else:
-            self.mask[key[0]][key[1]] = [polygon]
-
-    def add(self, element, key=None):
-        """
-        Add a new element or list of elements to this cell.
-
-        Parameters
-        ----------
-        element : object
-            The element or list of elements to be inserted in this cell.
-
-        Returns
-        -------
-        out : ``Cell``
-            This cell.
-        """
-
-        if key is None:
-            raise TypeError('key cannot be None')
-
-        assert isinstance(element[0], list)
-
-        fabdata = {**self.pcd.layers['ix'],
-                   **self.pcd.layers['hole'],
-                   **self.pcd.layers['res'],
-                   **self.pcd.layers['term'],
-                   **self.pcd.layers['via'],
-                   **self.pcd.layers['jj'],
-                   **self.pcd.layers['ntron']}
-
-        polygon = Polygon(key, element, fabdata)
-
-        if key[1] in self.polygons[key[0]]:
-            self.polygons[key[0]][key[1]].append(polygon)
-        else:
-            self.polygons[key[0]][key[1]] = [polygon]
+        if model == 'lvs':
+            if key[1] in self.polygons[key[0]]:
+                self.polygons[key[0]][key[1]].append(polygon)
+            else:
+                self.polygons[key[0]][key[1]] = [polygon]
+        elif model == 'model':
+            if key[1] in self.mask[key[0]]:
+                self.mask[key[0]][key[1]].append(polygon)
+            else:
+                self.mask[key[0]][key[1]] = [polygon]
 
     def parse_gdspy(self, cell):
-        for i in self.wires:
+        wires = {**self.pcd.layers['ix'],
+                 **self.pcd.layers['term'],
+                 **self.pcd.layers['res']}
+
+        for i in wires:
             for key, poly in self.polygons[i].items():
                 for pp in poly:
                     polygon = gdsyuna.Polygon(*pp.get_variables())

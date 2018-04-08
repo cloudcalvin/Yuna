@@ -40,7 +40,11 @@ class Terminal(object):
                 self.slope = slope(p1, p2)
 
     def metal_connection(self, datafield, name):
-        for gds, metal in datafield.wires.items():
+        wires = {**datafield.pcd.layers['ix'],
+                 **datafield.pcd.layers['term'],
+                 **datafield.pcd.layers['res']}
+
+        for gds, metal in wires.items():
             m1 = name.split(' ')[1]
             m2 = name.split(' ')[2]
 

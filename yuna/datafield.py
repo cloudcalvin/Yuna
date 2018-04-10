@@ -41,7 +41,7 @@ class DataField(object):
         pcd.add_parameters(fabdata['Params'])
         pcd.add_atoms(fabdata['Atoms'])
 
-        for mtype in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron']:
+        for mtype in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron', 'cap']:
             if mtype in fabdata:
                 for gds, value in fabdata[mtype].items():
                     pcd.add_layer(mtype, int(gds), value)

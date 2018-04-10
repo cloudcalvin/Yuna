@@ -53,7 +53,7 @@ class ProcessConfigData(object):
         if 'wire' in value.keys():
             layer.add_contact_layer(value['wire'])
 
-        if mtype not in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron']:
+        if mtype not in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron', 'cap']:
             raise TypeError("mtype `type` is not supported")
 
         assert isinstance(gds, int)

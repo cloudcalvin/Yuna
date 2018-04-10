@@ -11,6 +11,7 @@ from yuna import utils
 from yuna import process
 
 from .utils import nm
+from .masternodes import MasterNodes
 
 
 class DataField(object):
@@ -18,6 +19,7 @@ class DataField(object):
     def __init__(self, name, pcf):
         self.name = name
         self.pcd = self.read_config(pcf)
+        self.mnodes = self.masternodes(pcf)
 
         self.mask = cl.defaultdict(dict)
         self.polygons = cl.defaultdict(dict)
@@ -45,16 +47,6 @@ class DataField(object):
             if mtype in fabdata:
                 for gds, value in fabdata[mtype].items():
                     pcd.add_layer(mtype, int(gds), value)
-
-        # wires = {**pcd.layers['ix'],
-        #          **pcd.layers['term'],
-        #          **pcd.layers['res']}
-        #
-        # nonwires = {**pcd.layers['via'],
-        #             **pcd.layers['jj'],
-        #             **pcd.layers['ntron']}
-        #
-        # holes = {**pcd.layers['hole']}
 
         return pcd
 

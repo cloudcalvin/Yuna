@@ -5,27 +5,6 @@ from yuna import utils
 from yuna import process
 
 
-def add_cap(cell, element, datafield, name='cap'):
-    print('--- Adding Cap')
-    bb = element.get_bounding_box()
-    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
-    cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-
-    lbl = gdspy.Label(name, (cx, cy), 0, layer=64)
-    cell.add(lbl)
-
-    datafield.labels[lbl.text]['name'] = datafield.pcd.layers['cap'][65].name
-    datafield.labels[lbl.text]['type'] = 7
-    datafield.labels[lbl.text]['metals'] = [6, 1]
-    datafield.labels[lbl.text]['labels'] = [lbl]
-    # datafield.labels[lbl.text]['labels'].append(lbl)
-
-    # print(datafield.labels)
-    # datafield.labels[lbl.text] = datafield.pcd.atoms['cap'][name]
-    # print(datafield.labels[lbl.text])
-    # datafield.labels[lbl.text]['type'] = 6
-
-
 def terminals(cell, datafield):
     for lbl in cell.labels:
         datafield.labels[lbl.text]['name'] = datafield.pcd.layers['term'][63].name
@@ -65,6 +44,11 @@ def add_label(cell, element, name, datafield, ttype):
     elif ttype == 5:
         datafield.labels[lbl.text] = datafield.pcd.atoms['jjs'][name]
         datafield.labels[lbl.text]['type'] = 5
+    elif ttype == 7:
+        datafield.labels[lbl.text]['name'] = datafield.pcd.layers['cap'][65].name
+        datafield.labels[lbl.text]['type'] = 7
+        datafield.labels[lbl.text]['metals'] = [6, 1]
+        datafield.labels[lbl.text]['labels'] = [lbl]
 
 
 def intersect(pair):

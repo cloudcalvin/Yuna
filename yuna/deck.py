@@ -166,16 +166,6 @@ def components(cell, datafield):
 
     labels.terminals(cell, datafield)
 
-    # cl = cell.copy('Label Flatten', deep_copy=True)
-    # cl.flatten()
-
-    # for element in cl.elements:
-    #     if isinstance(element, gdspy.PolygonSet):
-    #         if element.layers[0] == 65:
-    #             for points in element.polygons:
-    #                 polygon = gdspy.Polygon(points, 65)
-    #                 labels.add_cap(cl, polygon, datafield)
-
     for subcell in cell.get_dependencies(True):
         print(subcell.name)
         if subcell.name[:3] == 'via':
@@ -191,7 +181,14 @@ def components(cell, datafield):
 
     cl = cell.copy('Label Flatten', deep_copy=True)
     cl.flatten()
-    
+
+    for element in cl.elements:
+        if isinstance(element, gdspy.PolygonSet):
+            if element.layers[0] == 65:
+                for points in element.polygons:
+                    polygon = gdspy.Polygon(points, 65)
+                    labels.add_label(cl, polygon, 'cap', datafield, 7)
+
     cell_labels = cl.get_labels(0)
 
     if len(cell_labels) > 0:

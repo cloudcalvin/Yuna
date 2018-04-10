@@ -13,7 +13,7 @@ def add_cap(cell, element, datafield, name='cap'):
 
     lbl = gdspy.Label(name, (cx, cy), 0, layer=64)
     cell.add(lbl)
-    
+
     datafield.labels[lbl.text]['name'] = datafield.pcd.layers['cap'][65].name
     datafield.labels[lbl.text]['type'] = 7
     datafield.labels[lbl.text]['metals'] = [6, 1]
@@ -45,7 +45,7 @@ def terminals(cell, datafield):
 
 
 def add_label(cell, element, name, datafield, ttype):
-    print('--- Adding label')
+    print('--- Adding label: ' + name)
     bb = element.get_bounding_box()
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )

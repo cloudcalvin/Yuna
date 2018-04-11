@@ -139,7 +139,15 @@ def grand_summon(basedir, args):
     cell = read_cell(gds_file, cellname)
 
     deck.model_mask(cell, datafield)
-    deck.components(cell, datafield)
+
+    deck.add_cell_components(cell, datafield)
+
+    cl = cell.copy('Label Flatten', deep_copy=True)
+    cl.flatten()
+
+    deck.add_flatten_components(cl, datafield)
+    deck.update_datafield_labels(cl, datafield)
+
     deck.lvs_mask(cell, datafield)
 
     # test_union()

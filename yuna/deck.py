@@ -13,6 +13,8 @@ import matplotlib.patches as patches
 import collections as cl
 from collections import namedtuple
 
+from yuna import masternodes as mn
+
 
 class Metal(object):
 
@@ -150,7 +152,7 @@ class Ntron(object):
             datafield.add(pp, self.key)
 
 
-def components(cell, datafield):
+def add_cell_components(cell, datafield):
     """
     Vias are primary components and are detected first.
     JJs and nTrons are defined as secondary components.
@@ -167,7 +169,6 @@ def components(cell, datafield):
     labels.terminals(cell, datafield)
 
     for subcell in cell.get_dependencies(True):
-        print(subcell.name)
         if subcell.name[:3] == 'via':
             labels.vias(subcell, datafield)
 
@@ -179,27 +180,36 @@ def components(cell, datafield):
         if subcell.name[:5] == 'ntron':
             labels.ntrons(subcell, datafield)
 
-    cl = cell.copy('Label Flatten', deep_copy=True)
-    cl.flatten()
 
-    for element in cl.elements:
+def add_flatten_components(cell_flat, datafield):
+
+    for element in cell_flat.elements:
         if isinstance(element, gdspy.PolygonSet):
             if element.layers[0] == 65:
                 for points in element.polygons:
                     polygon = gdspy.Polygon(points, 65)
-                    labels.add_label(cl, polygon, 'cap', datafield, 7)
+                    labels.add_label(cell_flat, polygon, 'cap', datafield)
 
-    cell_labels = cl.get_labels(0)
+
+def update_datafield_labels(cell_flat, datafield):
+
+    cell_labels = cell_flat.get_labels(0)
 
     if len(cell_labels) > 0:
         utils.print_labels(cell_labels)
 
     for lbl in cell_labels:
-        if 'labels' in datafield.labels[lbl.text]:
-            datafield.labels[lbl.text]['labels'].append(lbl)
-        else:
-            datafield.labels[lbl.text]['labels'] = []
-            datafield.labels[lbl.text]['labels'].append(lbl)
+        if lbl.text[:3] == 'via':
+            via = mn.Via(datafield.pcd.atoms['vias'], lbl.text, lbl.position)
+            datafield.labels.append(via)
+
+        if lbl.text[:2] == 'jj':
+            jj = mn.Junction(lbl.text, lbl.position)
+            datafield.labels.append(jj)
+
+        if lbl.text[:5] == 'ntron':
+            ntron = mn.Ntron(lbl.text, lbl.position)
+            datafield.labels.append(ntron)
 
 
 def lvs_mask(cell, datafield):
@@ -276,24 +286,6 @@ def lvs_mask(cell, datafield):
             metal.add(ntrons[gds])
 
         metal.update_mask(datafield)
-
-    # for gds, layer in datafield.wires.items():
-    #     if (gds, 0) in poly:
-    #         metals = merge_metal_layers(poly[(gds, 0)])
-    #
-    #         for i in [1, 3, 7]:
-    #             key = (gds, i)
-    #             if key in poly:
-    #                 if i == 1:
-    #                     via = Via(key, datafield, poly)
-    #                     # metals = add_vias(key, datafield, poly, metals)
-    #                 elif i == 3:
-    #                     # metals = add_junctions(key, datafield, poly, metals)
-    #                 elif i == 7:
-    #                     # metals = add_ntrons(key, datafield, poly, metals)
-    #
-    #         # for pp in metals:
-    #         #     datafield.add(pp, (gds, 0))
 
 
 def model_mask(cell, datafield):

@@ -11,7 +11,6 @@ from yuna import utils
 from yuna import process
 
 from .utils import nm
-from .masternodes import MasterNodes
 
 
 class DataField(object):
@@ -19,11 +18,11 @@ class DataField(object):
     def __init__(self, name, pcf):
         self.name = name
         self.pcd = self.read_config(pcf)
-        self.mnodes = self.masternodes(pcf)
 
         self.mask = cl.defaultdict(dict)
         self.polygons = cl.defaultdict(dict)
-        self.labels = cl.defaultdict(dict)
+        self.labels = list()
+        # self.labels = cl.defaultdict(dict)
 
     def __str__(self):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
@@ -132,24 +131,15 @@ class DataField(object):
                     polygon = gdspy.Polygon(*pp.get_variables())
                     cell.add(polygon)
 
-        # for i in self.nonwires:
-        #     for key, poly in self.mask[i].items():
-        #         for pp in poly:
-        #             polygon = gdspy.Polygon(*pp.get_variables())
-        #             cell.add(polygon)
+        for label in self.labels:
+            lbl = label.get_label()
+            cell.add(lbl)
 
-        # for tt, value in self.pcd.layers.items():
-        #     for i, value2 in value.items():
-        #         for key, poly in self.mask[i].items():
-        #             for pp in poly:
-        #                 polygon = gdspy.Polygon(*pp.get_variables())
-        #                 cell.add(polygon)
-
-        for lbl in self.labels:
-            for key, value in self.labels.items():
-                print(key, value)
-                for label in value['labels']:
-                    cell.add(label)
+        # for lbl in self.labels:
+        #     for key, value in self.labels.items():
+        #         print(key, value)
+        #         for label in value['labels']:
+        #             cell.add(label)
 
 
 class Polygon(gdspy.Polygon):

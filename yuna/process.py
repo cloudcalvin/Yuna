@@ -44,7 +44,7 @@ class ProcessConfigData(object):
         self.atoms = atoms
 
     def add_layer(self, mtype, gds, value):
-        layer = Layer(value['name'], mtype)
+        layer = Layer(value)
 
         if 'position' in value.keys():
             layer.set_position(value['position'])
@@ -63,12 +63,12 @@ class ProcessConfigData(object):
 
 class Layer(object):
 
-    def __init__(self, name, mtype):
-        self.name = name
-        self.type = mtype
+    def __init__(self, data):
+        self.name = data['name']
+        self.color = data['color']
         self.position = None
         self.width = None
-        self.wires = []
+        self.metals = list()
 
     def set_position(self, num):
         self.position = float(num)
@@ -76,5 +76,8 @@ class Layer(object):
     def set_width(self, num):
         self.width = float(num)
 
-    def add_contact_layer(self, gds_list):
-        self.wires = gds_list
+    def add_contact_layer(self, gds):
+        if isinstance(gds, list):
+            self.metals = gds
+        else:
+            self.metals.append(gds)

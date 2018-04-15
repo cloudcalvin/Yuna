@@ -155,12 +155,20 @@ class Polygon(gdspy.Polygon):
 
         self.holes = holes
 
-        self.id = 'p{}'.format(Polygon._ID)
+        if key[1] == 1:
+            self.id = 'v{}'.format(Polygon._ID)
+        elif key[1] == 3:
+            self.id = 'j{}'.format(Polygon._ID)
+        else:
+            self.id = 'i{}'.format(Polygon._ID)
+
         Polygon._ID += 1
 
         self.data = fabdata[int(key[0])]
 
         # print(self.data.name)
+
+        assert isinstance(self.data.name, str)
 
         if self.data is None:
             raise ValueError('Polygon data cannot be None.')
@@ -173,33 +181,3 @@ class Polygon(gdspy.Polygon):
 
     def get_variables(self):
         return (self.points, self.layer, self.datatype)
-
-
-# class Label(gdspy.Label):
-#     _ID = 0
-#
-#     def __init__(self, metals, text, position, rotation=0, layer=0):
-#         super(Label, self).__init__(text, position, rotation=rotation, layer=layer)
-#
-#         self.id = 'l{}'.format(Label._ID)
-#         Label._ID += 1
-#
-#         # pre_label = text.split('_')[0]
-#
-#         # tt = ['P', 'via', 'jj', 'sht', 'gnd']
-#         # if pre_label in tt:
-#         #     self.type = pre_label
-#         # else:
-#         #     self.type = None
-#         #
-#         # if self.type is None:
-#         #     raise TypeError("label type cannot be None")
-#
-#         self.metals = metals
-#
-#     def update_position(self, position):
-#         self.position = position
-#
-#     def get_variables(self):
-#         return (self.text, self.position, 'nw',
-#                 self.rotation, 0, False, self.layer)

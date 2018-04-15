@@ -32,7 +32,7 @@ def terminals(cell, datafield):
 def add_label(cell, element, name, datafield):
     print('--- Adding label: ' + name)
     bb = element.get_bounding_box()
-    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 1.0
+    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 10.0 #TODO: Watchout for this caveat
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
 
     lbl = gdspy.Label(name, (cx, cy), 0, layer=64)
@@ -79,6 +79,7 @@ def junctions(cell, datafield):
     jjs = datafield.pcd.atoms['jjs']
 
     get_shunt_connections(cell, jjs, datafield)
+    get_ground_connection(cell, jjs, datafield)
 
     # if utils.has_ground(cell, jjs):
     #     get_ground_connection(cell, jjs, datafield)
@@ -102,13 +103,25 @@ def get_ground_connection(cell, jj_atom, datafield):
 
     polygons = cell.get_polygons(True)
 
-    via_key = (int(gds), 3)
-    shunt_key = (int(jj_atom['ground']['metals'][0]), 3)
+    via = (int(gds), 3)
 
-    if shunt_key != (30, 3):
-        for points in utils.angusj(polygons[via_key], polygons[shunt_key], 'intersection'):
-            poly = gdspy.Polygon(points, gds, verbose=False)
-            add_label(cell, poly, 'ground', datafield)
+    ii = polygons[via]
+
+    for layer in jj_atom['ground']['metals']:
+        pp = (int(layer), 3)
+
+        print(pp)
+
+        ii = utils.angusj(ii, polygons[pp], 'intersection')
+
+        # for points in utils.angusj(polygons[via_key], polygons[pp], 'intersection'):
+        #     poly = gdspy.Polygon(points, gds, verbose=False)
+        #     add_label(cell, poly, 'ground', datafield)
+
+    for points in ii:
+        poly = gdspy.Polygon(points, gds, verbose=False)
+        add_label(cell, poly, 'ground', datafield)
+
 
 
 def ntrons(cell, pdd):

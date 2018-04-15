@@ -199,17 +199,27 @@ def update_datafield_labels(cell_flat, datafield):
         utils.print_labels(cell_labels)
 
     for lbl in cell_labels:
-        if lbl.text[:3] == 'via':
-            via = mn.Via(datafield.pcd.atoms['vias'], lbl.text, lbl.position)
+        comp = lbl.text.split('_')[0]
+
+        if comp == 'via':
+            via = mn.Via(lbl.text, lbl.position, atom=datafield.pcd.atoms['vias'])
             datafield.labels.append(via)
 
-        if lbl.text[:2] == 'jj':
-            jj = mn.Junction(lbl.text, lbl.position)
+        if comp == 'jj':
+            jj = mn.Junction(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
             datafield.labels.append(jj)
 
-        if lbl.text[:5] == 'ntron':
+        if comp == 'ntron':
             ntron = mn.Ntron(lbl.text, lbl.position)
             datafield.labels.append(ntron)
+
+        if comp == 'shunt':
+            shunt = mn.Shunt(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
+            datafield.labels.append(shunt)
+
+        if comp == 'ground':
+            ground = mn.Ground(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
+            datafield.labels.append(ground)
 
 
 def lvs_mask(cell, datafield):

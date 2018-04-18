@@ -1,14 +1,15 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
-from setuputils import setup, find_packages
 from termcolor import colored
 from pprint import pprint
+from setuptools import setup, find_packages
+
 from yuna import __version__
 
-setup_requires = []
-if 'build_sphinx' in sys.argv:
-    setup_requires.extend(['sphinx', 'sphinx_rtd_theme'])
+# setup_requires = []
+# if 'build_sphinx' in sys.argv:
+#     setup_requires.extend(['sphinx', 'sphinx_rtd_theme'])
 
 setup(
     name="yuna",
@@ -16,7 +17,7 @@ setup(
     author="Ruben van Staden",
     author_email="rubenvanstaden@gmail.com",
     description="Processes the layers from a GDS file.",
-    setup_requires=setup_requires,
+    # setup_requires=setup_requires,
     long_description_markdown_filename='README.md',
     license="BSD",
     keywords="yuna",
@@ -26,7 +27,7 @@ setup(
     install_requires=[
         'gdspy',
         'pyclipper',
-        'setuputils',
+        'setuptools',
         'numpy',
         'matplotlib',
         'docopt',

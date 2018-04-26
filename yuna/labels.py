@@ -123,7 +123,7 @@ def get_ground_connection(cell, jj_atom, datafield):
         add_label(cell, poly, 'ground', datafield)
 
 
-
-def ntrons(cell, pdd):
+def ntrons(cell, datafield):
     print('--- flattening ' + cell.name)
     cell.flatten(single_datatype=7)
+    add_label(cell, cell, cell.name, datafield)

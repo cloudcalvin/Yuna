@@ -50,8 +50,8 @@ class ProcessConfigData(object):
             layer.set_position(value['position'])
         if 'width' in value.keys():
             layer.set_width(value['width'])
-        if 'wire' in value.keys():
-            layer.add_contact_layer(value['wire'])
+        if 'metals' in value.keys():
+            layer.add_contact_layer(value['metals'])
 
         if mtype not in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron', 'cap']:
             raise TypeError("mtype `type` is not supported")

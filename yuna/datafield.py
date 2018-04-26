@@ -22,7 +22,6 @@ class DataField(object):
         self.mask = cl.defaultdict(dict)
         self.polygons = cl.defaultdict(dict)
         self.labels = list()
-        # self.labels = cl.defaultdict(dict)
 
     def __str__(self):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
@@ -159,6 +158,8 @@ class Polygon(gdspy.Polygon):
             self.id = 'v{}'.format(Polygon._ID)
         elif key[1] == 3:
             self.id = 'j{}'.format(Polygon._ID)
+        elif key[1] == 7:
+            self.id = 'pn{}'.format(Polygon._ID)
         else:
             self.id = 'i{}'.format(Polygon._ID)
 

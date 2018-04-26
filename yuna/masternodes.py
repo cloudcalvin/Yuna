@@ -67,12 +67,13 @@ class Terminal(gdspy.Label):
                  **datafield.pcd.layers['res']}
 
         for gds, metal in wires.items():
-            m1 = self.text.split(' ')[1]
-            m2 = self.text.split(' ')[2]
+            if self.text[0] == 'P':
+                m1 = self.text.split(' ')[1]
+                m2 = self.text.split(' ')[2]
 
-            # TODO: Solve this fucking issue with the ground M0.
-            if metal.name in [m1, m2]:
-                self.data.metals.append(gds)
+                # TODO: Solve this fucking issue with the ground M0.
+                if metal.name in [m1, m2]:
+                    self.data.metals.append(gds)
 
     def get_label(self):
         return gdspy.Label(self.text, self.position, rotation=0, layer=64)
@@ -107,12 +108,30 @@ class Via(gdspy.Label):
         self.data['color'] = "#A0A0A0"
 
 
-class Capacitor(object):
+class Capacitor(gdspy.Label):
+    _ID = 0 
 
-    def __init__(self, gds, data):
-        self.gds = gds
-        self.data = data
+    def __init__(self, text, position, layer=0, atom=None, id0=None):
+        super(Capacitor, self).__init__(text, position, layer=layer)
+
+        if id0 is None:
+            self.id = 'c{}'.format(Capacitor._ID)
+        else:
+            self.id = 'poly {}'.format(id0)
+
+        Capacitor._ID += 1
+
+        if atom is not None:
+            self.data = atom
+            print(self.data)
+        else:
+            self.data = {}
+            self.data['color'] = '#FF69B4'
+
         self.master = True
+
+    def get_label(self):
+        return gdspy.Label(self.text, self.position, rotation=0, layer=64)
 
 
 class Junction(gdspy.Label):
@@ -214,14 +233,22 @@ class Ground(gdspy.Label):
 class Ntron(gdspy.Label):
     _ID = 0
 
-    def __init__(self, text, position, rotation=0, layer=0):
+    def __init__(self, text, position, rotation=0, layer=0, atom=None, id0=None):
         super(Ntron, self).__init__(text, position, rotation=rotation, layer=layer)
 
-        self.id = 'j{}'.format(Ntron._ID)
+        if id0 is None:
+            self.id = 'n{}'.format(Ntron._ID)
+        else:
+            self.id = 'poly {}'.format(id0)
+
         Ntron._ID += 1
 
-        self.data = {}
-        self.data['color'] = '#FF5555'
+        if atom is not None:
+            self.data = atom[text]
+        else:
+            self.data = {}
+            self.data['color'] = '#FF5555'
+
         self.master = True
 
     def get_label(self):

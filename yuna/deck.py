@@ -185,7 +185,9 @@ def add_flatten_components(cell_flat, datafield):
 
     for element in cell_flat.elements:
         if isinstance(element, gdspy.PolygonSet):
+            print(element)
             if element.layers[0] == 65:
+                print('vwefbiubewiufpb;\n\n')
                 for points in element.polygons:
                     polygon = gdspy.Polygon(points, 65)
                     labels.add_label(cell_flat, polygon, 'cap', datafield)
@@ -210,7 +212,7 @@ def update_datafield_labels(cell_flat, datafield):
             datafield.labels.append(jj)
 
         if comp == 'ntron':
-            ntron = mn.Ntron(lbl.text, lbl.position)
+            ntron = mn.Ntron(lbl.text, lbl.position, atom=datafield.pcd.atoms['ntrons'])
             datafield.labels.append(ntron)
 
         if comp == 'shunt':
@@ -220,6 +222,10 @@ def update_datafield_labels(cell_flat, datafield):
         if comp == 'ground':
             ground = mn.Ground(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
             datafield.labels.append(ground)
+
+        if comp == 'cap':
+            cap = mn.Capacitor(lbl.text, lbl.position, atom=datafield.pcd.layers['cap'][65])
+            datafield.labels.append(cap)
 
 
 def lvs_mask(cell, datafield):
@@ -290,11 +296,17 @@ def lvs_mask(cell, datafield):
     for gds, metal in metals.items():
         if gds in vias:
             metal.add(vias[gds])
+        # metal.update_mask(datafield)
+    for gds, metal in metals.items():
         if gds in jjs:
             metal.add(jjs[gds])
+    #     metal.update_mask(datafield)
+    for gds, metal in metals.items():
         if gds in ntrons:
             metal.add(ntrons[gds])
+    #     metal.update_mask(datafield)
 
+    for gds, metal in metals.items():
         metal.update_mask(datafield)
 
 

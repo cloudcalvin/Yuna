@@ -185,9 +185,7 @@ def add_flatten_components(cell_flat, datafield):
 
     for element in cell_flat.elements:
         if isinstance(element, gdspy.PolygonSet):
-            print(element)
             if element.layers[0] == 65:
-                print('vwefbiubewiufpb;\n\n')
                 for points in element.polygons:
                     polygon = gdspy.Polygon(points, 65)
                     labels.add_label(cell_flat, polygon, 'cap', datafield)

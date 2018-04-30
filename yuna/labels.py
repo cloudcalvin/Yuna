@@ -110,8 +110,6 @@ def get_ground_connection(cell, jj_atom, datafield):
     for layer in jj_atom['ground']['metals']:
         pp = (int(layer), 3)
 
-        print(pp)
-
         ii = utils.angusj(ii, polygons[pp], 'intersection')
 
         # for points in utils.angusj(polygons[via_key], polygons[pp], 'intersection'):

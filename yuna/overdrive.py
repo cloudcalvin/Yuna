@@ -28,6 +28,8 @@ from yuna import deck
 
 from .datafield import DataField
 
+from yuna import user_labels as ul
+
 
 # def test_all():
 #     geom = pygmsh.opencascade.Geometry(
@@ -139,6 +141,9 @@ def grand_summon(basedir, args):
     cell = read_cell(gds_file, cellname)
 
     deck.model_mask(cell, datafield)
+
+    ul.terminals(cell, datafield)
+    ul.capacitors(cell, datafield)
 
     deck.add_cell_components(cell, datafield)
 

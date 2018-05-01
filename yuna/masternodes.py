@@ -18,7 +18,7 @@ class Inductor(gdspy.Label):
         self.data['color'] = '#66FFB2'
         self.master = False
 
-        
+
 class Unique(gdspy.Label):
     _ID = 0
 
@@ -35,7 +35,7 @@ class Unique(gdspy.Label):
         self.data = {}
         self.data['color'] = '#CC99FF'
         self.master = False
-        
+
 
 class Resistors(object):
 
@@ -79,6 +79,43 @@ class Terminal(gdspy.Label):
         return gdspy.Label(self.text, self.position, rotation=0, layer=64)
 
 
+class Capacitor(gdspy.Label):
+    _ID = 0
+
+    def __init__(self, data, text, position, layer=0, atom=None, id0=None):
+        super(Capacitor, self).__init__(text, position, layer=layer)
+
+        self.id = 'c{}'.format(Capacitor._ID)
+        Capacitor._ID += 1
+
+        # if atom is not None:
+        #     self.data = atom
+        # else:
+        #     self.data = {}
+        #     self.data['color'] = '#FF69B4'
+
+        self.data = data[layer]
+        self.master = True
+
+    def metal_connection(self, datafield):
+        wires = {**datafield.pcd.layers['ix'],
+                 **datafield.pcd.layers['cap']}
+
+        for gds, metal in wires.items():
+            if self.text[0] == 'C':
+                m1 = self.text.split(' ')[1]
+
+                # TODO: Solve this fucking issue with the ground M0.
+                if metal.name in [m1]:
+                    self.data.metals.append(gds)
+
+        for gds in self.data.metals:
+            print('  - ' + str(gds))
+
+    def get_label(self):
+        return gdspy.Label(self.text, self.position, rotation=0, layer=64)
+
+
 class Via(gdspy.Label):
     _ID = 0
 
@@ -106,32 +143,6 @@ class Via(gdspy.Label):
     def update_id(self, id0=None):
         self.id = self.pid
         self.data['color'] = "#A0A0A0"
-
-
-class Capacitor(gdspy.Label):
-    _ID = 0 
-
-    def __init__(self, text, position, layer=0, atom=None, id0=None):
-        super(Capacitor, self).__init__(text, position, layer=layer)
-
-        if id0 is None:
-            self.id = 'c{}'.format(Capacitor._ID)
-        else:
-            self.id = 'poly {}'.format(id0)
-
-        Capacitor._ID += 1
-
-        if atom is not None:
-            self.data = atom
-            print(self.data)
-        else:
-            self.data = {}
-            self.data['color'] = '#FF69B4'
-
-        self.master = True
-
-    def get_label(self):
-        return gdspy.Label(self.text, self.position, rotation=0, layer=64)
 
 
 class Junction(gdspy.Label):

@@ -4,16 +4,16 @@ import itertools
 import gdspy
 import pyclipper
 
-from yuna import labels
 from yuna import utils
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-import collections as cl
 from collections import namedtuple
+from collections import defaultdict
 
 from yuna import masternodes as mn
+from yuna import cell_labels as cl
 
 
 class Metal(object):
@@ -46,7 +46,7 @@ class Metal(object):
 
     def create_mask(self, datafield, myCell):
 
-        named_layers = cl.defaultdict(dict)
+        named_layers = defaultdict(dict)
 
         for l1 in self.points:
             Polygon = namedtuple('Polygon', ['area', 'points'])
@@ -166,29 +166,28 @@ def add_cell_components(cell, datafield):
     if len(cell.elements) == 0:
         utils.print_cellrefs(cell)
 
-    labels.terminals(cell, datafield)
+    for subcell in cell.get_dependencies(True):
+        if subcell.name.split('_')[0] == 'via':
+            cl.vias(subcell, datafield)
 
     for subcell in cell.get_dependencies(True):
-        if subcell.name[:3] == 'via':
-            labels.vias(subcell, datafield)
+        if subcell.name.split('_')[0] == 'jj':
+            cl.junctions(subcell, datafield)
 
     for subcell in cell.get_dependencies(True):
-        if subcell.name[:2] == 'jj':
-            labels.junctions(subcell, datafield)
-
-    for subcell in cell.get_dependencies(True):
-        if subcell.name[:5] == 'ntron':
-            labels.ntrons(subcell, datafield)
+        if subcell.name.split('_')[0] == 'ntron':
+            cl.ntrons(subcell, datafield)
 
 
 def add_flatten_components(cell_flat, datafield):
+    pass
 
-    for element in cell_flat.elements:
-        if isinstance(element, gdspy.PolygonSet):
-            if element.layers[0] == 65:
-                for points in element.polygons:
-                    polygon = gdspy.Polygon(points, 65)
-                    labels.add_label(cell_flat, polygon, 'cap', datafield)
+    # for element in cell_flat.elements:
+    #     if isinstance(element, gdspy.PolygonSet):
+    #         if element.layers[0] == 65:
+    #             for points in element.polygons:
+    #                 polygon = gdspy.Polygon(points, 65)
+    #                 labels.add_label(cell_flat, polygon, 'cap', datafield)
 
 
 def update_datafield_labels(cell_flat, datafield):
@@ -220,10 +219,6 @@ def update_datafield_labels(cell_flat, datafield):
         if comp == 'ground':
             ground = mn.Ground(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
             datafield.labels.append(ground)
-
-        if comp == 'cap':
-            cap = mn.Capacitor(lbl.text, lbl.position, atom=datafield.pcd.layers['cap'][65])
-            datafield.labels.append(cap)
 
 
 def lvs_mask(cell, datafield):
@@ -257,7 +252,7 @@ def lvs_mask(cell, datafield):
 
     poly = cell_layout.get_polygons(True)
 
-    metals = cl.defaultdict(dict)
+    metals = defaultdict(dict)
 
     wires = {**datafield.pcd.layers['ix'],
              **datafield.pcd.layers['res']}
@@ -266,9 +261,9 @@ def lvs_mask(cell, datafield):
         if (gds, 0) in poly:
             metals[gds] = Metal(gds, poly)
 
-    vias = cl.defaultdict(dict)
-    jjs = cl.defaultdict(dict)
-    ntrons = cl.defaultdict(dict)
+    vias = defaultdict(dict)
+    jjs = defaultdict(dict)
+    ntrons = defaultdict(dict)
 
     for gds, layer in wires.items():
         if gds in metals:
@@ -294,15 +289,14 @@ def lvs_mask(cell, datafield):
     for gds, metal in metals.items():
         if gds in vias:
             metal.add(vias[gds])
-        # metal.update_mask(datafield)
+
     for gds, metal in metals.items():
         if gds in jjs:
             metal.add(jjs[gds])
-    #     metal.update_mask(datafield)
+
     for gds, metal in metals.items():
         if gds in ntrons:
             metal.add(ntrons[gds])
-    #     metal.update_mask(datafield)
 
     for gds, metal in metals.items():
         metal.update_mask(datafield)
@@ -348,7 +342,7 @@ def model_mask(cell, datafield):
                    **datafield.pcd.layers['jj'],
                    **datafield.pcd.layers['ntron']}
 
-    metals = cl.defaultdict(dict)
+    metals = defaultdict(dict)
 
     for gds, layer in mask_layers.items():
         if (gds, 0) in poly:

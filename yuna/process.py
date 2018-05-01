@@ -4,7 +4,6 @@ import json
 import gdspy
 
 from yuna import utils
-from yuna import labels
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches

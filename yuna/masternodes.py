@@ -122,9 +122,10 @@ class Capacitor(gdspy.Label):
         for gds, metal in wires.items():
             if self.text[0] == 'C':
                 m1 = self.text.split(' ')[1]
+                m2 = self.text.split(' ')[2]
 
                 # TODO: Solve this fucking issue with the ground M0.
-                if metal.name in [m1]:
+                if metal.name in [m1, m2]:
                     self.data.metals.append(gds)
 
         for gds in self.data.metals:

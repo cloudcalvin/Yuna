@@ -95,6 +95,7 @@ class Metal(object):
 class Via(object):
 
     def __init__(self, gds, poly):
+        self.clip = False
         self.key = (gds, 1)
         self.raw_points = poly[(gds, 1)]
         self.points = self.union()
@@ -107,9 +108,14 @@ class Via(object):
 
         return points
 
-    def update_mask(self, datafield):
+    def update_mask(self, datafield, element=None):
+        if element is not None:
+            self.points = utils.angusj(self.points, element.points, 'difference')
+        
         for pp in self.points:
             datafield.add(pp, self.key)
+            
+        self.clip = True
 
 
 class Junction(object):
@@ -269,17 +275,17 @@ def lvs_mask(cell, datafield):
         if gds in metals:
             if (gds, 1) in poly:
                 via = Via(gds, poly)
-                via.update_mask(datafield)
+                # via.update_mask(datafield)
                 vias[gds] = via
 
             if (gds, 3) in poly:
                 jj = Junction(gds, poly)
-                jj.update_mask(datafield)
+                # jj.update_mask(datafield)
                 jjs[gds] = jj
 
             if (gds, 7) in poly:
                 ntron = Ntron(gds, poly)
-                ntron.update_mask(datafield)
+                # ntron.update_mask(datafield)
                 ntrons[gds] = ntron
 
     # # TODO: We use a dict so that we can do individual unittests like this.
@@ -289,15 +295,24 @@ def lvs_mask(cell, datafield):
     for gds, metal in metals.items():
         if gds in vias:
             metal.add(vias[gds])
-
-    for gds, metal in metals.items():
-        if gds in jjs:
-            metal.add(jjs[gds])
-
+    
+    # for gds, metal in metals.items():
+    #     if gds in jjs:
+    #         metal.add(jjs[gds])
+    
     for gds, metal in metals.items():
         if gds in ntrons:
             metal.add(ntrons[gds])
-
+            
+            ntron.update_mask(datafield)
+            
+            if gds in vias:
+                via.update_mask(datafield, ntrons[gds])
+                
+    for gds, via in vias.items():
+        if via.clip is False:
+            via.update_mask(datafield)
+    
     for gds, metal in metals.items():
         metal.update_mask(datafield)
 

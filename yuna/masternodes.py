@@ -26,7 +26,7 @@ class Remove(gdspy.Label):
         super(Remove, self).__init__(text, position, layer=layer)
 
         if id0 is None:
-            self.id = 'u{}'.format(Remove._ID)
+            self.id = 'r{}'.format(Remove._ID)
         else:
             self.id = 'poly {}'.format(id0)
 

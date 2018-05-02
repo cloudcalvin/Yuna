@@ -55,18 +55,6 @@ class Unique(gdspy.Label):
         self.master = False
 
 
-class Resistors(object):
-
-    def __init__(self):
-        pass
-
-
-class Hole(object):
-
-    def __init__(self):
-        pass
-
-
 class Terminal(gdspy.Label):
     _ID = 0
 

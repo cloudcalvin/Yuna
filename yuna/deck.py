@@ -111,10 +111,10 @@ class Via(object):
     def update_mask(self, datafield, element=None):
         if element is not None:
             self.points = utils.angusj(self.points, element.points, 'difference')
-        
+
         for pp in self.points:
             datafield.add(pp, self.key)
-            
+
         self.clip = True
 
 
@@ -295,24 +295,24 @@ def lvs_mask(cell, datafield):
     for gds, metal in metals.items():
         if gds in vias:
             metal.add(vias[gds])
-    
+
     # for gds, metal in metals.items():
     #     if gds in jjs:
     #         metal.add(jjs[gds])
-    
+
     for gds, metal in metals.items():
         if gds in ntrons:
             metal.add(ntrons[gds])
-            
+
             ntron.update_mask(datafield)
-            
+
             if gds in vias:
                 via.update_mask(datafield, ntrons[gds])
-                
+
     for gds, via in vias.items():
         if via.clip is False:
             via.update_mask(datafield)
-    
+
     for gds, metal in metals.items():
         metal.update_mask(datafield)
 

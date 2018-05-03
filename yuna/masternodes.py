@@ -1,5 +1,8 @@
 import gdspy
 
+from collections import namedtuple
+from collections import defaultdict
+
 
 class Inductor(gdspy.Label):
     _ID = 0
@@ -91,17 +94,34 @@ class Capacitor(gdspy.Label):
     def __init__(self, data, text, position, layer=0, atom=None, id0=None):
         super(Capacitor, self).__init__(text, position, layer=layer)
 
-        self.id = 'c{}'.format(Capacitor._ID)
+        if id0 is None:
+            # self.id = 'cap_{}_{}'.format(text, Capacitor._ID)
+            self.id = 'c{}'.format(Capacitor._ID)
+        else:
+            self.id = id0
+
         Capacitor._ID += 1
 
-        # if atom is not None:
-        #     self.data = atom
-        # else:
-        #     self.data = {}
-        #     self.data['color'] = '#FF69B4'
+        self.plates = defaultdict()
 
         self.data = data[layer]
         self.master = True
+
+    def set_plates(self, datafield):
+        Plates = namedtuple('Plates', ['term', 'label'], verbose=True)
+
+        wires = {**datafield.pcd.layers['ix'],
+                 **datafield.pcd.layers['cap']}
+
+        for gds, metal in wires.items():
+            if self.text[0] == 'C':
+                m1 = self.text.split(' ')[1]
+                m2 = self.text.split(' ')[2]
+
+                if metal.name == m1:
+                    self.plates[gds] = Plates(term='+', label=m1)
+                elif metal.name == m2:
+                    self.plates[gds] = Plates(term='-', label=m2)
 
     def metal_connection(self, datafield):
         wires = {**datafield.pcd.layers['ix'],

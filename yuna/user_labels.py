@@ -11,6 +11,7 @@ def capacitors(cell, datafield):
     for lbl in cell.labels:
         if lbl.text[0] == 'C':
             cap = mn.Capacitor(datafield.pcd.layers['cap'], lbl.text, lbl.position, lbl.layer)
+            cap.set_plates(datafield)
             cap.metal_connection(datafield)
             datafield.labels.append(cap)
 

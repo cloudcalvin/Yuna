@@ -7,6 +7,7 @@ from yuna import utils
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
 import collections as cl
 
 
@@ -64,7 +65,7 @@ class Layer(object):
 
     def __init__(self, data):
         print(data['name'])
-        
+
         self.name = data['name']
         self.color = data['color']
         self.position = None

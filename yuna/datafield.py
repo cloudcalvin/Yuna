@@ -159,7 +159,7 @@ class Polygon(gdspy.Polygon):
         elif key[1] == 3:
             self.id = 'j{}'.format(Polygon._ID)
         elif key[1] == 7:
-            self.id = 'pn{}'.format(Polygon._ID)
+            self.id = 'n{}'.format(Polygon._ID)
         else:
             self.id = 'i{}'.format(Polygon._ID)
 

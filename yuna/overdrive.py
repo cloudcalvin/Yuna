@@ -147,11 +147,7 @@ def grand_summon(basedir, args):
 
     deck.add_cell_components(cell, datafield)
 
-    cl = cell.copy('Label Flatten', deep_copy=True)
-    cl.flatten()
-
-    deck.add_flatten_components(cl, datafield)
-    deck.update_datafield_labels(cl, datafield)
+    deck.update_datafield_labels(cell, datafield)
 
     deck.lvs_mask(cell, datafield)
 

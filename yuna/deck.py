@@ -5,6 +5,7 @@ import gdspy
 import pyclipper
 
 from yuna import utils
+from yuna import devices
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -16,150 +17,11 @@ from yuna import masternodes as mn
 from yuna import cell_labels as cl
 
 
-class Metal(object):
-
-    def __init__(self, gds, poly):
-        self.key = (gds, 0)
-        self.raw_points = poly[(gds, 0)]
-        self.points = self.union()
-
-    def union(self):
-        if not isinstance(self.raw_points[0][0], np.ndarray):
-            raise TypeError("poly must be a 3D list")
-
-        cc_poly = list()
-
-        for poly in self.raw_points:
-            if pyclipper.Orientation(poly) is False:
-                reverse_poly = pyclipper.ReversePath(poly)
-                cc_poly.append(reverse_poly)
-            else:
-                cc_poly.append(poly)
-
-        union = utils.angusj(subj=cc_poly, method='union')
-        points = pyclipper.CleanPolygons(union)
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
-
-    def create_mask(self, datafield, myCell):
-
-        named_layers = defaultdict(dict)
-
-        for l1 in self.points:
-            Polygon = namedtuple('Polygon', ['area', 'points'])
-            pp = Polygon(area=pyclipper.Area(l1), points=l1)
-
-            if pp.area < 0:
-                if 'holes' in named_layers:
-                    named_layers['holes'].append(pp)
-                else:
-                    named_layers['holes'] = [pp]
-            elif pp.area > 0:
-                if 'polygon' in named_layers:
-                    named_layers['polygon'].append(pp)
-                else:
-                    named_layers['polygon'] = [pp]
-            else:
-                raise ValueError('polygon area cannot be zero')
-
-        for poly in named_layers['polygon']:
-            add_to_mask = True
-
-            for hole in named_layers['holes']:
-                if abs(hole.area) < abs(poly.area):
-
-                    if utils.is_nested_polygons(hole, poly):
-                        datafield.add(poly.points, self.key, holes=hole.points, model='model')
-                        myCell.add(gdspy.Polygon(hole.points, layer=81))
-                        add_to_mask = False
-                    else:
-                        datafield.add(poly.points, self.key, model='model')
-                        add_to_mask = False
-
-            if add_to_mask:
-                datafield.add(poly.points, self.key, model='model')
-
-            myCell.add(gdspy.Polygon(poly.points, self.key[0], verbose=False))
-
-    def add(self, element):
-        self.points = utils.angusj(self.points, element.points, 'difference')
-
-    def update_mask(self, datafield):
-        for pp in self.points:
-            datafield.add(pp, self.key)
-
-
-class Via(object):
-
-    def __init__(self, gds, poly):
-        self.clip = False
-        self.key = (gds, 1)
-        self.raw_points = poly[(gds, 1)]
-        self.points = self.union()
-
-    def union(self):
-        points = utils.angusj(subj=self.raw_points, method='union')
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
-
-    def update_mask(self, datafield, element=None):
-        if element is not None:
-            self.points = utils.angusj(self.points, element.points, 'difference')
-
-        for pp in self.points:
-            datafield.add(pp, self.key)
-
-        self.clip = True
-
-
-class Junction(object):
-
-    def __init__(self, gds, poly):
-        self.key = (gds, 3)
-        self.raw_points = poly[(gds, 3)]
-        self.points = self.union()
-
-    def union(self):
-        points = utils.angusj(subj=self.raw_points, method='union')
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
-
-    def update_mask(self, datafield):
-        for pp in self.points:
-            datafield.add(pp, self.key)
-
-
-class Ntron(object):
-
-    def __init__(self, gds, poly):
-        self.key = (gds, 7)
-        self.raw_points = poly[(gds, 7)]
-        self.points = self.union()
-
-    def union(self):
-        points = utils.angusj(subj=self.raw_points, method='union')
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
-
-    def update_mask(self, datafield):
-        for pp in self.points:
-            datafield.add(pp, self.key)
-
-
 def add_cell_components(cell, datafield):
     """
+    Label each individual cell before flattening them
+    to the top-level cell.
+
     Vias are primary components and are detected first.
     JJs and nTrons are defined as secondary components.
 
@@ -185,20 +47,16 @@ def add_cell_components(cell, datafield):
             cl.ntrons(subcell, datafield)
 
 
-def add_flatten_components(cell_flat, datafield):
-    pass
+def update_datafield_labels(cell, datafield):
+    """
+    Place the labels to their corresponding positions
+    after flattening the top-level cell. Update the
+    datafield object to include all labels in the layout.
+    """
 
-    # for element in cell_flat.elements:
-    #     if isinstance(element, gdspy.PolygonSet):
-    #         if element.layers[0] == 65:
-    #             for points in element.polygons:
-    #                 polygon = gdspy.Polygon(points, 65)
-    #                 labels.add_label(cell_flat, polygon, 'cap', datafield)
+    cl = cell.copy('Label Flatten', deep_copy=True)
 
-
-def update_datafield_labels(cell_flat, datafield):
-
-    cell_labels = cell_flat.get_labels(0)
+    cell_labels = cl.flatten().get_labels(0)
 
     if len(cell_labels) > 0:
         utils.print_labels(cell_labels)
@@ -207,23 +65,38 @@ def update_datafield_labels(cell_flat, datafield):
         comp = lbl.text.split('_')[0]
 
         if comp == 'via':
-            via = mn.Via(lbl.text, lbl.position, atom=datafield.pcd.atoms['vias'])
+            via = mn.Via(lbl.text,
+                         lbl.position,
+                         atom=datafield.pcd.atoms['vias'])
+
             datafield.labels.append(via)
 
         if comp == 'jj':
-            jj = mn.Junction(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
+            jj = mn.Junction(lbl.text,
+                             lbl.position,
+                             atom=datafield.pcd.atoms['jjs'])
+
             datafield.labels.append(jj)
 
         if comp == 'ntron':
-            ntron = mn.Ntron(lbl.text, lbl.position, atom=datafield.pcd.atoms['ntrons'])
+            ntron = mn.Ntron(lbl.text,
+                             lbl.position,
+                             atom=datafield.pcd.atoms['ntrons'])
+
             datafield.labels.append(ntron)
 
         if comp == 'shunt':
-            shunt = mn.Shunt(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
+            shunt = mn.Shunt(lbl.text,
+                             lbl.position,
+                             atom=datafield.pcd.atoms['jjs'])
+
             datafield.labels.append(shunt)
 
         if comp == 'ground':
-            ground = mn.Ground(lbl.text, lbl.position, atom=datafield.pcd.atoms['jjs'])
+            ground = mn.Ground(lbl.text,
+                               lbl.position,
+                               atom=datafield.pcd.atoms['jjs'])
+
             datafield.labels.append(ground)
 
 
@@ -265,7 +138,7 @@ def lvs_mask(cell, datafield):
 
     for gds, layer in wires.items():
         if (gds, 0) in poly:
-            metals[gds] = Metal(gds, poly)
+            metals[gds] = devices.Metal(gds, poly)
 
     vias = defaultdict(dict)
     jjs = defaultdict(dict)
@@ -274,17 +147,17 @@ def lvs_mask(cell, datafield):
     for gds, layer in wires.items():
         if gds in metals:
             if (gds, 1) in poly:
-                via = Via(gds, poly)
+                via = devices.Via(gds, poly)
                 # via.update_mask(datafield)
                 vias[gds] = via
 
             if (gds, 3) in poly:
-                jj = Junction(gds, poly)
+                jj = devices.Junction(gds, poly)
                 # jj.update_mask(datafield)
                 jjs[gds] = jj
 
             if (gds, 7) in poly:
-                ntron = Ntron(gds, poly)
+                ntron = devices.Ntron(gds, poly)
                 # ntron.update_mask(datafield)
                 ntrons[gds] = ntron
 
@@ -296,16 +169,19 @@ def lvs_mask(cell, datafield):
         if gds in vias:
             metal.add(vias[gds])
 
-    # for gds, metal in metals.items():
-    #     if gds in jjs:
-    #         metal.add(jjs[gds])
+    for gds, metal in metals.items():
+        if gds in jjs:
+            metal.add(jjs[gds])
+
+            jjs[gds].update_mask(datafield)
+            # if gds in vias:
+            #     via.update_mask(datafield, ntrons[gds])
 
     for gds, metal in metals.items():
         if gds in ntrons:
             metal.add(ntrons[gds])
 
-            ntron.update_mask(datafield)
-
+            ntrons[gds].update_mask(datafield)
             if gds in vias:
                 via.update_mask(datafield, ntrons[gds])
 
@@ -361,5 +237,5 @@ def model_mask(cell, datafield):
 
     for gds, layer in mask_layers.items():
         if (gds, 0) in poly:
-            metals[gds] = Metal(gds, poly)
+            metals[gds] = devices.Metal(gds, poly)
             metals[gds].create_mask(datafield, myCell)

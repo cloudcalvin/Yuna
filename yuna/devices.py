@@ -7,13 +7,27 @@ from yuna import utils
 from collections import namedtuple
 from collections import defaultdict
 
+from shapely.geometry import Polygon
+
 
 class Metal(object):
 
     def __init__(self, gds, poly):
         self.key = (gds, 0)
         self.raw_points = poly[(gds, 0)]
-        self.points = self.union()
+        self.union_points = self.union()
+        self.points = self.simple()
+
+    def simple(self):
+        points = list()
+        for pp in self.union_points:
+            if len(pp) > 10:
+                sp = Polygon(pp).simplify(1.5e5)
+                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+                points.append(plist[:-1])
+            else:
+                points.append(list(pp))
+        return points
 
     def union(self):
         if not isinstance(self.raw_points[0][0], np.ndarray):
@@ -90,7 +104,19 @@ class Via(object):
         self.clip = False
         self.key = (gds, 1)
         self.raw_points = poly[(gds, 1)]
-        self.points = self.union()
+        self.union_points = self.union()
+        self.points = self.simple()
+
+    def simple(self):
+        points = list()
+        for pp in self.union_points:
+            if len(pp) > 10:
+                sp = Polygon(pp).simplify(1.5e5)
+                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+                points.append(plist[:-1])
+            else:
+                points.append(list(pp))
+        return points
 
     def union(self):
         points = utils.angusj(subj=self.raw_points, method='union')
@@ -115,7 +141,19 @@ class Junction(object):
     def __init__(self, gds, poly):
         self.key = (gds, 3)
         self.raw_points = poly[(gds, 3)]
-        self.points = self.union()
+        self.union_points = self.union()
+        self.points = self.simple()
+
+    def simple(self):
+        points = list()
+        for pp in self.union_points:
+            if len(pp) > 10:
+                sp = Polygon(pp).simplify(1.5e5)
+                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+                points.append(plist[:-1])
+            else:
+                points.append(list(pp))
+        return points
 
     def union(self):
         points = utils.angusj(subj=self.raw_points, method='union')
@@ -135,7 +173,19 @@ class Ntron(object):
     def __init__(self, gds, poly):
         self.key = (gds, 7)
         self.raw_points = poly[(gds, 7)]
-        self.points = self.union()
+        self.union_points = self.union()
+        self.points = self.simple()
+
+    def simple(self):
+        points = list()
+        for pp in self.union_points:
+            if len(pp) > 10:
+                sp = Polygon(pp).simplify(1.5e5)
+                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+                points.append(plist[:-1])
+            else:
+                points.append(list(pp))
+        return points
 
     def union(self):
         points = utils.angusj(subj=self.raw_points, method='union')

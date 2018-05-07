@@ -1,7 +1,8 @@
 """
 
 Usage:
-    yuna <process> <testname> <ldf> --cell=<cellname [--union] [--model=<modelname>]
+    yuna <testname> <ldf> --cell=<cellname [--union] [--model=<modelname>]
+    yuna <testname> --cell=<cellname [--debug=<debug>]
     yuna (-h | --help)
     yuna (-V | --version)
 
@@ -29,6 +30,7 @@ from yuna import deck
 from .datafield import DataField
 
 from yuna import user_labels as ul
+from yuna import polygons
 
 
 # def test_all():
@@ -70,6 +72,14 @@ def read_cell(gds_file, cellname):
 
     gdsii.read_gds(gds_file, unit=1.0e-12)
 
+    # all_cells = gdsii.extract('Array_4x4').get_dependencies(True)
+    #
+    # for cell in all_cells:
+    #     # print(cellname)
+    #     print(cell.name)
+    #     if cell.name == cellname:
+    #         return cell
+
     return gdsii.extract(cellname)
 
 
@@ -90,7 +100,7 @@ def viewing(datafield):
 
     gdspy.LayoutViewer()
 
-    gdspy.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
+    # gdspy.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
 
 
 def grand_summon(basedir, args):
@@ -127,7 +137,7 @@ def grand_summon(basedir, args):
     if not cellname:
         raise ValueError('please specify a valid cell name')
 
-    gds_file, config_file = '', ''
+    gds_file, config_file = '', None
     for root, dirs, files in os.walk(os.getcwd()):
         for file in files:
             if file.endswith('.gds'):
@@ -136,39 +146,58 @@ def grand_summon(basedir, args):
                 if file == config_name:
                     config_file = basedir + '/' + file
 
-    datafield = DataField('Hypres', config_file)
-
     cell = read_cell(gds_file, cellname)
 
-    deck.model_mask(cell, datafield)
+    datafield = DataField('Hypres', config_file)
 
-    ul.terminals(cell, datafield)
-    ul.capacitors(cell, datafield)
+    if args['--debug']:
+        # poly_cell = gdspy.Cell('POLYGONS')
+        #
+        # for key, value in cell.get_polygons(True).items():
+        #     for points in value:
+        #         if len(points) > 20:
+        #             pp = polygons.simplify(points)
+        #             poly = gdspy.Polygon(pp, *key)
+        #             poly_cell.add(poly)
+        #         else:
+        #             poly = gdspy.Polygon(points, *key)
+        #             poly_cell.add(poly)
 
-    deck.add_cell_components(cell, datafield)
+        deck.add_cell_components(cell, datafield)
+        deck.update_datafield_labels(cell, datafield)
 
-    deck.update_datafield_labels(cell, datafield)
+        deck.lvs_mask(cell, datafield)
 
-    deck.lvs_mask(cell, datafield)
+        # gdspy.LayoutViewer()
+    else:
+        deck.model_mask(cell, datafield)
 
-    # test_union()
-    # test_all()
+        ul.terminals(cell, datafield)
+        ul.capacitors(cell, datafield)
 
-    if modelname:
-        utils.magenta_print('3D Model')
+        deck.add_cell_components(cell, datafield)
+        deck.update_datafield_labels(cell, datafield)
 
-        geom = init_geom()
+        deck.lvs_mask(cell, datafield)
 
-        model.metals(geom, datafield)
-        model.terminals(geom, cell, datafield)
+        # test_union()
+        # test_all()
 
-        meshdata = pygmsh.generate_mesh(geom,
-                                        verbose=False,
-                                        geo_filename=modelname + '.geo')
+        if modelname:
+            utils.magenta_print('3D Model')
 
-        meshio.write(modelname + '.vtu', *meshdata)
+            geom = init_geom()
 
-        utils.end_print()
+            model.metals(geom, datafield)
+            model.terminals(geom, cell, datafield)
+
+            meshdata = pygmsh.generate_mesh(geom,
+                                            verbose=False,
+                                            geo_filename=modelname + '.geo')
+
+            meshio.write(modelname + '.vtu', *meshdata)
+
+            utils.end_print()
 
     viewing(datafield)
 

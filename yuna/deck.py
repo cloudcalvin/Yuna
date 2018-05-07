@@ -100,6 +100,7 @@ def update_datafield_labels(cell, datafield):
             datafield.labels.append(ground)
 
 
+
 def lvs_mask(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
@@ -139,6 +140,9 @@ def lvs_mask(cell, datafield):
     for gds, layer in wires.items():
         if (gds, 0) in poly:
             metals[gds] = devices.Metal(gds, poly)
+
+    print('--- metals')
+    print(metals)
 
     vias = defaultdict(dict)
     jjs = defaultdict(dict)
@@ -190,6 +194,7 @@ def lvs_mask(cell, datafield):
             via.update_mask(datafield)
 
     for gds, metal in metals.items():
+        # metal.simplify(datafield)
         metal.update_mask(datafield)
 
 

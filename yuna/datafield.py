@@ -17,7 +17,9 @@ class DataField(object):
 
     def __init__(self, name, pcf):
         self.name = name
-        self.pcd = self.read_config(pcf)
+
+        if pcf is not None:
+            self.pcd = self.read_config(pcf)
 
         self.mask = cl.defaultdict(dict)
         self.polygons = cl.defaultdict(dict)

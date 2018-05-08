@@ -106,7 +106,7 @@ class Capacitor(gdspy.Label):
         self.master = True
 
     def set_plates(self, datafield):
-        Plates = namedtuple('Plates', ['term', 'label'], verbose=True)
+        Plates = namedtuple('Plates', ['term', 'label'])
 
         wires = {**datafield.pcd.layers['ix'],
                  **datafield.pcd.layers['cap']}
@@ -137,9 +137,6 @@ class Capacitor(gdspy.Label):
                 # TODO: Solve this fucking issue with the ground M0.
                 if metal.name in [m1, m2]:
                     self.data.metals.append(gds)
-
-        for gds in self.data.metals:
-            print('  - ' + str(gds))
 
     def get_label(self):
         return gdspy.Label(self.text, self.position, rotation=0, layer=64)

@@ -11,6 +11,9 @@ from yuna import utils
 from yuna import process
 
 from .utils import nm
+from .utils import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DataField(object):
@@ -168,8 +171,6 @@ class Polygon(gdspy.Polygon):
         Polygon._ID += 1
 
         self.data = fabdata[int(key[0])]
-
-        # print(self.data.name)
 
         assert isinstance(self.data.name, str)
 

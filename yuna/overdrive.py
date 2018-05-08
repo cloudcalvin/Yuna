@@ -32,6 +32,8 @@ from .datafield import DataField
 from yuna import user_labels as ul
 from yuna import polygons
 
+from .utils import logging
+
 
 # def test_all():
 #     geom = pygmsh.opencascade.Geometry(
@@ -100,7 +102,7 @@ def viewing(datafield):
 
     gdspy.LayoutViewer()
 
-    # gdspy.write_gds('auron.gds', unit=1.0e-6, precision=1.0e-6)
+    gdspy.write_gds('ex_layout.gds', unit=1.0e-6, precision=1.0e-6)
 
 
 def grand_summon(basedir, args):
@@ -131,8 +133,12 @@ def grand_summon(basedir, args):
 
     cellname = args['--cell']
     config_name = args['<configname>']
-    modelname = args['--model']
     cwd = ''
+
+    if args['--logging'] == 'debug':
+        logging.basicConfig(level=logging.DEBUG)
+    elif args['--logging'] == 'info':
+        logging.basicConfig(level=logging.INFO)
 
     if not cellname:
         raise ValueError('please specify a valid cell name')
@@ -150,54 +156,34 @@ def grand_summon(basedir, args):
 
     datafield = DataField('Hypres', config_file)
 
-    if args['--debug']:
-        # poly_cell = gdspy.Cell('POLYGONS')
-        #
-        # for key, value in cell.get_polygons(True).items():
-        #     for points in value:
-        #         if len(points) > 20:
-        #             pp = polygons.simplify(points)
-        #             poly = gdspy.Polygon(pp, *key)
-        #             poly_cell.add(poly)
-        #         else:
-        #             poly = gdspy.Polygon(points, *key)
-        #             poly_cell.add(poly)
+    deck.model_mask(cell, datafield)
 
-        deck.add_cell_components(cell, datafield)
-        deck.update_datafield_labels(cell, datafield)
+    ul.terminals(cell, datafield)
+    ul.capacitors(cell, datafield)
 
-        deck.lvs_mask(cell, datafield)
+    deck.add_cell_components(cell, datafield)
+    deck.update_datafield_labels(cell, datafield)
 
-        # gdspy.LayoutViewer()
-    else:
-        deck.model_mask(cell, datafield)
+    deck.lvs_mask(cell, datafield)
 
-        ul.terminals(cell, datafield)
-        ul.capacitors(cell, datafield)
+    # test_union()
+    # test_all()
 
-        deck.add_cell_components(cell, datafield)
-        deck.update_datafield_labels(cell, datafield)
+    if args['--model']:
+        utils.magenta_print('3D Model')
 
-        deck.lvs_mask(cell, datafield)
+        geom = init_geom()
 
-        # test_union()
-        # test_all()
+        model.metals(geom, datafield)
+        model.terminals(geom, cell, datafield)
 
-        if modelname:
-            utils.magenta_print('3D Model')
+        meshdata = pygmsh.generate_mesh(geom,
+                                        verbose=False,
+                                        geo_filename=modelname + '.geo')
 
-            geom = init_geom()
+        meshio.write(modelname + '.vtu', *meshdata)
 
-            model.metals(geom, datafield)
-            model.terminals(geom, cell, datafield)
-
-            meshdata = pygmsh.generate_mesh(geom,
-                                            verbose=False,
-                                            geo_filename=modelname + '.geo')
-
-            meshio.write(modelname + '.vtu', *meshdata)
-
-            utils.end_print()
+        utils.end_print()
 
     viewing(datafield)
 

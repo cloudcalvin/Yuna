@@ -94,6 +94,27 @@ class Metal(object):
     def add(self, element):
         self.points = utils.angusj(self.points, element.points, 'difference')
 
+        # diff_points = utils.angusj(self.points, element.points, 'difference')
+
+        # pp = list()
+        # if isinstance(element, Via):
+        #     for poly in diff_points:
+        #         if pyclipper.Orientation(poly) is False:
+        #             reverse_poly = pyclipper.ReversePath(poly)
+        #             # cc_poly.append(reverse_poly)
+        #             print('--- Negative poly')
+        #             # print(poly)
+        #         else:
+        #             pp.append(poly)
+        #             # cc_poly.append(poly)
+        #             print('--- Positive poly')
+        #             # print(poly)
+
+        # print(pp)
+        # self.points = pp
+
+        # print('---\n')
+
     def update_mask(self, datafield):
         for pp in self.points:
             datafield.add(pp, self.key)

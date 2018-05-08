@@ -7,6 +7,8 @@ import pyclipper
 from yuna import utils
 from yuna import devices
 
+from .utils import logging
+
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
@@ -15,6 +17,8 @@ from collections import defaultdict
 
 from yuna import masternodes as mn
 from yuna import cell_labels as cl
+
+logger = logging.getLogger(__name__)
 
 
 def add_cell_components(cell, datafield):
@@ -54,12 +58,15 @@ def update_datafield_labels(cell, datafield):
     datafield object to include all labels in the layout.
     """
 
+    utils.green_print('Place labels in flattened layout')
+
     cl = cell.copy('Label Flatten', deep_copy=True)
 
     cell_labels = cl.flatten().get_labels(0)
 
     if len(cell_labels) > 0:
-        utils.print_labels(cell_labels)
+        for label in cell_labels:
+            logging.info(label.text)
 
     for lbl in cell_labels:
         comp = lbl.text.split('_')[0]
@@ -100,7 +107,6 @@ def update_datafield_labels(cell, datafield):
             datafield.labels.append(ground)
 
 
-
 def lvs_mask(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
@@ -127,6 +133,8 @@ def lvs_mask(cell, datafield):
         that corresponds to the current datatype value.
     """
 
+    utils.green_print('Processing LVS mask polygons')
+
     cell_layout = cell.copy('Polygon Flatten', deep_copy=True)
     cell_layout.flatten()
 
@@ -141,8 +149,8 @@ def lvs_mask(cell, datafield):
         if (gds, 0) in poly:
             metals[gds] = devices.Metal(gds, poly)
 
-    print('--- metals')
-    print(metals)
+    for key, metal in metals.items():
+        logging.info((key, metal))
 
     vias = defaultdict(dict)
     jjs = defaultdict(dict)

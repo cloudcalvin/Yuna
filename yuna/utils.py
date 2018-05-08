@@ -8,6 +8,7 @@ import json
 import gdspy
 import pyclipper
 import numpy as np
+import logging
 
 from yuna import process
 
@@ -24,13 +25,6 @@ def print_cellrefs(cell):
         if isinstance(element, gdspy.CellReference):
             print(element)
             print('')
-
-
-def print_labels(labels):
-    print('')
-    magenta_print('Labels')
-    for label in labels:
-        print(label.text)
 
 
 def midpoint(x1, y1, x2, y2):

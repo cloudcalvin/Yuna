@@ -64,7 +64,6 @@ class ProcessConfigData(object):
 class Layer(object):
 
     def __init__(self, data):
-        print(data['name'])
 
         self.name = data['name']
         self.color = data['color']

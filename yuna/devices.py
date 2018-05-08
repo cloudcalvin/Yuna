@@ -22,7 +22,8 @@ class Metal(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                sp = Polygon(pp).simplify(1.5e5)
+                factor = (len(pp)/100.0) * 1e5 
+                sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:
@@ -111,7 +112,8 @@ class Via(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                sp = Polygon(pp).simplify(1.5e5)
+                factor = (len(pp)/20.0) * 1e5 
+                sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:
@@ -148,7 +150,8 @@ class Junction(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                sp = Polygon(pp).simplify(1.5e5)
+                factor = (len(pp)/20.0) * 1e5 
+                sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:
@@ -180,7 +183,8 @@ class Ntron(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                sp = Polygon(pp).simplify(1.5e5)
+                factor = (len(pp)/150.0) * 1e5 
+                sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:

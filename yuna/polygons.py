@@ -3,10 +3,6 @@ from matplotlib import pyplot
 from shapely.geometry import MultiPoint, Point
 from shapely.geometry import Polygon
 
-from descartes.patch import PolygonPatch
-
-from .figures import SIZE, BLUE, GRAY
-
 
 def convert_node_to_2d(polygon):
     um = 10e-6

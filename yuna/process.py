@@ -66,6 +66,12 @@ class Layer(object):
     def __init__(self, data):
 
         self.name = data['name']
+
+        if 'ETL' in data:
+            self.etl = data['ETL']
+        else:
+            self.etl = None
+
         self.color = data['color']
         self.position = None
         self.width = None

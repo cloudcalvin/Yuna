@@ -107,6 +107,43 @@ def update_datafield_labels(cell, datafield):
             datafield.labels.append(ground)
 
 
+def _etl_polygons(datafield, cell):
+    """
+    Reads throught the PDF file and converts the corresponding 
+    conducting layers to the same type. An example of this is
+    layer NbN_1 and NbN_2 that should be the same. 
+
+    Output : dict()
+        Updated `poly` version that has converted the ETL polygons.
+    """
+
+    logger.info('ETL Polygons')
+
+    poly = cell.get_polygons(True)
+
+    polygons = dict()
+
+    for gds, layer in datafield.pcd.layers['ix'].items():
+        if layer.etl is not None:
+            for key, points in poly.items():
+                if gds == key[0]:
+                    etl_key = (layer.etl, key[1])
+                    for pp in points:
+                        if etl_key in polygons:
+                            polygons[etl_key].append(pp)
+                        else:
+                            polygons[etl_key] = [pp]
+        else:
+            for key, points in poly.items():
+                if gds == key[0]:
+                    for pp in points:
+                        if key in polygons:
+                            polygons[key].append(pp)
+                        else:
+                            polygons[key] = [pp]
+    return polygons
+
+
 def lvs_mask(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
@@ -138,7 +175,10 @@ def lvs_mask(cell, datafield):
     cell_layout = cell.copy('Polygon Flatten', deep_copy=True)
     cell_layout.flatten()
 
-    poly = cell_layout.get_polygons(True)
+    poly = _etl_polygons(datafield, cell_layout)
+
+    for key, value in poly.items():
+        print(key, value)
 
     metals = defaultdict(dict)
 

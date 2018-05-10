@@ -22,6 +22,7 @@ setup(
     package_dir={'yuna': 'yuna'},
     install_requires=[
         'gdspy',
+        'shapely',
         'pyclipper',
         'setuptools',
         'numpy',

@@ -123,7 +123,10 @@ def _etl_polygons(datafield, cell):
 
     polygons = dict()
 
-    for gds, layer in datafield.pcd.layers['ix'].items():
+    wires = {**datafield.pcd.layers['ix'],
+             **datafield.pcd.layers['res']}
+
+    for gds, layer in wires.items():
         if layer.etl is not None:
             for key, points in poly.items():
                 if gds == key[0]:
@@ -176,9 +179,6 @@ def lvs_mask(cell, datafield):
     cell_layout.flatten()
 
     poly = _etl_polygons(datafield, cell_layout)
-
-    for key, value in poly.items():
-        print(key, value)
 
     metals = defaultdict(dict)
 
@@ -242,7 +242,6 @@ def lvs_mask(cell, datafield):
             via.update_mask(datafield)
 
     for gds, metal in metals.items():
-        # metal.simplify(datafield)
         metal.update_mask(datafield)
 
 

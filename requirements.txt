@@ -1,8 +1,8 @@
 setuputils
 numpy
 matplotlib
-future; python_version < "3"
 gdspy
 pyclipper
 docopt
 termcolor
+shapely

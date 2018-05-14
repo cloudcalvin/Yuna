@@ -3,6 +3,7 @@ import pyclipper
 import gdspy
 
 from yuna import utils
+from yuna import grid
 
 from collections import namedtuple
 from collections import defaultdict
@@ -28,6 +29,14 @@ class Metal(object):
                 points.append(plist[:-1])
             else:
                 points.append(list(pp))
+
+        print(points)
+        print('==========\n')
+
+        points = grid.snap_points(points)
+
+        print(points)
+        
         return points
 
     def union(self):

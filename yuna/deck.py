@@ -180,6 +180,8 @@ def lvs_mask(cell, datafield):
 
     poly = _etl_polygons(datafield, cell_layout)
 
+    print(poly)
+
     metals = defaultdict(dict)
 
     wires = {**datafield.pcd.layers['ix'],

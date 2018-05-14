@@ -53,7 +53,8 @@ package on your system.
 sudo pip install -e .
 ```
 
-Uploading package to PyPi using *twine*:
+Remember to remove the build, dist and .egg directories before doing a new 
+PyPi upload. To uploading package to PyPi using *twine*:
 
 ```
 sudo python setup.py bdist_wheel

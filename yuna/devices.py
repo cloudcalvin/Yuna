@@ -23,7 +23,7 @@ class Metal(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                factor = (len(pp)/100.0) * 1e5 
+                factor = (len(pp)/100.0) * 1e5
                 sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
@@ -36,7 +36,7 @@ class Metal(object):
         points = grid.snap_points(points)
 
         print(points)
-        
+
         return points
 
     def union(self):
@@ -142,12 +142,15 @@ class Via(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                factor = (len(pp)/20.0) * 1e5 
+                factor = (len(pp)/20.0) * 1e5
                 sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:
                 points.append(list(pp))
+
+        points = grid.snap_points(points)
+
         return points
 
     def union(self):
@@ -180,12 +183,15 @@ class Junction(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                factor = (len(pp)/20.0) * 1e5 
+                factor = (len(pp)/20.0) * 1e5
                 sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:
                 points.append(list(pp))
+
+        points = grid.snap_points(points)
+
         return points
 
     def union(self):
@@ -213,12 +219,15 @@ class Ntron(object):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
-                factor = (len(pp)/150.0) * 1e5 
+                factor = (len(pp)/150.0) * 1e5
                 sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:
                 points.append(list(pp))
+
+        points = grid.snap_points(points)
+
         return points
 
     def union(self):

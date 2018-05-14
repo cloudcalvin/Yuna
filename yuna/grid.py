@@ -3,7 +3,10 @@ import math
 
 
 def get_grids_per_unit():
-    return 10e-6
+    unit = 1e-6
+    grid = 5e-9
+
+    return (unit/grid) * 10e-6
 
 
 def _points_to_float(points):

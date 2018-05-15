@@ -4,7 +4,8 @@ import itertools as it
 from yuna import utils
 from yuna import process
 
-from yuna import masternodes as mn
+# import yuna.lvs.masternodes as mn
+from ..lvs import masternodes as mn
 
 
 def capacitors(cell, datafield):

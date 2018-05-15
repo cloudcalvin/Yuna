@@ -24,17 +24,15 @@ from docopt import docopt
 
 from yuna import process
 from yuna import utils
-from yuna import model
 
-from .datafield import DataField
-
-from yuna import user_labels as ul
-from yuna import polygons
+# from .datafield import DataField
+# from yuna import user_labels as ul
 
 from .utils import logging
 
 import yuna.model as model
 import yuna.lvs as lvs
+import yuna.labels as labels
 
 
 # def test_all():
@@ -156,12 +154,12 @@ def grand_summon(basedir, args):
 
     cell = read_cell(gds_file, cellname)
 
-    datafield = DataField('Hypres', config_file)
+    datafield = lvs.datafield.DataField('Hypres', config_file)
 
     model.mask.geometry(cell, datafield)
 
-    ul.terminals(cell, datafield)
-    ul.capacitors(cell, datafield)
+    labels.user.terminals(cell, datafield)
+    labels.user.capacitors(cell, datafield)
 
     lvs.deck.add_cell_components(cell, datafield)
     lvs.deck.update_datafield_labels(cell, datafield)

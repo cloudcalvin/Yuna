@@ -14,10 +14,10 @@ import matplotlib.patches as patches
 from collections import namedtuple
 from collections import defaultdict
 
-from yuna import masternodes as mn
-from yuna import cell_labels as cl
-
 import yuna.devices as devices
+import yuna.labels as labels
+
+from . import masternodes as mn
 
 logger = logging.getLogger(__name__)
 
@@ -41,15 +41,15 @@ def add_cell_components(cell, datafield):
 
     for subcell in cell.get_dependencies(True):
         if subcell.name.split('_')[0] == 'via':
-            cl.vias(subcell, datafield)
+            labels.cell.vias(subcell, datafield)
 
     for subcell in cell.get_dependencies(True):
         if subcell.name.split('_')[0] == 'jj':
-            cl.junctions(subcell, datafield)
+            labels.cell.junctions(subcell, datafield)
 
     for subcell in cell.get_dependencies(True):
         if subcell.name.split('_')[0] == 'ntron':
-            cl.ntrons(subcell, datafield)
+            labels.cell.ntrons(subcell, datafield)
 
 
 def update_datafield_labels(cell, datafield):

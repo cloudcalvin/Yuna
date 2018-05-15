@@ -18,7 +18,7 @@ setup(
     license="BSD",
     keywords="yuna",
     url="https://github.com/rubenvanstaden/yuna",
-    packages=['yuna', 'model', 'lvs'],
+    packages=['yuna', 'model', 'lvs', 'devices', 'labels'],
     package_dir={'yuna': 'yuna'},
     install_requires=[
         'gdspy',

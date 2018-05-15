@@ -4,11 +4,11 @@ import meshio
 import numpy as np
 import pyclipper
 
-from yuna import utils
+import yuna.utils as utils
 from collections import namedtuple
 
-from .utils import nm
-from .utils import um
+from yuna.utils import nm
+from yuna.utils import um
 
 
 class Point:

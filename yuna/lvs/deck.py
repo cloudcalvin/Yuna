@@ -7,7 +7,7 @@ import pyclipper
 from yuna import utils
 from yuna import devices
 
-from .utils import logging
+from yuna.utils import logging
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -109,9 +109,9 @@ def update_datafield_labels(cell, datafield):
 
 def _etl_polygons(datafield, cell):
     """
-    Reads throught the PDF file and converts the corresponding 
+    Reads throught the PDF file and converts the corresponding
     conducting layers to the same type. An example of this is
-    layer NbN_1 and NbN_2 that should be the same. 
+    layer NbN_1 and NbN_2 that should be the same.
 
     Output : dict()
         Updated `poly` version that has converted the ETL polygons.
@@ -180,8 +180,6 @@ def lvs_mask(cell, datafield):
 
     poly = _etl_polygons(datafield, cell_layout)
 
-    print(poly)
-
     metals = defaultdict(dict)
 
     wires = {**datafield.pcd.layers['ix'],
@@ -245,51 +243,3 @@ def lvs_mask(cell, datafield):
 
     for gds, metal in metals.items():
         metal.update_mask(datafield)
-
-
-def model_mask(cell, datafield):
-    """
-    The layer polygons for each gdsnumber is created in four phases:
-
-    1. Merge all the normal conducting wires.
-    2. Merge the polygons inside each component.
-    3. Find the difference between the conducting polygons
-       and the component polygons.
-    4. Add these polygons to the datafield object.
-
-    Parameters
-    ----------
-    cell_layout : gdspy Cell
-        The original layout cell flattened
-    datafield : gdspy Cell
-        The cell containing all the layer polygons merged
-
-    Arguments
-    ---------
-    metals : list
-        A list containing the points of the merged polygons.
-    components : list
-        The merged polygons of the specific layer in the components
-        that corresponds to the current datatype value.
-    """
-
-    myCell = gdspy.Cell('myCell')
-
-    cell_origin = cell.copy('Original', deep_copy=True)
-    cell_origin.flatten()
-
-    poly = cell_origin.get_polygons(True)
-
-    mask_layers = {**datafield.pcd.layers['ix'],
-                   **datafield.pcd.layers['term'],
-                   **datafield.pcd.layers['res'],
-                   **datafield.pcd.layers['via'],
-                   **datafield.pcd.layers['jj'],
-                   **datafield.pcd.layers['ntron']}
-
-    metals = defaultdict(dict)
-
-    for gds, layer in mask_layers.items():
-        if (gds, 0) in poly:
-            metals[gds] = devices.Metal(gds, poly)
-            metals[gds].create_mask(datafield, myCell)

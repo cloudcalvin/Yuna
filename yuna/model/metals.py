@@ -1,7 +1,7 @@
 import numpy as np
 import pyclipper
 
-from yuna import utils
+import yuna.utils as utils
 from collections import namedtuple
 
 from pygmsh.opencascade.surface_base import SurfaceBase
@@ -9,7 +9,7 @@ from pygmsh.opencascade.volume_base import VolumeBase
 from pygmsh.built_in.volume import Volume
 
 from .terminal import Terminal
-from .utils import um
+from yuna.utils import um
 
 
 class Metal(object):

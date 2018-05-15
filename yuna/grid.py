@@ -1,12 +1,10 @@
 import numpy as np
 import math
+from yuna import utils
 
 
-def get_grids_per_unit():
-    unit = 1e-6
-    grid = 5e-9
-
-    return (unit/grid) * 10e-6
+def _grids_per_unit():
+    return (utils.unit/utils.grid) * utils.um
 
 
 def _points_to_float(points):
@@ -25,10 +23,10 @@ def snap_points(points, grids_per_unit=None):
     """
 
     if grids_per_unit is None:
-        grids_per_unit = get_grids_per_unit()
+        grids_per_unit = _grids_per_unit()
     else:
         raise ValueError('please define grids per unit')
-    
+
     points = _points_to_float(points)
 
     polygons = list()

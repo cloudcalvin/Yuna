@@ -17,6 +17,9 @@ um = 10e-6
 nm = 10e-9
 pm = 10e-12
 
+unit = 1e-6
+grid = 5e-9
+
 
 def print_cellrefs(cell):
     print('')

@@ -25,7 +25,6 @@ from docopt import docopt
 from yuna import process
 from yuna import utils
 from yuna import model
-from yuna import deck
 
 from .datafield import DataField
 
@@ -33,6 +32,9 @@ from yuna import user_labels as ul
 from yuna import polygons
 
 from .utils import logging
+
+import yuna.model as model
+import yuna.lvs as lvs
 
 
 # def test_all():
@@ -156,15 +158,15 @@ def grand_summon(basedir, args):
 
     datafield = DataField('Hypres', config_file)
 
-    deck.model_mask(cell, datafield)
+    model.mask.geometry(cell, datafield)
 
     ul.terminals(cell, datafield)
     ul.capacitors(cell, datafield)
 
-    deck.add_cell_components(cell, datafield)
-    deck.update_datafield_labels(cell, datafield)
+    lvs.deck.add_cell_components(cell, datafield)
+    lvs.deck.update_datafield_labels(cell, datafield)
 
-    deck.lvs_mask(cell, datafield)
+    lvs.deck.lvs_mask(cell, datafield)
 
     # test_union()
     # test_all()
@@ -174,8 +176,8 @@ def grand_summon(basedir, args):
 
         geom = init_geom()
 
-        model.metals(geom, datafield)
-        model.terminals(geom, cell, datafield)
+        model.mask._metals(geom, datafield)
+        model.mask.terminals(geom, cell, datafield)
 
         meshdata = pygmsh.generate_mesh(geom,
                                         verbose=False,

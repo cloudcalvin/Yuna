@@ -139,12 +139,6 @@ class DataField(object):
             lbl = label.get_label()
             cell.add(lbl)
 
-        # for lbl in self.labels:
-        #     for key, value in self.labels.items():
-        #         print(key, value)
-        #         for label in value['labels']:
-        #             cell.add(label)
-
 
 class Polygon(gdspy.Polygon):
     """

@@ -5,7 +5,6 @@ import gdspy
 import pyclipper
 
 from yuna import utils
-from yuna import devices
 
 from yuna.utils import logging
 
@@ -17,6 +16,8 @@ from collections import defaultdict
 
 from yuna import masternodes as mn
 from yuna import cell_labels as cl
+
+import yuna.devices as devices
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +188,7 @@ def lvs_mask(cell, datafield):
 
     for gds, layer in wires.items():
         if (gds, 0) in poly:
-            metals[gds] = devices.Metal(gds, poly)
+            metals[gds] = devices.paths.Paths(gds, poly)
 
     for key, metal in metals.items():
         logging.info((key, metal))
@@ -199,17 +200,17 @@ def lvs_mask(cell, datafield):
     for gds, layer in wires.items():
         if gds in metals:
             if (gds, 1) in poly:
-                via = devices.Via(gds, poly)
+                via = devices.vias.Via(gds, poly)
                 # via.update_mask(datafield)
                 vias[gds] = via
 
             if (gds, 3) in poly:
-                jj = devices.Junction(gds, poly)
+                jj = devices.junctions.Junction(gds, poly)
                 # jj.update_mask(datafield)
                 jjs[gds] = jj
 
             if (gds, 7) in poly:
-                ntron = devices.Ntron(gds, poly)
+                ntron = devices.ntrons.Ntron(gds, poly)
                 # ntron.update_mask(datafield)
                 ntrons[gds] = ntron
 

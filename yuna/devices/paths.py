@@ -11,7 +11,7 @@ from collections import defaultdict
 from shapely.geometry import Polygon
 
 
-class Metal(object):
+class Paths(object):
 
     def __init__(self, gds, poly):
         self.key = (gds, 0)
@@ -123,120 +123,6 @@ class Metal(object):
         # self.points = pp
 
         # print('---\n')
-
-    def update_mask(self, datafield):
-        for pp in self.points:
-            datafield.add(pp, self.key)
-
-
-class Via(object):
-
-    def __init__(self, gds, poly):
-        self.clip = False
-        self.key = (gds, 1)
-        self.raw_points = poly[(gds, 1)]
-        self.union_points = self.union()
-        self.points = self.simple()
-
-    def simple(self):
-        points = list()
-        for pp in self.union_points:
-            if len(pp) > 10:
-                factor = (len(pp)/20.0) * 1e5
-                sp = Polygon(pp).simplify(factor)
-                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
-                points.append(plist[:-1])
-            else:
-                points.append(list(pp))
-
-        points = grid.snap_points(points)
-
-        return points
-
-    def union(self):
-        points = utils.angusj(subj=self.raw_points, method='union')
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
-
-    def update_mask(self, datafield, element=None):
-        if element is not None:
-            self.points = utils.angusj(self.points, element.points, 'difference')
-
-        for pp in self.points:
-            datafield.add(pp, self.key)
-
-        self.clip = True
-
-
-class Junction(object):
-
-    def __init__(self, gds, poly):
-        self.key = (gds, 3)
-        self.raw_points = poly[(gds, 3)]
-        self.union_points = self.union()
-        self.points = self.simple()
-
-    def simple(self):
-        points = list()
-        for pp in self.union_points:
-            if len(pp) > 10:
-                factor = (len(pp)/20.0) * 1e5
-                sp = Polygon(pp).simplify(factor)
-                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
-                points.append(plist[:-1])
-            else:
-                points.append(list(pp))
-
-        points = grid.snap_points(points)
-
-        return points
-
-    def union(self):
-        points = utils.angusj(subj=self.raw_points, method='union')
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
-
-    def update_mask(self, datafield):
-        for pp in self.points:
-            datafield.add(pp, self.key)
-
-
-class Ntron(object):
-
-    def __init__(self, gds, poly):
-        self.key = (gds, 7)
-        self.raw_points = poly[(gds, 7)]
-        self.union_points = self.union()
-        self.points = self.simple()
-
-    def simple(self):
-        points = list()
-        for pp in self.union_points:
-            if len(pp) > 10:
-                factor = (len(pp)/150.0) * 1e5
-                sp = Polygon(pp).simplify(factor)
-                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
-                points.append(plist[:-1])
-            else:
-                points.append(list(pp))
-
-        points = grid.snap_points(points)
-
-        return points
-
-    def union(self):
-        points = utils.angusj(subj=self.raw_points, method='union')
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
 
     def update_mask(self, datafield):
         for pp in self.points:

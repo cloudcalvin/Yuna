@@ -36,11 +36,10 @@ class Via(object):
 
         return points
 
-    def update_mask(self, datafield, element=None):
-        if element is not None:
-            self.points = utils.angusj(self.points, element.points, 'difference')
+    def add(self, mask):
+        self.points = utils.angusj(self.points, mask.points, 'difference')
+        self.clip = True
 
+    def update_mask(self, datafield, element=None):
         for pp in self.points:
             datafield.add(pp, self.key)
-
-        self.clip = True

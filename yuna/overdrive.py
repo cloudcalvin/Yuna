@@ -25,9 +25,6 @@ from docopt import docopt
 from yuna import process
 from yuna import utils
 
-# from .datafield import DataField
-# from yuna import user_labels as ul
-
 from .utils import logging
 
 import yuna.model as model
@@ -69,23 +66,15 @@ import yuna.labels as labels
 #     union = pygmsh.generate_mesh(geom, geo_filename='union.geo')
 
 
-def read_cell(gds_file, cellname):
+def _read_cell(gds_file, cellname):
     gdsii = gdspy.GdsLibrary()
 
     gdsii.read_gds(gds_file, unit=1.0e-12)
 
-    # all_cells = gdsii.extract('Array_4x4').get_dependencies(True)
-    #
-    # for cell in all_cells:
-    #     # print(cellname)
-    #     print(cell.name)
-    #     if cell.name == cellname:
-    #         return cell
-
     return gdsii.extract(cellname)
 
 
-def init_geom():
+def _init_geom():
     geom = pygmsh.opencascade.Geometry()
 
     geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
@@ -97,12 +86,24 @@ def init_geom():
     return geom
 
 
-def viewing(datafield):
+def _viewing(datafield):
     datafield.parse_gdspy(gdspy.Cell('View Cell Test'))
 
     gdspy.LayoutViewer()
 
     gdspy.write_gds('ex_layout.gds', unit=1.0e-6, precision=1.0e-6)
+
+
+def _get_files(basedir, name):
+    gds_file, config_file = '', None
+    for root, dirs, files in os.walk(os.getcwd()):
+        for file in files:
+            if file.endswith('.gds'):
+                gds_file = basedir + '/' + file
+            elif file.endswith('.json'):
+                if file == name:
+                    config_file = basedir + '/' + file
+    return gds_file, config_file
 
 
 def grand_summon(basedir, args):
@@ -132,8 +133,7 @@ def grand_summon(basedir, args):
     utils.cyan_print('Summoning Yuna...')
 
     cellname = args['--cell']
-    config_name = args['<configname>']
-    cwd = ''
+    pdk_name = args['<pdkname>']
 
     if args['--logging'] == 'debug':
         logging.basicConfig(level=logging.DEBUG)
@@ -143,36 +143,18 @@ def grand_summon(basedir, args):
     if not cellname:
         raise ValueError('please specify a valid cell name')
 
-    gds_file, config_file = '', None
-    for root, dirs, files in os.walk(os.getcwd()):
-        for file in files:
-            if file.endswith('.gds'):
-                gds_file = basedir + '/' + file
-            elif file.endswith('.json'):
-                if file == config_name:
-                    config_file = basedir + '/' + file
-
-    cell = read_cell(gds_file, cellname)
-
-    datafield = lvs.datafield.DataField('Hypres', config_file)
-
-    model.mask.geometry(cell, datafield)
-
-    labels.user.terminals(cell, datafield)
-    labels.user.capacitors(cell, datafield)
-
-    lvs.deck.add_cell_components(cell, datafield)
-    lvs.deck.update_datafield_labels(cell, datafield)
-
-    lvs.deck.lvs_mask(cell, datafield)
+    gds_file, config_file = _get_files(basedir, pdk_name)
 
     # test_union()
     # test_all()
 
     if args['--model']:
+        # cell = read_cell(gds_file, cellname)
+        # model.mask.geometry(cell, datafield)
+
         utils.magenta_print('3D Model')
 
-        geom = init_geom()
+        geom = _init_geom()
 
         model.mask._metals(geom, datafield)
         model.mask.terminals(geom, cell, datafield)
@@ -184,8 +166,20 @@ def grand_summon(basedir, args):
         meshio.write(modelname + '.vtu', *meshdata)
 
         utils.end_print()
+    else:
+        cell = _read_cell(gds_file, cellname)
 
-    viewing(datafield)
+        datafield = lvs.datafield.DataField('Hypres', config_file)
+
+        labels.user.terminals(cell, datafield)
+        labels.user.capacitors(cell, datafield)
+
+        lvs.geometry.label_cells(cell, datafield)
+        lvs.geometry.label_flatten(cell, datafield)
+
+        lvs.geometry.deposition(cell, datafield)
+
+    _viewing(datafield)
 
     utils.cyan_print('Yuna. Done.\n')
 

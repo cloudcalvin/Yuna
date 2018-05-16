@@ -100,29 +100,8 @@ class Paths(object):
 
             myCell.add(gdspy.Polygon(poly.points, self.key[0], verbose=False))
 
-    def add(self, element):
-        self.points = utils.angusj(self.points, element.points, 'difference')
-
-        # diff_points = utils.angusj(self.points, element.points, 'difference')
-
-        # pp = list()
-        # if isinstance(element, Via):
-        #     for poly in diff_points:
-        #         if pyclipper.Orientation(poly) is False:
-        #             reverse_poly = pyclipper.ReversePath(poly)
-        #             # cc_poly.append(reverse_poly)
-        #             print('--- Negative poly')
-        #             # print(poly)
-        #         else:
-        #             pp.append(poly)
-        #             # cc_poly.append(poly)
-        #             print('--- Positive poly')
-        #             # print(poly)
-
-        # print(pp)
-        # self.points = pp
-
-        # print('---\n')
+    def add(self, mask):
+        self.points = utils.angusj(self.points, mask.points, 'difference')
 
     def update_mask(self, datafield):
         for pp in self.points:

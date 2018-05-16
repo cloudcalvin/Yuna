@@ -12,6 +12,8 @@ from yuna import process
 from yuna.utils import nm
 from yuna.utils import logging
 
+import yuna.devices as devices
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +25,8 @@ class DataField(object):
         if pcf is not None:
             self.pcd = self.read_config(pcf)
 
-        self.mask = cl.defaultdict(dict)
+        self.maskset = dict()
+
         self.polygons = cl.defaultdict(dict)
         self.labels = list()
 
@@ -51,6 +54,82 @@ class DataField(object):
                     pcd.add_layer(mtype, int(gds), value)
 
         return pcd
+
+    def add_mask(self, gds, mask):
+        if gds in self.maskset:
+            self.maskset[gds].append(mask)
+        else:
+            self.maskset[gds] = [mask]
+
+    def add_polygon(self, element, key=None, holes=None):
+        """
+        Add a new element or list of elements to this cell.
+
+        Parameters
+        ----------
+        element : object
+            The element or list of elements to be inserted in this cell.
+
+        Returns
+        -------
+        out : ``Cell``
+            This cell.
+        """
+
+        if key is None:
+            raise TypeError('key cannot be None')
+
+        assert isinstance(element[0], list)
+
+        fabdata = {**self.pcd.layers['ix'],
+                   **self.pcd.layers['hole'],
+                   **self.pcd.layers['res'],
+                   **self.pcd.layers['term'],
+                   **self.pcd.layers['via'],
+                   **self.pcd.layers['jj'],
+                   **self.pcd.layers['ntron']}
+
+        polygon = Polygon(key, element, fabdata, holes)
+
+        if key[1] in self.polygons[key[0]]:
+            self.polygons[key[0]][key[1]].append(polygon)
+        else:
+            self.polygons[key[0]][key[1]] = [polygon]
+
+    def pattern_path(self, device_type):
+        elements = []
+        for gds, mask in self.maskset.items():
+            for submask in mask:
+                if isinstance(submask, device_type):
+                    elements.append(submask)
+
+        for gds, mask in self.maskset.items():
+            for submask in mask:
+                if isinstance(submask, devices.paths.Paths):
+                    for element in elements:
+                        submask.add(element)
+
+    def pattern_via(self, device_type):
+        elements = []
+        for gds, mask in self.maskset.items():
+            for submask in mask:
+                if isinstance(submask, device_type):
+                    elements.append(submask)
+
+        for gds, mask in self.maskset.items():
+            for submask in mask:
+                if isinstance(submask, devices.vias.Via):
+                    for element in elements:
+                        submask.add(element)
+
+    def update_polygons(self, device_type=None):
+        for gds, mask_list in self.maskset.items():
+            for mask in mask_ist:
+                if device_type is None:
+                    mask.update_mask(self)
+                else:
+                    if isinstance(mask, device_type):
+                       mask.update_mask(self)
 
     def get_terminals(self):
         terminals = dict()
@@ -81,47 +160,6 @@ class DataField(object):
                             metals[key] = [np.array(poly.points)]
 
         return metals
-
-    def add(self, element, key=None, holes=None, model='lvs'):
-        """
-        Add a new element or list of elements to this cell.
-
-        Parameters
-        ----------
-        element : object
-            The element or list of elements to be inserted in this cell.
-
-        Returns
-        -------
-        out : ``Cell``
-            This cell.
-        """
-
-        if key is None:
-            raise TypeError('key cannot be None')
-
-        assert isinstance(element[0], list)
-
-        fabdata = {**self.pcd.layers['ix'],
-                   **self.pcd.layers['hole'],
-                   **self.pcd.layers['res'],
-                   **self.pcd.layers['term'],
-                   **self.pcd.layers['via'],
-                   **self.pcd.layers['jj'],
-                   **self.pcd.layers['ntron']}
-
-        polygon = Polygon(key, element, fabdata, holes)
-
-        if model == 'lvs':
-            if key[1] in self.polygons[key[0]]:
-                self.polygons[key[0]][key[1]].append(polygon)
-            else:
-                self.polygons[key[0]][key[1]] = [polygon]
-        elif model == 'model':
-            if key[1] in self.mask[key[0]]:
-                self.mask[key[0]][key[1]].append(polygon)
-            else:
-                self.mask[key[0]][key[1]] = [polygon]
 
     def parse_gdspy(self, cell):
         wires = {**self.pcd.layers['ix'],

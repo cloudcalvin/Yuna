@@ -1,3 +1,3 @@
-__all__ = ['datafield', 'deck', 'masternodes']
+__all__ = ['datafield', 'geometry', 'masternodes']
 
 from . import *

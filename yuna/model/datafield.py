@@ -25,8 +25,6 @@ class DataField(object):
             self.pcd = self.read_config(pcf)
 
         self.mask = cl.defaultdict(dict)
-        self.polygons = cl.defaultdict(dict)
-        self.labels = list()
 
     def __str__(self):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
@@ -83,7 +81,7 @@ class DataField(object):
 
         return metals
 
-    def add(self, element, key=None, holes=None, model='lvs'):
+    def add(self, element, key=None, holes=None):
         """
         Add a new element or list of elements to this cell.
 
@@ -113,16 +111,10 @@ class DataField(object):
 
         polygon = Polygon(key, element, fabdata, holes)
 
-        if model == 'lvs':
-            if key[1] in self.polygons[key[0]]:
-                self.polygons[key[0]][key[1]].append(polygon)
-            else:
-                self.polygons[key[0]][key[1]] = [polygon]
-        elif model == 'model':
-            if key[1] in self.mask[key[0]]:
-                self.mask[key[0]][key[1]].append(polygon)
-            else:
-                self.mask[key[0]][key[1]] = [polygon]
+        if key[1] in self.mask[key[0]]:
+            self.mask[key[0]][key[1]].append(polygon)
+        else:
+            self.mask[key[0]][key[1]] = [polygon]
 
     def parse_gdspy(self, cell):
         wires = {**self.pcd.layers['ix'],

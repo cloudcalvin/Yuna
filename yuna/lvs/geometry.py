@@ -7,6 +7,7 @@ import pyclipper
 from yuna import utils
 
 from yuna.utils import logging
+from yuna.utils import datatype
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -22,7 +23,7 @@ from . import masternodes as mn
 logger = logging.getLogger(__name__)
 
 
-def add_cell_components(cell, datafield):
+def label_cells(cell, datafield):
     """
     Label each individual cell before flattening them
     to the top-level cell.
@@ -52,7 +53,7 @@ def add_cell_components(cell, datafield):
             labels.cell.ntrons(subcell, datafield)
 
 
-def update_datafield_labels(cell, datafield):
+def label_flatten(cell, datafield):
     """
     Place the labels to their corresponding positions
     after flattening the top-level cell. Update the
@@ -148,7 +149,7 @@ def _etl_polygons(datafield, cell):
     return polygons
 
 
-def lvs_mask(cell, datafield):
+def deposition(cell, datafield):
     """
     The layer polygons for each gdsnumber is created in four phases:
 
@@ -179,68 +180,48 @@ def lvs_mask(cell, datafield):
     cell_layout = cell.copy('Polygon Flatten', deep_copy=True)
     cell_layout.flatten()
 
-    poly = _etl_polygons(datafield, cell_layout)
+    mask_poly = _etl_polygons(datafield, cell_layout)
 
     metals = defaultdict(dict)
 
     wires = {**datafield.pcd.layers['ix'],
              **datafield.pcd.layers['res']}
 
-    for gds, layer in wires.items():
-        if (gds, 0) in poly:
-            metals[gds] = devices.paths.Paths(gds, poly)
+    # Mask = namedtuple('Mask', ['dtype', 'devices'])
 
-    for key, metal in metals.items():
-        logging.info((key, metal))
+    # paths = Mask(dtype=datatype['path'], element=[])
+    # vias = Mask(dtype=datatype['via'], element=[])
+    # jjs = Mask(dtype=datatype['jj'], element=[])
+    # ntrons = Mask(dtype=datatype['ntron'], element=[])
 
-    vias = defaultdict(dict)
-    jjs = defaultdict(dict)
-    ntrons = defaultdict(dict)
+    # geom = Geometry()
 
     for gds, layer in wires.items():
-        if gds in metals:
-            if (gds, 1) in poly:
-                via = devices.vias.Via(gds, poly)
-                # via.update_mask(datafield)
-                vias[gds] = via
+        if (gds, datatype['path']) in mask_poly:
+            path = devices.paths.Paths(gds, mask_poly)
+            datafield.add_mask(gds, path)
+            # geom.add(gds, path)
 
-            if (gds, 3) in poly:
-                jj = devices.junctions.Junction(gds, poly)
-                # jj.update_mask(datafield)
-                jjs[gds] = jj
+            if (gds, datatype['via']) in mask_poly:
+                via = devices.vias.Via(gds, mask_poly)
+                datafield.add_mask(gds, via)
+                # geom.add(gds, via)
 
-            if (gds, 7) in poly:
-                ntron = devices.ntrons.Ntron(gds, poly)
-                # ntron.update_mask(datafield)
-                ntrons[gds] = ntron
+            if (gds, datatype['jj']) in mask_poly:
+                jj = devices.junctions.Junction(gds, mask_poly)
+                datafield.add_mask(gds, jj)
+                # geom.add(gds, jj)
 
-    # # TODO: We use a dict so that we can do individual unittests like this.
-    # metals[6].add(vias[6])
-    # metals[6].update_mask(datafield)
+            if (gds, datatype['ntron']) in mask_poly:
+                ntron = devices.ntrons.Ntron(gds, mask_poly)
+                datafield.add_mask(gds, ntron)
+                # geom.add(gds, ntron)
 
-    for gds, metal in metals.items():
-        if gds in vias:
-            metal.add(vias[gds])
+    datafield.pattern_path(devices.vias.Via)
+    datafield.pattern_path(devices.ntrons.Ntron)
+    datafield.pattern_path(devices.junctions.Junction)
 
-    for gds, metal in metals.items():
-        if gds in jjs:
-            metal.add(jjs[gds])
+    datafield.pattern_via(devices.ntrons.Ntron)
+    datafield.pattern_via(devices.junctions.Junction)
 
-            jjs[gds].update_mask(datafield)
-            # if gds in vias:
-            #     via.update_mask(datafield, ntrons[gds])
-
-    for gds, metal in metals.items():
-        if gds in ntrons:
-            metal.add(ntrons[gds])
-
-            ntrons[gds].update_mask(datafield)
-            if gds in vias:
-                via.update_mask(datafield, ntrons[gds])
-
-    for gds, via in vias.items():
-        if via.clip is False:
-            via.update_mask(datafield)
-
-    for gds, metal in metals.items():
-        metal.update_mask(datafield)
+    datafield.update_polygons()

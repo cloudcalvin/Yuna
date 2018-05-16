@@ -45,13 +45,21 @@ def junctions(cell, datafield):
         if isinstance(element, gdspy.PolygonSet):
             if element.layers[0] == jjs[cell.name]['gds']:
                 jj_poly = utils.angusj(element.polygons, element.polygons, 'union')
-                poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
+
+                if isinstance(jj_poly[0][0], list):
+                    poly = gdspy.Polygon(jj_poly[0], element.layers[0], verbose=False)
+                else:
+                    poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
 
                 add_label(cell, poly, cell.name, datafield)
         elif isinstance(element, gdspy.Polygon):
             if element.layers == jjs[cell.name]['gds']:
                 jj_poly = utils.angusj(element.polygons, element.polygons, 'union')
-                poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
+
+                if isinstance(jj_poly[0][0], list):
+                    poly = gdspy.Polygon(jj_poly[0], element.layers[0], verbose=False)
+                else:
+                    poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
 
                 add_label(cell, poly, cell.name, datafield)
 

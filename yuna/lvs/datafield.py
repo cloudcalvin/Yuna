@@ -124,7 +124,7 @@ class DataField(object):
 
     def update_polygons(self, device_type=None):
         for gds, mask_list in self.maskset.items():
-            for mask in mask_ist:
+            for mask in mask_list:
                 if device_type is None:
                     mask.update_mask(self)
                 else:

@@ -42,4 +42,4 @@ class Via(object):
 
     def update_mask(self, datafield, element=None):
         for pp in self.points:
-            datafield.add(pp, self.key)
+            datafield.add_polygon(pp, self.key)

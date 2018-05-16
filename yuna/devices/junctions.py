@@ -37,4 +37,4 @@ class Junction(object):
 
     def update_mask(self, datafield):
         for pp in self.points:
-            datafield.add(pp, self.key)
+            datafield.add_polygon(pp, self.key)

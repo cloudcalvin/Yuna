@@ -19,8 +19,51 @@ import yuna.devices as devices
 import yuna.labels as labels
 
 from . import masternodes as mn
+from yuna.utils import nm
 
 logger = logging.getLogger(__name__)
+
+
+class Polygon(gdspy.Polygon):
+    """
+    Holes can only be a list of points, since it is only a hole
+    and has no other properties.
+    """
+
+    _ID = 0
+
+    def __init__(self, key, points, pdk, holes=None):
+        super(Polygon, self).__init__(points, *key, verbose=False)
+
+        self.holes = holes
+
+        if key[1] == 1:
+            self.id = 'v{}'.format(Polygon._ID)
+        elif key[1] == 3:
+            self.id = 'j{}'.format(Polygon._ID)
+        elif key[1] == 7:
+            self.id = 'n{}'.format(Polygon._ID)
+        else:
+            self.id = 'i{}'.format(Polygon._ID)
+
+        process = {**pdk.layers['ix'],
+                   **pdk.layers['res'],
+                   **pdk.layers['ntron'],
+                   **pdk.layers['jj'],
+                   **pdk.layers['via']}
+
+        self.properties = process[key[0]]
+
+        Polygon._ID += 1
+
+    def get_holes(self, z):
+        return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
+
+    def get_points(self, z):
+        return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
+
+    def get_variables(self):
+        return (self.points, self.layer, self.datatype)
 
 
 def label_cells(cell, datafield):
@@ -194,28 +237,22 @@ def deposition(cell, datafield):
     # jjs = Mask(dtype=datatype['jj'], element=[])
     # ntrons = Mask(dtype=datatype['ntron'], element=[])
 
-    # geom = Geometry()
-
     for gds, layer in wires.items():
         if (gds, datatype['path']) in mask_poly:
-            path = devices.paths.Paths(gds, mask_poly)
+            path = devices.paths.Paths(gds, datafield.pcd, mask_poly)
             datafield.add_mask(gds, path)
-            # geom.add(gds, path)
 
             if (gds, datatype['via']) in mask_poly:
-                via = devices.vias.Via(gds, mask_poly)
+                via = devices.vias.Via(gds, datafield.pcd, mask_poly)
                 datafield.add_mask(gds, via)
-                # geom.add(gds, via)
 
             if (gds, datatype['jj']) in mask_poly:
-                jj = devices.junctions.Junction(gds, mask_poly)
+                jj = devices.junctions.Junction(gds, datafield.pcd, mask_poly)
                 datafield.add_mask(gds, jj)
-                # geom.add(gds, jj)
 
             if (gds, datatype['ntron']) in mask_poly:
-                ntron = devices.ntrons.Ntron(gds, mask_poly)
+                ntron = devices.ntrons.Ntron(gds, datafield.pcd, mask_poly)
                 datafield.add_mask(gds, ntron)
-                # geom.add(gds, ntron)
 
     datafield.pattern_path(devices.vias.Via)
     datafield.pattern_path(devices.ntrons.Ntron)

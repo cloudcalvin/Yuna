@@ -1,16 +1,51 @@
 from yuna import utils
 from yuna import grid
+from yuna import lvs
 
 from shapely.geometry import Polygon
 
 
 class Ntron(object):
 
-    def __init__(self, gds, poly):
+    def __init__(self, gds, pdk, poly):
         self.key = (gds, 7)
+        self.datatype = 7
         self.raw_points = poly[(gds, 7)]
         self.union_points = self.union()
+
+        # process = {**pdk.layers['ix'],
+        #            **pdk.layers['res'],
+        #            **pdk.layers['ntron'],
+        #            **pdk.layers['jj'],
+        #            **pdk.layers['via']}
+        #
+        # self.properties = process[gds]
+
         self.points = self.simple()
+        self.polygons = []
+
+    def add_polygon(self, dt, element, key=None, holes=None):
+        """
+        Add a new element or list of elements to this cell.
+
+        Parameters
+        ----------
+        element : object
+            The element or list of elements to be inserted in this cell.
+
+        Returns
+        -------
+        out : ``Cell``
+            This cell.
+        """
+
+        if key is None:
+            raise TypeError('key cannot be None')
+
+        assert isinstance(element[0], list)
+
+        polygon = lvs.geometry.Polygon(key, element, dt.pcd, holes)
+        self.polygons.append(polygon)
 
     def simple(self):
         points = list()
@@ -37,4 +72,4 @@ class Ntron(object):
 
     def update_mask(self, datafield):
         for pp in self.points:
-            datafield.add_polygon(pp, self.key)
+            self.add_polygon(datafield, pp, self.key)

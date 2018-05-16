@@ -26,9 +26,8 @@ class DataField(object):
             self.pcd = self.read_config(pcf)
 
         self.maskset = dict()
-
-        self.polygons = cl.defaultdict(dict)
         self.labels = list()
+        self.polygons = cl.defaultdict(dict)
 
     def __str__(self):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
@@ -61,7 +60,7 @@ class DataField(object):
         else:
             self.maskset[gds] = [mask]
 
-    def add_polygon(self, element, key=None, holes=None):
+    def get_polygons(self):
         """
         Add a new element or list of elements to this cell.
 
@@ -76,25 +75,14 @@ class DataField(object):
             This cell.
         """
 
-        if key is None:
-            raise TypeError('key cannot be None')
-
-        assert isinstance(element[0], list)
-
-        fabdata = {**self.pcd.layers['ix'],
-                   **self.pcd.layers['hole'],
-                   **self.pcd.layers['res'],
-                   **self.pcd.layers['term'],
-                   **self.pcd.layers['via'],
-                   **self.pcd.layers['jj'],
-                   **self.pcd.layers['ntron']}
-
-        polygon = Polygon(key, element, fabdata, holes)
-
-        if key[1] in self.polygons[key[0]]:
-            self.polygons[key[0]][key[1]].append(polygon)
-        else:
-            self.polygons[key[0]][key[1]] = [polygon]
+        for gds, mask_list in self.maskset.items():
+            for mask in mask_list:
+                for polygon in mask.polygons:
+                    if mask.datatype in self.polygons[gds]:
+                        self.polygons[gds][mask.datatype].append(polygon)
+                    else:
+                        self.polygons[gds][mask.datatype] = [polygon]
+        return self.polygons
 
     def pattern_path(self, device_type):
         elements = []
@@ -162,57 +150,66 @@ class DataField(object):
         return metals
 
     def parse_gdspy(self, cell):
-        wires = {**self.pcd.layers['ix'],
-                 **self.pcd.layers['term'],
-                 **self.pcd.layers['res']}
-
-        for i in wires:
-            for key, poly in self.polygons[i].items():
-                for pp in poly:
-                    polygon = gdspy.Polygon(*pp.get_variables())
-                    cell.add(polygon)
+        for gds, mask_list in self.maskset.items():
+            for mask in mask_list:
+                if isinstance(mask, devices.paths.Paths):
+                    for pp in mask.polygons:
+                        polygon = gdspy.Polygon(*pp.get_variables())
+                        cell.add(polygon)
+                elif isinstance(mask, devices.vias.Via):
+                    for pp in mask.polygons:
+                        polygon = gdspy.Polygon(*pp.get_variables())
+                        cell.add(polygon)
+                elif isinstance(mask, devices.junctions.Junction):
+                    for pp in mask.polygons:
+                        polygon = gdspy.Polygon(*pp.get_variables())
+                        cell.add(polygon)
+                elif isinstance(mask, devices.ntrons.Ntron):
+                    for pp in mask.polygons:
+                        polygon = gdspy.Polygon(*pp.get_variables())
+                        cell.add(polygon)
 
         for label in self.labels:
             lbl = label.get_label()
             cell.add(lbl)
 
 
-class Polygon(gdspy.Polygon):
-    """
-    Holes can only be a list of points, since it is only a hole
-    and has no other properties.
-    """
-
-    _ID = 0
-
-    def __init__(self, key, points, fabdata, holes=None):
-        super(Polygon, self).__init__(points, *key, verbose=False)
-
-        self.holes = holes
-
-        if key[1] == 1:
-            self.id = 'v{}'.format(Polygon._ID)
-        elif key[1] == 3:
-            self.id = 'j{}'.format(Polygon._ID)
-        elif key[1] == 7:
-            self.id = 'n{}'.format(Polygon._ID)
-        else:
-            self.id = 'i{}'.format(Polygon._ID)
-
-        Polygon._ID += 1
-
-        self.data = fabdata[int(key[0])]
-
-        assert isinstance(self.data.name, str)
-
-        if self.data is None:
-            raise ValueError('Polygon data cannot be None.')
-
-    def get_holes(self, z):
-        return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
-
-    def get_points(self, z):
-        return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
-
-    def get_variables(self):
-        return (self.points, self.layer, self.datatype)
+# class Polygon(gdspy.Polygon):
+#     """
+#     Holes can only be a list of points, since it is only a hole
+#     and has no other properties.
+#     """
+#
+#     _ID = 0
+#
+#     def __init__(self, key, points, fabdata, holes=None):
+#         super(Polygon, self).__init__(points, *key, verbose=False)
+#
+#         self.holes = holes
+#
+#         if key[1] == 1:
+#             self.id = 'v{}'.format(Polygon._ID)
+#         elif key[1] == 3:
+#             self.id = 'j{}'.format(Polygon._ID)
+#         elif key[1] == 7:
+#             self.id = 'n{}'.format(Polygon._ID)
+#         else:
+#             self.id = 'i{}'.format(Polygon._ID)
+#
+#         Polygon._ID += 1
+#
+#         self.data = fabdata[int(key[0])]
+#
+#         assert isinstance(self.data.name, str)
+#
+#         if self.data is None:
+#             raise ValueError('Polygon data cannot be None.')
+#
+#     def get_holes(self, z):
+#         return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
+#
+#     def get_points(self, z):
+#         return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
+#
+#     def get_variables(self):
+#         return (self.points, self.layer, self.datatype)

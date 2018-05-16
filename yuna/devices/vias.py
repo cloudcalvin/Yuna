@@ -1,17 +1,44 @@
 from yuna import utils
 from yuna import grid
+from yuna import lvs
 
 from shapely.geometry import Polygon
 
 
 class Via(object):
 
-    def __init__(self, gds, poly):
+    def __init__(self, gds, pdk, poly):
         self.clip = False
         self.key = (gds, 1)
+        self.datatype = 1
         self.raw_points = poly[(gds, 1)]
         self.union_points = self.union()
+
         self.points = self.simple()
+        self.polygons = []
+
+    def add_polygon(self, dt, element, key=None, holes=None):
+        """
+        Add a new element or list of elements to this cell.
+
+        Parameters
+        ----------
+        element : object
+            The element or list of elements to be inserted in this cell.
+
+        Returns
+        -------
+        out : ``Cell``
+            This cell.
+        """
+
+        if key is None:
+            raise TypeError('key cannot be None')
+
+        assert isinstance(element[0], list)
+
+        polygon = lvs.geometry.Polygon(key, element, dt.pcd, holes)
+        self.polygons.append(polygon)
 
     def simple(self):
         points = list()
@@ -23,10 +50,7 @@ class Via(object):
                 points.append(plist[:-1])
             else:
                 points.append(list(pp))
-
-        points = grid.snap_points(points)
-
-        return points
+        return grid.snap_points(points)
 
     def union(self):
         points = utils.angusj(subj=self.raw_points, method='union')
@@ -42,4 +66,4 @@ class Via(object):
 
     def update_mask(self, datafield, element=None):
         for pp in self.points:
-            datafield.add_polygon(pp, self.key)
+            self.add_polygon(datafield, pp, self.key)

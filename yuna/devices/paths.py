@@ -5,39 +5,67 @@ import gdspy
 from yuna import utils
 from yuna import grid
 
+from yuna import lvs
+
 from collections import namedtuple
 from collections import defaultdict
+import collections as cl
 
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon as ShapePolygon
 
 
 class Paths(object):
 
-    def __init__(self, gds, poly):
+    def __init__(self, gds, pdk, poly):
         self.key = (gds, 0)
+        self.datatype = 0
         self.raw_points = poly[(gds, 0)]
         self.union_points = self.union()
+
+        # self.data = fabdata[gds]
+        #
+        # assert isinstance(self.data.name, str)
+        #
+        # if self.data is None:
+        #     raise ValueError('Polygon data cannot be None.')
+
         self.points = self.simple()
+        self.polygons = []
+
+    def add_polygon(self, dt, element, key=None, holes=None):
+        """
+        Add a new element or list of elements to this cell.
+
+        Parameters
+        ----------
+        element : object
+            The element or list of elements to be inserted in this cell.
+
+        Returns
+        -------
+        out : ``Cell``
+            This cell.
+        """
+
+        if key is None:
+            raise TypeError('key cannot be None')
+
+        assert isinstance(element[0], list)
+
+        polygon = lvs.geometry.Polygon(key, element, dt.pcd, holes)
+        self.polygons.append(polygon)
 
     def simple(self):
         points = list()
         for pp in self.union_points:
             if len(pp) > 10:
                 factor = (len(pp)/100.0) * 1e5
-                sp = Polygon(pp).simplify(factor)
+                sp = ShapePolygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])
             else:
                 points.append(list(pp))
-
-        print(points)
-        print('==========\n')
-
-        points = grid.snap_points(points)
-
-        print(points)
-
-        return points
+        return grid.snap_points(points)
 
     def union(self):
         if not isinstance(self.raw_points[0][0], np.ndarray):
@@ -105,4 +133,4 @@ class Paths(object):
 
     def update_mask(self, datafield):
         for pp in self.points:
-            datafield.add_polygon(pp, self.key)
+            self.add_polygon(datafield, pp, self.key)

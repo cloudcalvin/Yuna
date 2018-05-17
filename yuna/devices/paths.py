@@ -129,6 +129,8 @@ class Paths(object):
             myCell.add(gdspy.Polygon(poly.points, self.key[0], verbose=False))
 
     def add(self, mask):
+        print(self.points)
+        print(mask.points)
         self.points = utils.angusj(self.points, mask.points, 'difference')
 
     def update_mask(self, datafield):

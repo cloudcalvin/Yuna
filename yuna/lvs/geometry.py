@@ -225,8 +225,6 @@ def deposition(cell, datafield):
 
     mask_poly = _etl_polygons(datafield, cell_layout)
 
-    metals = defaultdict(dict)
-
     wires = {**datafield.pcd.layers['ix'],
              **datafield.pcd.layers['res']}
 

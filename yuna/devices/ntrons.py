@@ -9,7 +9,7 @@ from .mask_base import MaskBase
 class Ntron(MaskBase):
 
     def __init__(self, gds, poly):
-        super(Ntron, self).__init__((gds, 7), poly)
+        super(Ntron, self).__init__((gds, 7), poly, 20.0)
 
         self.datatype = 7
 

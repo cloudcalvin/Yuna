@@ -10,7 +10,7 @@ from .mask_base import MaskBase
 class Via(MaskBase):
 
     def __init__(self, gds, poly):
-        super(Via, self).__init__((gds, 1), poly)
+        super(Via, self).__init__((gds, 1), poly, 20.0)
 
         self.clip = False
         self.datatype = 1

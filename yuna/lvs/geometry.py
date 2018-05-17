@@ -199,15 +199,15 @@ def deposition(cell, datafield):
             datafield.add_mask(gds, path)
 
             if (gds, datatype['via']) in mask_poly:
-                via = devices.vias.Via(gds, datafield.pcd, mask_poly)
+                via = devices.vias.Via(gds, mask_poly)
                 datafield.add_mask(gds, via)
 
             if (gds, datatype['jj']) in mask_poly:
-                jj = devices.junctions.Junction(gds, datafield.pcd, mask_poly)
+                jj = devices.junctions.Junction(gds, mask_poly)
                 datafield.add_mask(gds, jj)
 
             if (gds, datatype['ntron']) in mask_poly:
-                ntron = devices.ntrons.Ntron(gds, datafield.pcd, mask_poly)
+                ntron = devices.ntrons.Ntron(gds, mask_poly)
                 datafield.add_mask(gds, ntron)
 
     datafield.pattern_path(devices.vias.Via)

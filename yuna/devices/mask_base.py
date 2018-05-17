@@ -9,8 +9,12 @@ from shapely.geometry import Polygon
 
 class MaskBase(object):
 
-    def __init__(self, key, poly):
+    _PP = 10
+    _FACTOR = 1e5
+
+    def __init__(self, key, poly, smoothness=1.0):
         self.key = key
+        self.smoothness = smoothness
 
         if self.key is None:
             raise TypeError('`key` cannot be None')
@@ -22,8 +26,8 @@ class MaskBase(object):
     def simple(self):
         points = list()
         for pp in self.union():
-            if len(pp) > 10:
-                factor = (len(pp)/20.0) * 1e5
+            if len(pp) > MaskBase._PP:
+                factor = (len(pp)/self.smoothness) * MaskBase._FACTOR
                 sp = Polygon(pp).simplify(factor)
                 plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
                 points.append(plist[:-1])

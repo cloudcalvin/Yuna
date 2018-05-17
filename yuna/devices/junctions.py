@@ -8,7 +8,7 @@ from .mask_base import MaskBase
 
 class Junction(MaskBase):
 
-    def __init__(self, gds, pdk, poly):
+    def __init__(self, gds, poly):
         super(Junction, self).__init__((gds, 3), poly)
 
         self.datatype = 3

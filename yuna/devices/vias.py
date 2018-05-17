@@ -9,7 +9,7 @@ from .mask_base import MaskBase
 
 class Via(MaskBase):
 
-    def __init__(self, gds, pdk, poly):
+    def __init__(self, gds, poly):
         super(Via, self).__init__((gds, 1), poly)
 
         self.clip = False

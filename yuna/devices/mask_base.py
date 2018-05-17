@@ -1,6 +1,8 @@
 from yuna import utils
 from yuna import grid
-from yuna import lvs
+# from yuna import lvs
+
+from yuna.lvs.poly_base import PolyBase
 
 from shapely.geometry import Polygon
 
@@ -41,5 +43,5 @@ class MaskBase(object):
         for pp in self.points:
             assert isinstance(pp[0], list)
 
-            polygon = lvs.geometry.Polygon(self.key, pp, datafield.pcd)
+            polygon = PolyBase(self.key, pp, datafield.pcd)
             self.polygons.append(polygon)

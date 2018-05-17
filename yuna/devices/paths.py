@@ -12,6 +12,7 @@ from collections import defaultdict
 import collections as cl
 
 from shapely.geometry import Polygon as ShapePolygon
+from yuna.lvs.poly_base import PolyBase
 
 
 class Paths(object):
@@ -52,7 +53,7 @@ class Paths(object):
 
         assert isinstance(element[0], list)
 
-        polygon = lvs.geometry.Polygon(key, element, dt.pcd, holes)
+        polygon = PolyBase(key, element, dt.pcd, holes)
         self.polygons.append(polygon)
 
     def simple(self):

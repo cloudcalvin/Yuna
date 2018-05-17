@@ -1,6 +1,7 @@
 from yuna import utils
 from yuna import grid
-# from yuna import lvs
+
+import numpy as np
 
 from yuna.lvs.poly_base import PolyBase
 
@@ -20,6 +21,10 @@ class MaskBase(object):
             raise TypeError('`key` cannot be None')
 
         self.raw_points = poly[key]
+
+        if not isinstance(self.raw_points[0][0], np.ndarray):
+            raise TypeError("raw_points must be a 3D list")
+
         self.points = self.simple()
         self.polygons = []
 

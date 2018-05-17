@@ -92,7 +92,7 @@ class DataField(object):
 
         for gds, mask in self.maskset.items():
             for submask in mask:
-                if isinstance(submask, devices.paths.Paths):
+                if isinstance(submask, devices.paths.Path):
                     for element in elements:
                         submask.add(element)
 
@@ -152,7 +152,7 @@ class DataField(object):
     def parse_gdspy(self, cell):
         for gds, mask_list in self.maskset.items():
             for mask in mask_list:
-                if isinstance(mask, devices.paths.Paths):
+                if isinstance(mask, devices.paths.Path):
                     for pp in mask.polygons:
                         polygon = gdspy.Polygon(*pp.get_variables())
                         cell.add(polygon)

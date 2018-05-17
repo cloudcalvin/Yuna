@@ -195,7 +195,7 @@ def deposition(cell, datafield):
 
     for gds, layer in wires.items():
         if (gds, datatype['path']) in mask_poly:
-            path = devices.paths.Paths(gds, datafield.pcd, mask_poly)
+            path = devices.paths.Path(gds, datafield.pcd, mask_poly)
             datafield.add_mask(gds, path)
 
             if (gds, datatype['via']) in mask_poly:

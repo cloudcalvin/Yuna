@@ -19,7 +19,7 @@ from .mask_base import MaskBase
 
 class Path(MaskBase):
 
-    def __init__(self, gds, pdk, poly):
+    def __init__(self, gds, poly):
         super(Path, self).__init__((gds, 0), poly, 100.0)
 
         self.datatype = 0

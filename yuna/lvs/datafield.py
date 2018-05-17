@@ -8,9 +8,11 @@ import json
 import collections as cl
 
 from yuna import process
+from yuna import utils
 
 from yuna.utils import nm
 from yuna.utils import logging
+from yuna.utils import datatype
 
 import yuna.masks as devices
 
@@ -54,12 +56,6 @@ class DataField(object):
 
         return pcd
 
-    def add_mask(self, gds, mask):
-        if gds in self.maskset:
-            self.maskset[gds].append(mask)
-        else:
-            self.maskset[gds] = [mask]
-
     def get_polygons(self):
         """
         Add a new element or list of elements to this cell.
@@ -83,12 +79,16 @@ class DataField(object):
                     else:
                         self.polygons[gds][mask.datatype] = [polygon]
 
-    def pattern_path(self, device_type):
+    def _filter_elements(self, devtype):
         elements = []
         for gds, mask in self.maskset.items():
             for submask in mask:
-                if isinstance(submask, device_type):
+                if isinstance(submask, devtype):
                     elements.append(submask)
+        return elements
+
+    def pattern_path(self, devtype):
+        elements = self._filter_elements(devtype)
 
         for gds, mask in self.maskset.items():
             for submask in mask:
@@ -96,12 +96,8 @@ class DataField(object):
                     for element in elements:
                         submask.add(element)
 
-    def pattern_via(self, device_type):
-        elements = []
-        for gds, mask in self.maskset.items():
-            for submask in mask:
-                if isinstance(submask, device_type):
-                    elements.append(submask)
+    def pattern_via(self, devtype):
+        elements = self._filter_elements(devtype)
 
         for gds, mask in self.maskset.items():
             for submask in mask:
@@ -173,43 +169,104 @@ class DataField(object):
             lbl = label.get_label()
             cell.add(lbl)
 
+    def deposition(self, cell):
+        """
+        The layer polygons for each gdsnumber is created in four phases:
 
-# class Polygon(gdspy.Polygon):
-#     """
-#     Holes can only be a list of points, since it is only a hole
-#     and has no other properties.
-#     """
-#
-#     _ID = 0
-#
-#     def __init__(self, key, points, fabdata, holes=None):
-#         super(Polygon, self).__init__(points, *key, verbose=False)
-#
-#         self.holes = holes
-#
-#         if key[1] == 1:
-#             self.id = 'v{}'.format(Polygon._ID)
-#         elif key[1] == 3:
-#             self.id = 'j{}'.format(Polygon._ID)
-#         elif key[1] == 7:
-#             self.id = 'n{}'.format(Polygon._ID)
-#         else:
-#             self.id = 'i{}'.format(Polygon._ID)
-#
-#         Polygon._ID += 1
-#
-#         self.data = fabdata[int(key[0])]
-#
-#         assert isinstance(self.data.name, str)
-#
-#         if self.data is None:
-#             raise ValueError('Polygon data cannot be None.')
-#
-#     def get_holes(self, z):
-#         return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
-#
-#     def get_points(self, z):
-#         return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
-#
-#     def get_variables(self):
-#         return (self.points, self.layer, self.datatype)
+        1. Merge all the normal conducting wires.
+        2. Merge the polygons inside each component.
+        3. Find the difference between the conducting polygons
+           and the component polygons.
+        4. Add these polygons to the datafield object.
+
+        Parameters
+        ----------
+        cell_layout : gdspy Cell
+            The original layout cell flattened
+        datafield : gdspy Cell
+            The cell containing all the layer polygons merged
+
+        Arguments
+        ---------
+        metals : list
+            A list containing the points of the merged polygons.
+        components : list
+            The merged polygons of the specific layer in the components
+            that corresponds to the current datatype value.
+        """
+
+        utils.green_print('Processing LVS mask polygons')
+
+        cell_layout = cell.copy('Polygon Flatten', deep_copy=True)
+        cell_layout.flatten()
+
+        wires = {**self.pcd.layers['ix'],
+                 **self.pcd.layers['res']}
+
+        # Mask = namedtuple('Mask', ['dtype', 'devices'])
+
+        # paths = Mask(dtype=datatype['path'], element=[])
+        # vias = Mask(dtype=datatype['via'], element=[])
+        # jjs = Mask(dtype=datatype['jj'], element=[])
+        # ntrons = Mask(dtype=datatype['ntron'], element=[])
+
+        def _etl_polygons(wires, cell):
+            """
+            Reads throught the PDF file and converts the corresponding
+            conducting layers to the same type. An example of this is
+            layer NbN_1 and NbN_2 that should be the same.
+
+            Output : dict()
+                Updated `poly` version that has converted the ETL polygons.
+            """
+
+            logger.info('ETL Polygons')
+
+            poly = cell.get_polygons(True)
+
+            polygons = dict()
+
+            for gds, layer in wires.items():
+                if layer.etl is not None:
+                    for key, points in poly.items():
+                        if gds == key[0]:
+                            etl_key = (layer.etl, key[1])
+                            for pp in points:
+                                if etl_key in polygons:
+                                    polygons[etl_key].append(pp)
+                                else:
+                                    polygons[etl_key] = [pp]
+                else:
+                    for key, points in poly.items():
+                        if gds == key[0]:
+                            for pp in points:
+                                if key in polygons:
+                                    polygons[key].append(pp)
+                                else:
+                                    polygons[key] = [pp]
+            return polygons
+
+        def _add_mask(gds, mask):
+            if gds in self.maskset:
+                self.maskset[gds].append(mask)
+            else:
+                self.maskset[gds] = [mask]
+
+        mask_poly = _etl_polygons(wires, cell_layout)
+
+        for gds, layer in wires.items():
+            if (gds, datatype['path']) in mask_poly:
+                path = devices.paths.Path(gds, mask_poly)
+                _add_mask(gds, path)
+
+                if (gds, datatype['via']) in mask_poly:
+                    via = devices.vias.Via(gds, mask_poly)
+                    _add_mask(gds, via)
+
+                if (gds, datatype['jj']) in mask_poly:
+                    jj = devices.junctions.Junction(gds, mask_poly)
+                    _add_mask(gds, jj)
+
+                if (gds, datatype['ntron']) in mask_poly:
+                    ntron = devices.ntrons.Ntron(gds, mask_poly)
+                    _add_mask(gds, ntron)

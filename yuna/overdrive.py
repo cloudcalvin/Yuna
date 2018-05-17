@@ -30,6 +30,7 @@ from .utils import logging
 import yuna.model as model
 import yuna.lvs as lvs
 import yuna.labels as labels
+import yuna.masks as devices
 
 
 # def test_all():
@@ -154,12 +155,12 @@ def grand_summon(basedir, args):
 
         utils.magenta_print('3D Model')
 
-        geom = _init_geom()
+        pygmsh_geom = _init_geom()
 
-        model.mask._metals(geom, datafield)
-        model.mask.terminals(geom, cell, datafield)
+        model.mask._metals(pygmsh_geom, datafield)
+        model.mask.terminals(pygmsh_geom, cell, datafield)
 
-        meshdata = pygmsh.generate_mesh(geom,
+        meshdata = pygmsh.generate_mesh(pygmsh_geom,
                                         verbose=False,
                                         geo_filename=modelname + '.geo')
 
@@ -169,18 +170,29 @@ def grand_summon(basedir, args):
     else:
         cell = _read_cell(gds_file, cellname)
 
-        datafield = lvs.datafield.DataField('Hypres', config_file)
+        geom = lvs.datafield.DataField('Hypres', config_file)
 
-        labels.user.terminals(cell, datafield)
-        labels.user.capacitors(cell, datafield)
+        labels.user.terminals(cell, geom)
+        labels.user.capacitors(cell, geom)
 
-        lvs.geometry.label_cells(cell, datafield)
-        lvs.geometry.label_flatten(cell, datafield)
+        lvs.geometry.label_cells(cell, geom)
+        lvs.geometry.label_flatten(cell, geom)
 
-        lvs.geometry.deposition(cell, datafield)
+        geom.deposition(cell)
 
-    _viewing(datafield)
+        geom.pattern_path(devices.vias.Via)
+        geom.pattern_path(devices.ntrons.Ntron)
+        geom.pattern_path(devices.junctions.Junction)
+
+        geom.pattern_via(devices.ntrons.Ntron)
+        geom.pattern_via(devices.junctions.Junction)
+
+        geom.update_polygons()
+
+
+
+    _viewing(geom)
 
     utils.cyan_print('Yuna. Done.\n')
 
-    return datafield
+    return geom

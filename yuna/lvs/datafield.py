@@ -82,7 +82,6 @@ class DataField(object):
                         self.polygons[gds][mask.datatype].append(polygon)
                     else:
                         self.polygons[gds][mask.datatype] = [polygon]
-        return self.polygons
 
     def pattern_path(self, device_type):
         elements = []
@@ -118,6 +117,7 @@ class DataField(object):
                 else:
                     if isinstance(mask, device_type):
                        mask.update_mask(self)
+        self.get_polygons()
 
     def get_terminals(self):
         terminals = dict()

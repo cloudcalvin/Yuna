@@ -12,7 +12,7 @@ from yuna import process
 from yuna.utils import nm
 from yuna.utils import logging
 
-import yuna.devices as devices
+import yuna.masks as devices
 
 logger = logging.getLogger(__name__)
 

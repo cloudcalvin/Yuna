@@ -4,9 +4,6 @@ import itertools as it
 from yuna import utils
 from yuna import process
 
-# from yuna import masternodes as mn
-# import yuna.lvs as lvs
-
 
 def add_label(cell, element, name, datafield):
     print('--- Adding label: ' + name)

@@ -15,10 +15,15 @@ import matplotlib.patches as patches
 from collections import namedtuple
 from collections import defaultdict
 
-import yuna.devices as devices
+import yuna.masks as devices
 import yuna.labels as labels
 
-from . import masternodes as mn
+from yuna.masternodes.via import Via
+from yuna.masternodes.junction import Junction
+from yuna.masternodes.junction import Shunt
+from yuna.masternodes.junction import Ground
+from yuna.masternodes.ntron import Ntron
+
 from yuna.utils import nm
 
 logger = logging.getLogger(__name__)
@@ -75,35 +80,35 @@ def label_flatten(cell, datafield):
         comp = lbl.text.split('_')[0]
 
         if comp == 'via':
-            via = mn.Via(lbl.text,
+            via = Via(lbl.text,
                          lbl.position,
                          atom=datafield.pcd.atoms['vias'])
 
             datafield.labels.append(via)
 
         if comp == 'jj':
-            jj = mn.Junction(lbl.text,
+            jj = Junction(lbl.text,
                              lbl.position,
                              atom=datafield.pcd.atoms['jjs'])
 
             datafield.labels.append(jj)
 
         if comp == 'ntron':
-            ntron = mn.Ntron(lbl.text,
+            ntron = Ntron(lbl.text,
                              lbl.position,
                              atom=datafield.pcd.atoms['ntrons'])
 
             datafield.labels.append(ntron)
 
         if comp == 'shunt':
-            shunt = mn.Shunt(lbl.text,
+            shunt = Shunt(lbl.text,
                              lbl.position,
                              atom=datafield.pcd.atoms['jjs'])
 
             datafield.labels.append(shunt)
 
         if comp == 'ground':
-            ground = mn.Ground(lbl.text,
+            ground = Ground(lbl.text,
                                lbl.position,
                                atom=datafield.pcd.atoms['jjs'])
 

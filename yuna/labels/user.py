@@ -4,14 +4,14 @@ import itertools as it
 from yuna import utils
 from yuna import process
 
-# import yuna.lvs.masternodes as mn
-from ..lvs import masternodes as mn
+from ..masternodes.capacitor import Capacitor
+from ..masternodes.terminal import Terminal
 
 
 def capacitors(cell, datafield):
     for lbl in cell.labels:
         if lbl.text[0] == 'C':
-            cap = mn.Capacitor(datafield.pcd.layers['cap'],
+            cap = Capacitor(datafield.pcd.layers['cap'],
                                lbl.text,
                                lbl.position,
                                lbl.layer)
@@ -23,7 +23,7 @@ def capacitors(cell, datafield):
 
 def terminals(cell, datafield):
     for lbl in cell.labels:
-        term = mn.Terminal(datafield.pcd.layers['term'],
+        term = Terminal(datafield.pcd.layers['term'],
                            lbl.text,
                            lbl.position,
                            lbl.layer)

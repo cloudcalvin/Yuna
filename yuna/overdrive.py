@@ -41,40 +41,6 @@ from yuna.masks.ntrons import Ntron
 from yuna.lvs.geometry import Geometry
 
 
-# def test_all():
-#     geom = pygmsh.opencascade.Geometry(
-#         characteristic_length_min=0.1,
-#         characteristic_length_max=0.1,
-#         )
-#
-#     rectangle = geom.add_rectangle([-1.0, -1.0, 0.0], 2.0, 2.0)
-#     disk1 = geom.add_disk([-1.0, 0.0, 0.0], 0.5)
-#     disk2 = geom.add_disk([+1.0, 0.0, 0.0], 0.5)
-#     union = geom.boolean_union([rectangle, disk1, disk2])
-#
-#     disk3 = geom.add_disk([0.0, -1.0, 0.0], 0.5)
-#     disk4 = geom.add_disk([0.0, +1.0, 0.0], 0.5)
-#     geom.boolean_difference([union], [disk3, disk4])
-#
-#     ref = 4.0
-#     union = pygmsh.generate_mesh(geom, geo_filename='differnce.geo')
-#
-#
-# def test_union():
-#     geom = pygmsh.opencascade.Geometry(
-#         characteristic_length_min=0.1,
-#         characteristic_length_max=0.1,
-#         )
-#
-#     rectangle = geom.add_rectangle([-1.0, -1.0, 0.0], 2.0, 2.0)
-#     disk_w = geom.add_disk([-1.0, 0.0, 0.0], 0.5)
-#     disk_e = geom.add_disk([+1.0, 0.0, 0.0], 0.5)
-#
-#     frags = geom.boolean_fragments([rectangle], [disk_w, disk_e])
-#
-#     union = pygmsh.generate_mesh(geom, geo_filename='union.geo')
-
-
 def _read_cell(gds_file, cell_name):
     gdsii = gdspy.GdsLibrary()
 
@@ -95,27 +61,37 @@ def _init_geom():
     return geom
 
 
-def _viewing(datafield):
-    datafield.parse_gdspy(gdspy.Cell('View Cell Test'))
+def _viewing(geom, debug):
+    geom.parse_gdspy(gdspy.Cell('yuna_geom'))
+    
+    directory = os.getcwd() + '/debug/'
+    layout_file = directory + 'yuna.gds'
 
-    gdspy.LayoutViewer()
+    gdspy.write_gds(layout_file, unit=1.0e-6, precision=1.0e-6)
 
-    gdspy.write_gds('ex_layout.gds', unit=1.0e-6, precision=1.0e-6)
+    if debug == 'view':
+        gdspy.LayoutViewer()
 
 
 def _get_files(basedir, name):
+    def _files(path):  
+        for file in os.listdir(path):
+            if os.path.isfile(os.path.join(path, file)):
+                yield file
+
     gds_file, config_file = '', None
-    for root, dirs, files in os.walk(os.getcwd()):
-        for file in files:
-            if file.endswith('.gds'):
-                gds_file = basedir + '/' + file
-            elif file.endswith('.json'):
-                if file == name:
-                    config_file = basedir + '/' + file
+
+    for file in _files("."):  
+        if file.endswith('.gds'):
+            gds_file = basedir + '/' + file
+        elif file.endswith('.json'):
+            if file == name:
+                config_file = basedir + '/' + file
+
     return gds_file, config_file
 
 
-def grand_summon(basedir, cell_name, pdk_name, log=None, model=False):
+def grand_summon(basedir, cell_name, pdk_name, log=None, model=False, debug=None):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -140,8 +116,6 @@ def grand_summon(basedir, cell_name, pdk_name, log=None, model=False):
     """
 
     utils.cyan_print('Summoning Yuna...')
-    
-    print(basedir)
 
     if log == 'debug':
         logging.basicConfig(level=logging.DEBUG)
@@ -152,9 +126,6 @@ def grand_summon(basedir, cell_name, pdk_name, log=None, model=False):
         raise ValueError('please specify a valid cell name')
 
     gds_file, config_file = _get_files(basedir, pdk_name)
-
-    # test_union()
-    # test_all()
 
     if model is True:
         # cell = read_cell(gds_file, cellname)
@@ -175,9 +146,11 @@ def grand_summon(basedir, cell_name, pdk_name, log=None, model=False):
 
         utils.end_print()
     else:
+        print(gds_file)
+
         cell = _read_cell(gds_file, cell_name)
 
-        geom = Geometry('Hypres', config_file)
+        geom = Geometry(cell_name, config_file)
 
         geom.user_label_term(cell)
         geom.user_label_cap(cell)
@@ -201,8 +174,13 @@ def grand_summon(basedir, cell_name, pdk_name, log=None, model=False):
 
         geom.update_polygons()
 
-    _viewing(geom)
+    _viewing(geom, debug)
 
     utils.cyan_print('Yuna. Done.\n')
 
     return geom
+
+
+
+
+

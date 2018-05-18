@@ -15,7 +15,7 @@ setup(
     author_email="rubenvanstaden@gmail.com",
     description="Processes the layers from a GDS file.",
     long_description_markdown_filename='README.md',
-    license="BSD",
+    license="MIT",
     keywords="yuna",
     url="https://github.com/rubenvanstaden/yuna",
     packages=['yuna', 'model', 'lvs', 'devices', 'labels'],
@@ -29,7 +29,8 @@ setup(
         'matplotlib',
         'docopt',
         'future',
-        'termcolor'
+        'termcolor',
+        'pytest'
     ],
     entry_points={
         'console_scripts': [

@@ -75,12 +75,12 @@ from yuna.lvs.geometry import Geometry
 #     union = pygmsh.generate_mesh(geom, geo_filename='union.geo')
 
 
-def _read_cell(gds_file, cellname):
+def _read_cell(gds_file, cell_name):
     gdsii = gdspy.GdsLibrary()
 
     gdsii.read_gds(gds_file, unit=1.0e-12)
 
-    return gdsii.extract(cellname)
+    return gdsii.extract(cell_name)
 
 
 def _init_geom():
@@ -115,7 +115,7 @@ def _get_files(basedir, name):
     return gds_file, config_file
 
 
-def grand_summon(basedir, args):
+def grand_summon(basedir, cell_name, pdk_name, log=None, model=False):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -140,16 +140,15 @@ def grand_summon(basedir, args):
     """
 
     utils.cyan_print('Summoning Yuna...')
+    
+    print(basedir)
 
-    cellname = args['--cell']
-    pdk_name = args['<pdkname>']
-
-    if args['--logging'] == 'debug':
+    if log == 'debug':
         logging.basicConfig(level=logging.DEBUG)
-    elif args['--logging'] == 'info':
+    elif log == 'info':
         logging.basicConfig(level=logging.INFO)
 
-    if not cellname:
+    if not cell_name:
         raise ValueError('please specify a valid cell name')
 
     gds_file, config_file = _get_files(basedir, pdk_name)
@@ -157,7 +156,7 @@ def grand_summon(basedir, args):
     # test_union()
     # test_all()
 
-    if args['--model']:
+    if model is True:
         # cell = read_cell(gds_file, cellname)
         # model.mask.geometry(cell, datafield)
 
@@ -176,7 +175,7 @@ def grand_summon(basedir, args):
 
         utils.end_print()
     else:
-        cell = _read_cell(gds_file, cellname)
+        cell = _read_cell(gds_file, cell_name)
 
         geom = Geometry('Hypres', config_file)
 

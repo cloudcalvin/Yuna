@@ -189,8 +189,6 @@ def grand_summon(basedir, args):
 
         geom.update_polygons()
 
-
-
     _viewing(geom)
 
     utils.cyan_print('Yuna. Done.\n')

@@ -14,7 +14,11 @@ from yuna.utils import nm
 from yuna.utils import logging
 from yuna.utils import datatype
 
-import yuna.masks as devices
+from yuna.masks.paths import Path
+from yuna.masks.vias import Via
+from yuna.masks.junctions import Junction
+from yuna.masks.ntrons import Ntron
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +31,8 @@ class DataField(object):
         if pcf is not None:
             self.pcd = self.read_config(pcf)
 
-        self.maskset = dict()
         self.labels = list()
+        self.maskset = cl.defaultdict(list)
         self.polygons = cl.defaultdict(dict)
 
     def __str__(self):
@@ -92,7 +96,7 @@ class DataField(object):
 
         for gds, mask in self.maskset.items():
             for submask in mask:
-                if isinstance(submask, devices.paths.Path):
+                if isinstance(submask, Path):
                     for element in elements:
                         submask.add(element)
 
@@ -101,7 +105,7 @@ class DataField(object):
 
         for gds, mask in self.maskset.items():
             for submask in mask:
-                if isinstance(submask, devices.vias.Via):
+                if isinstance(submask, Via):
                     for element in elements:
                         submask.add(element)
 
@@ -148,19 +152,19 @@ class DataField(object):
     def parse_gdspy(self, cell):
         for gds, mask_list in self.maskset.items():
             for mask in mask_list:
-                if isinstance(mask, devices.paths.Path):
+                if isinstance(mask, Path):
                     for pp in mask.polygons:
                         polygon = gdspy.Polygon(*pp.get_variables())
                         cell.add(polygon)
-                elif isinstance(mask, devices.vias.Via):
+                elif isinstance(mask, Via):
                     for pp in mask.polygons:
                         polygon = gdspy.Polygon(*pp.get_variables())
                         cell.add(polygon)
-                elif isinstance(mask, devices.junctions.Junction):
+                elif isinstance(mask, Junction):
                     for pp in mask.polygons:
                         polygon = gdspy.Polygon(*pp.get_variables())
                         cell.add(polygon)
-                elif isinstance(mask, devices.ntrons.Ntron):
+                elif isinstance(mask, Ntron):
                     for pp in mask.polygons:
                         polygon = gdspy.Polygon(*pp.get_variables())
                         cell.add(polygon)
@@ -222,51 +226,35 @@ class DataField(object):
 
             logger.info('ETL Polygons')
 
-            poly = cell.get_polygons(True)
+            pp = cell.get_polygons(True)
 
-            polygons = dict()
+            ply = cl.defaultdict(list)
 
-            for gds, layer in wires.items():
-                if layer.etl is not None:
-                    for key, points in poly.items():
-                        if gds == key[0]:
-                            etl_key = (layer.etl, key[1])
-                            for pp in points:
-                                if etl_key in polygons:
-                                    polygons[etl_key].append(pp)
-                                else:
-                                    polygons[etl_key] = [pp]
+            for gds, ll in wires.items():
+                if ll.etl is not None:
+                    p = {(ll.etl, k[1]):v for k,v in pp.items() if gds == k[0]}
                 else:
-                    for key, points in poly.items():
-                        if gds == key[0]:
-                            for pp in points:
-                                if key in polygons:
-                                    polygons[key].append(pp)
-                                else:
-                                    polygons[key] = [pp]
-            return polygons
+                    p = {k:v for k,v in pp.items() if gds == k[0]}
 
-        def _add_mask(gds, mask):
-            if gds in self.maskset:
-                self.maskset[gds].append(mask)
-            else:
-                self.maskset[gds] = [mask]
+                for k,v in p.items():
+                    ply[k].extend(v)
+            return ply
 
         mask_poly = _etl_polygons(wires, cell_layout)
 
         for gds, layer in wires.items():
             if (gds, datatype['path']) in mask_poly:
-                path = devices.paths.Path(gds, mask_poly)
-                _add_mask(gds, path)
+                p = Path(gds, mask_poly)
+                self.maskset[gds].append(p)
 
                 if (gds, datatype['via']) in mask_poly:
-                    via = devices.vias.Via(gds, mask_poly)
-                    _add_mask(gds, via)
+                    v = Via(gds, mask_poly)
+                    self.maskset[gds].append(v)
 
                 if (gds, datatype['jj']) in mask_poly:
-                    jj = devices.junctions.Junction(gds, mask_poly)
-                    _add_mask(gds, jj)
+                    j = Junction(gds, mask_poly)
+                    self.maskset[gds].append(j)
 
                 if (gds, datatype['ntron']) in mask_poly:
-                    ntron = devices.ntrons.Ntron(gds, mask_poly)
-                    _add_mask(gds, ntron)
+                    n = Ntron(gds, mask_poly)
+                    self.maskset[gds].append(n)

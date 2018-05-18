@@ -32,6 +32,13 @@ import yuna.lvs as lvs
 import yuna.labels as labels
 import yuna.masks as devices
 
+from yuna.masks.paths import Path
+from yuna.masks.vias import Via
+from yuna.masks.junctions import Junction
+from yuna.masks.ntrons import Ntron
+
+from yuna.lvs.geometry import Geometry
+
 
 # def test_all():
 #     geom = pygmsh.opencascade.Geometry(
@@ -170,22 +177,22 @@ def grand_summon(basedir, args):
     else:
         cell = _read_cell(gds_file, cellname)
 
-        geom = lvs.datafield.DataField('Hypres', config_file)
+        geom = Geometry('Hypres', config_file)
 
         labels.user.terminals(cell, geom)
         labels.user.capacitors(cell, geom)
 
-        lvs.geometry.label_cells(cell, geom)
-        lvs.geometry.label_flatten(cell, geom)
+        geom.label_cells(cell)
+        geom.label_flatten(cell)
 
         geom.deposition(cell)
 
-        geom.pattern_path(devices.vias.Via)
-        geom.pattern_path(devices.ntrons.Ntron)
-        geom.pattern_path(devices.junctions.Junction)
+        geom.patterning(masktype=Path, devtype=Via)
+        geom.patterning(masktype=Path, devtype=Ntron)
+        geom.patterning(masktype=Path, devtype=Junction)
 
-        geom.pattern_via(devices.ntrons.Ntron)
-        geom.pattern_via(devices.junctions.Junction)
+        geom.patterning(masktype=Via, devtype=Ntron)
+        geom.patterning(masktype=Via, devtype=Junction)
 
         geom.update_polygons()
 

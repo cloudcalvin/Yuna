@@ -1,3 +1,3 @@
-__all__ = ['datafield', 'geometry']
+__all__ = ['poly_base', 'geometry']
 
 from . import *

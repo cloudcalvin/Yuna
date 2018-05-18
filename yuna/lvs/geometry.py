@@ -63,99 +63,6 @@ class Geometry(object):
                     pcd.add_layer(mtype, int(gds), value)
         return pcd
 
-    def patterning(self, masktype, devtype):
-        """
-
-        """
-
-        def _filter_elements(devtype):
-            elements = []
-            for gds, mask in self.maskset.items():
-                for submask in mask:
-                    if isinstance(submask, devtype):
-                        elements.append(submask)
-            return elements
-
-        elements = _filter_elements(devtype)
-
-        for gds, mask in self.maskset.items():
-            for submask in mask:
-                if isinstance(submask, masktype):
-                    for element in elements:
-                        submask.add(element)
-
-    def update_polygons(self, devtype=None):
-
-        def _save_polygons():
-            for gds, mask_list in self.maskset.items():
-                for mask in mask_list:
-                    for pp in mask.polygons:
-                        if mask.datatype in self.polygons[gds]:
-                            self.polygons[gds][mask.datatype].append(pp)
-                        else:
-                            self.polygons[gds][mask.datatype] = [pp]
-
-        for gds, mask_list in self.maskset.items():
-            for mask in mask_list:
-                if devtype is None:
-                    mask.update_mask(self)
-                else:
-                    if isinstance(mask, devtype):
-                       mask.update_mask(self)
-
-        _save_polygons()
-
-    def get_terminals(self):
-        terminals = dict()
-
-        for gds, polydata in self.polygons.items():
-            for datatype, polygons in polydata.items():
-                for poly in polygons:
-                    if poly.data.type == 'term':
-                        key = (gds, datatype)
-                        if key in terminals:
-                            terminals[key].append(np.array(poly.points))
-                        else:
-                            terminals[key] = [np.array(poly.points)]
-
-        return terminals
-
-    def get_metals(self):
-        metals = dict()
-
-        for gds, polydata in self.polygons.items():
-            for datatype, polygons in polydata.items():
-                for poly in polygons:
-                    if poly.data.type in ['ix', 'res']:
-                        key = (gds, datatype)
-                        if key in metals:
-                            metals[key].append(np.array(poly.points))
-                        else:
-                            metals[key] = [np.array(poly.points)]
-
-        return metals
-
-    def parse_gdspy(self, cell):
-        def _update_cell(mask):
-            for pp in mask.polygons:
-                polygon = gdspy.Polygon(*pp.get_variables())
-                cell.add(polygon)
-
-        for gds, mask_list in self.maskset.items():
-            for mask in mask_list:
-                if isinstance(mask, Path):
-                    _update_cell(mask)
-                elif isinstance(mask, Via):
-                    _update_cell(mask)
-                elif isinstance(mask, Junction):
-                    _update_cell(mask)
-                elif isinstance(mask, Ntron):
-                    _update_cell(mask)
-
-        for label in self.labels:
-            lbl = label.get_label()
-            cell.add(lbl)
-
     def deposition(self, cell):
         """
         The layer polygons for each gdsnumber is created in four phases:
@@ -235,6 +142,40 @@ class Geometry(object):
                     n = Ntron(gds, mask_poly)
                     self.maskset[gds].append(n)
 
+    def patterning(self, masktype, devtype):
+        """
+
+        """
+
+        ee = [sm for gds,mask in self.maskset.items() for sm in mask]
+        elements = list(filter(lambda e: isinstance(e, devtype), ee))
+        submasks = list(filter(lambda e: isinstance(e, masktype), ee))
+
+        for submask in submasks:
+            for element in elements:
+                submask.add(element)
+
+    def update_polygons(self, devtype=None):
+
+        def _save_polygons():
+            for gds, mask_list in self.maskset.items():
+                for mask in mask_list:
+                    for pp in mask.polygons:
+                        if mask.datatype in self.polygons[gds]:
+                            self.polygons[gds][mask.datatype].append(pp)
+                        else:
+                            self.polygons[gds][mask.datatype] = [pp]
+
+        for gds, mask_list in self.maskset.items():
+            for mask in mask_list:
+                if devtype is None:
+                    mask.update_mask(self)
+                else:
+                    if isinstance(mask, devtype):
+                       mask.update_mask(self)
+
+        _save_polygons()
+
     def label_cells(self, cell):
         """
         Label each individual cell before flattening them
@@ -263,7 +204,6 @@ class Geometry(object):
         for subcell in cell.get_dependencies(True):
             if subcell.name.split('_')[0] == 'ntron':
                 labels.cell.ntrons(subcell, self)
-
 
     def label_flatten(self, cell):
         """
@@ -297,10 +237,9 @@ class Geometry(object):
                                 lbl.position,
                                 atom=self.pcd.atoms['jjs'])
 
-                datafield.labels.append(jj)
+                self.labels.append(jj)
 
             if comp == 'ntron':
-                print(self.pcd.atoms)
                 ntron = mn.ntron.Ntron(lbl.text,
                                 lbl.position,
                                 atom=self.pcd.atoms['ntrons'])
@@ -321,7 +260,86 @@ class Geometry(object):
 
                 self.labels.append(ground)
 
+    def user_label_cap(self, cell):
+        from yuna.masternodes.capacitor import Capacitor
+        for lbl in cell.labels:
+            if lbl.text[0] == 'C':
+                cap = Capacitor(self.pcd.layers['cap'],
+                                lbl.text,
+                                lbl.position,
+                                lbl.layer)
 
+                cap.set_plates(self)
+                cap.metal_connection(self)
+                self.labels.append(cap)
+
+    def user_label_term(self, cell):
+        from yuna.masternodes.terminal import Terminal
+        for lbl in cell.labels:
+            term = Terminal(self.pcd.layers['term'],
+                            lbl.text,
+                            lbl.position,
+                            lbl.layer)
+
+            term.metal_connection(self)
+            self.labels.append(term)
+
+    def has_device(self, dtype):
+        for label in self.labels:
+            if isinstance(label, dtype):
+                return True
+        return False
+
+    def get_terminals(self):
+        terminals = dict()
+
+        for gds, polydata in self.polygons.items():
+            for datatype, polygons in polydata.items():
+                for poly in polygons:
+                    if poly.data.type == 'term':
+                        key = (gds, datatype)
+                        if key in terminals:
+                            terminals[key].append(np.array(poly.points))
+                        else:
+                            terminals[key] = [np.array(poly.points)]
+
+        return terminals
+
+    def get_metals(self):
+        metals = dict()
+
+        for gds, polydata in self.polygons.items():
+            for datatype, polygons in polydata.items():
+                for poly in polygons:
+                    if poly.data.type in ['ix', 'res']:
+                        key = (gds, datatype)
+                        if key in metals:
+                            metals[key].append(np.array(poly.points))
+                        else:
+                            metals[key] = [np.array(poly.points)]
+
+        return metals
+
+    def parse_gdspy(self, cell):
+        def _update_cell(mask):
+            for pp in mask.polygons:
+                polygon = gdspy.Polygon(*pp.get_variables())
+                cell.add(polygon)
+
+        for gds, mask_list in self.maskset.items():
+            for mask in mask_list:
+                if isinstance(mask, Path):
+                    _update_cell(mask)
+                elif isinstance(mask, Via):
+                    _update_cell(mask)
+                elif isinstance(mask, Junction):
+                    _update_cell(mask)
+                elif isinstance(mask, Ntron):
+                    _update_cell(mask)
+
+        for label in self.labels:
+            lbl = label.get_label()
+            cell.add(lbl)
 
 
 

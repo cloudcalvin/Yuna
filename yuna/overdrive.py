@@ -31,6 +31,7 @@ import yuna.model as model
 import yuna.lvs as lvs
 import yuna.labels as labels
 import yuna.masks as devices
+import yuna.masternodes as mn
 
 from yuna.masks.paths import Path
 from yuna.masks.vias import Via
@@ -179,20 +180,25 @@ def grand_summon(basedir, args):
 
         geom = Geometry('Hypres', config_file)
 
-        labels.user.terminals(cell, geom)
-        labels.user.capacitors(cell, geom)
+        geom.user_label_term(cell)
+        geom.user_label_cap(cell)
 
         geom.label_cells(cell)
         geom.label_flatten(cell)
 
         geom.deposition(cell)
 
-        geom.patterning(masktype=Path, devtype=Via)
-        geom.patterning(masktype=Path, devtype=Ntron)
-        geom.patterning(masktype=Path, devtype=Junction)
+        if geom.has_device(mn.via.Via):
+            geom.patterning(masktype=Path, devtype=Via)
+        if geom.has_device(mn.ntron.Ntron):
+            geom.patterning(masktype=Path, devtype=Ntron)
+        if geom.has_device(mn.junction.Junction):
+            geom.patterning(masktype=Path, devtype=Junction)
 
-        geom.patterning(masktype=Via, devtype=Ntron)
-        geom.patterning(masktype=Via, devtype=Junction)
+        if geom.has_device(mn.ntron.Ntron):
+            geom.patterning(masktype=Via, devtype=Ntron)
+        if geom.has_device(mn.junction.Junction):
+            geom.patterning(masktype=Via, devtype=Junction)
 
         geom.update_polygons()
 

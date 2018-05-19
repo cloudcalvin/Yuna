@@ -146,7 +146,7 @@ def grand_summon(cell_name, pdk_name, basedir=None, log=None, model=False, debug
         geom.update_polygons()
 
     if debug == 'view':
-        _viewing(geom, debug)
+        _viewing(geom)
 
     utils.cyan_print('Yuna. Done.\n')
 

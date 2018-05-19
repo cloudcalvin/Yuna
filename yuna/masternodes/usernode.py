@@ -8,7 +8,7 @@ class UserNode(gdspy.Label):
         super(UserNode, self).__init__(text, position, rotation=rotation, layer=layer)
 
         if id0 is None:
-            self.id = 'un_{}'.format(UserNode._ID)
+            self.id = 'usernode_{}'.format(UserNode._ID)
         else:
             self.id = 'poly {}'.format(id0)
 

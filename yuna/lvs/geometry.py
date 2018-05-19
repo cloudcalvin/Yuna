@@ -14,13 +14,6 @@ from yuna.utils import nm
 from yuna.utils import logging
 from yuna.utils import datatype
 
-from yuna.masks.paths import Path
-from yuna.masks.vias import Via
-from yuna.masks.junctions import Junction
-from yuna.masks.ntrons import Ntron
-
-import yuna.masternodes as mn
-
 import yuna.labels as labels
 
 
@@ -88,6 +81,11 @@ class Geometry(object):
             The merged polygons of the specific layer in the components
             that corresponds to the current datatype value.
         """
+
+        from yuna.masks.paths import Path
+        from yuna.masks.vias import Via
+        from yuna.masks.junctions import Junction
+        from yuna.masks.ntrons import Ntron
 
         utils.green_print('Processing LVS mask polygons')
 
@@ -212,6 +210,8 @@ class Geometry(object):
         datafield object to include all labels in the layout.
         """
 
+        import yuna.masternodes as mn
+
         utils.green_print('Place labels in flattened layout')
 
         cl = cell.copy('Label Flatten', deep_copy=True)
@@ -322,6 +322,11 @@ class Geometry(object):
         return metals
 
     def parse_gdspy(self, cell):
+        from yuna.masks.paths import Path
+        from yuna.masks.vias import Via
+        from yuna.masks.junctions import Junction
+        from yuna.masks.ntrons import Ntron
+
         def _update_cell(mask):
             for pp in mask.polygons:
                 polygon = gdspy.Polygon(*pp.get_variables())

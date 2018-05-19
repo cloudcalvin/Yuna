@@ -1,26 +1,8 @@
-"""
-
-Usage:
-    yuna <testname> <ldf> --cell=<cellname [--union] [--model=<modelname>]
-    yuna <testname> --cell=<cellname [--debug=<debug>]
-    yuna (-h | --help)
-    yuna (-V | --version)
-
-Options:
-    -h --help     show this screen.
-    -V --version  show version.
-    --verbose     print more text
-
-"""
-
-
 import os
 import meshio
 import pygmsh
 import gdspy
 import pyclipper
-
-from docopt import docopt
 
 from yuna import process
 from yuna import utils
@@ -61,27 +43,18 @@ def _init_geom():
     return geom
 
 
-def _viewing(geom, debug):
+def _viewing(geom):
     geom.parse_gdspy(gdspy.Cell('yuna_geom'))
-    
     directory = os.getcwd() + '/debug/'
     layout_file = directory + 'yuna.gds'
-
     gdspy.write_gds(layout_file, unit=1.0e-6, precision=1.0e-6)
-
-    if debug == 'view':
-        gdspy.LayoutViewer()
+    gdspy.LayoutViewer()
 
 
 def _get_files(basedir, name):
-    def _files(path):  
-        for file in os.listdir(path):
-            if os.path.isfile(os.path.join(path, file)):
-                yield file
-
     gds_file, config_file = '', None
 
-    for file in _files("."):  
+    for file in os.listdir(basedir):
         if file.endswith('.gds'):
             gds_file = basedir + '/' + file
         elif file.endswith('.json'):
@@ -91,7 +64,7 @@ def _get_files(basedir, name):
     return gds_file, config_file
 
 
-def grand_summon(basedir, cell_name, pdk_name, log=None, model=False, debug=None):
+def grand_summon(cell_name, pdk_name, basedir=None, log=None, model=False, debug=None):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -146,8 +119,6 @@ def grand_summon(basedir, cell_name, pdk_name, log=None, model=False, debug=None
 
         utils.end_print()
     else:
-        print(gds_file)
-
         cell = _read_cell(gds_file, cell_name)
 
         geom = Geometry(cell_name, config_file)
@@ -174,13 +145,9 @@ def grand_summon(basedir, cell_name, pdk_name, log=None, model=False, debug=None
 
         geom.update_polygons()
 
-    _viewing(geom, debug)
+    if debug == 'view':
+        _viewing(geom, debug)
 
     utils.cyan_print('Yuna. Done.\n')
 
     return geom
-
-
-
-
-

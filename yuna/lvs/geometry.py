@@ -276,13 +276,14 @@ class Geometry(object):
     def user_label_term(self, cell):
         from yuna.masternodes.terminal import Terminal
         for lbl in cell.labels:
-            term = Terminal(self.pcd.layers['term'],
-                            lbl.text,
-                            lbl.position,
-                            lbl.layer)
+            if lbl.text[0] == 'P':
+                term = Terminal(self.pcd.layers['term'],
+                                lbl.text,
+                                lbl.position,
+                                lbl.layer)
 
-            term.metal_connection(self)
-            self.labels.append(term)
+                term.metal_connection(self)
+                self.labels.append(term)
 
     def has_device(self, dtype):
         for label in self.labels:
@@ -340,6 +341,3 @@ class Geometry(object):
         for label in self.labels:
             lbl = label.get_label()
             cell.add(lbl)
-
-
-

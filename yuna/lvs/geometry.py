@@ -89,7 +89,9 @@ class Geometry(object):
 
         utils.green_print('Processing LVS mask polygons')
 
-        cell_layout = cell.copy('Polygon Flatten', deep_copy=True)
+        cell_layout = cell.copy('Polygon Flatten', 
+                                exclude_from_current=True,
+                                deep_copy=True)
         cell_layout.flatten()
 
         wires = {**self.pcd.layers['ix'],
@@ -214,7 +216,9 @@ class Geometry(object):
 
         utils.green_print('Place labels in flattened layout')
 
-        cl = cell.copy('Label Flatten', deep_copy=True)
+        cl = cell.copy('Label Flatten', 
+                       exclude_from_current=True,
+                       deep_copy=True)
 
         cell_labels = cl.flatten().get_labels(0)
 

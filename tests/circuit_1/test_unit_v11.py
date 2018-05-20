@@ -9,15 +9,13 @@ import yuna
 import os
 import gdspy
 import pytest
-import networkx as nx
-from auron import mesh
 
 
 @pytest.fixture(scope='module')
 def geometry():
     basedir = os.getcwd() + '/tests/data' + '/unit_v11'
-    return yuna.grand_summon('OneBit', 'pdf.json', basedir)
 
+    return yuna.grand_summon('unit', 'OneBit', 'pdf', basedir)
 
 def test_user_labels(geometry):
     """

@@ -1,1 +1,10 @@
-{}
+{
+  "tests/test_jtl.py::test_Al_polygons": true,
+  "tests/test_jtl.py::test_NbN_polygons": true,
+  "tests/test_jtl.py::test_masks": true,
+  "tests/test_unit_v11.py::test_Al_polygons": true,
+  "tests/test_unit_v11.py::test_NbN_polygons": true,
+  "tests/test_unit_v11.py::test_cell_labels": true,
+  "tests/test_unit_v11.py::test_masks": true,
+  "tests/test_unit_v11.py::test_user_labels": true
+}

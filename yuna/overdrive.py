@@ -28,14 +28,17 @@ def _read_cell(gds_file, cell_name):
 
     gdsii.read_gds(gds_file, unit=1.0e-12)
 
+    for key, value in gdsii.cell_dict.items():
+        print(key)
+
     return gdsii.extract(cell_name)
 
 
 def _init_geom():
-    geom = pygmsh.opencascade.Geometry()
-
-    geom.add_raw_code('Mesh.CharacteristicLengthMin = 0.1;')
-    geom.add_raw_code('Mesh.CharacteristicLengthMax = 0.1;')
+    geom = pygmsh.opencascade.Geometry(
+        characteristic_length_min=0.1,
+        characteristic_length_max=0.1,
+    )
 
     geom.add_raw_code('Mesh.Algorithm = 100;')
     geom.add_raw_code('Coherence Mesh;')
@@ -51,20 +54,23 @@ def _viewing(geom):
     gdspy.LayoutViewer()
 
 
-def _get_files(basedir, name):
+def _get_files(basedir, testname, pdkname):
     gds_file, config_file = '', None
 
-    for file in os.listdir(basedir):
-        if file.endswith('.gds'):
-            gds_file = basedir + '/' + file
-        elif file.endswith('.json'):
-            if file == name:
-                config_file = basedir + '/' + file
+    # for file in os.listdir(basedir):
+    #     if file.endswith('.gds'):
+    #         gds_file = basedir + '/' + file
+    #     elif file.endswith('.json'):
+    #         if file == name:
+    #             config_file = basedir + '/' + file
 
-    return gds_file, config_file
+    gds_file = basedir + '/' + testname + '.gds'
+    pdk_file = basedir + '/' + pdkname + '.json'
+
+    return gds_file, pdk_file
 
 
-def grand_summon(cell_name, pdk_name, basedir=None, log=None, model=False, debug=None):
+def grand_summon(testname, cell_name, pdk_name, basedir=None, log=None, model=False, debug=None):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -98,7 +104,7 @@ def grand_summon(cell_name, pdk_name, basedir=None, log=None, model=False, debug
     if not cell_name:
         raise ValueError('please specify a valid cell name')
 
-    gds_file, config_file = _get_files(basedir, pdk_name)
+    gds_file, pdk_file = _get_files(basedir, testname, pdk_name)
 
     if model is True:
         # cell = read_cell(gds_file, cellname)
@@ -121,7 +127,7 @@ def grand_summon(cell_name, pdk_name, basedir=None, log=None, model=False, debug
     else:
         cell = _read_cell(gds_file, cell_name)
 
-        geom = Geometry(cell_name, config_file)
+        geom = Geometry(cell_name, pdk_file)
 
         geom.user_label_term(cell)
         geom.user_label_cap(cell)

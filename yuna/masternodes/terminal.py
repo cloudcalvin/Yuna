@@ -10,7 +10,8 @@ class Terminal(gdspy.Label):
         self.id = 'P{}'.format(Terminal._ID)
         Terminal._ID += 1
 
-        self.data = data[layer]
+        if data is not None:
+            self.data = data[layer]
         self.master = True
 
     def metal_connection(self, datafield):

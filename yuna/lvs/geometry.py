@@ -34,7 +34,7 @@ class Geometry(object):
 
     def __str__(self):
         return "DataField (\"{}\", {} polygons, {} labels)".format(
-            self.name, len(self.polygons.keys()),len(self.labels))
+            self.name, len(self.polygons.keys()), len(self.labels))
 
     def read_config(self, pcf):
         """ Reads the config file that is written in
@@ -89,7 +89,7 @@ class Geometry(object):
 
         utils.green_print('Processing LVS mask polygons')
 
-        cell_layout = cell.copy('Polygon Flatten', 
+        cell_layout = cell.copy('Polygon Flatten',
                                 exclude_from_current=True,
                                 deep_copy=True)
         cell_layout.flatten()
@@ -115,11 +115,11 @@ class Geometry(object):
 
             for gds, ll in wires.items():
                 if ll.etl is not None:
-                    p = {(ll.etl, k[1]):v for k,v in pp.items() if gds == k[0]}
+                    p = {(ll.etl, k[1]): v for k, v in pp.items() if gds == k[0]}
                 else:
-                    p = {k:v for k,v in pp.items() if gds == k[0]}
+                    p = {k: v for k, v in pp.items() if gds == k[0]}
 
-                for k,v in p.items():
+                for k, v in p.items():
                     ply[k].extend(v)
             return ply
 
@@ -147,7 +147,7 @@ class Geometry(object):
 
         """
 
-        ee = [sm for gds,mask in self.maskset.items() for sm in mask]
+        ee = [sm for gds, mask in self.maskset.items() for sm in mask]
         elements = list(filter(lambda e: isinstance(e, devtype), ee))
         submasks = list(filter(lambda e: isinstance(e, masktype), ee))
 
@@ -216,7 +216,7 @@ class Geometry(object):
 
         utils.green_print('Place labels in flattened layout')
 
-        cl = cell.copy('Label Flatten', 
+        cl = cell.copy('Label Flatten',
                        exclude_from_current=True,
                        deep_copy=True)
 
@@ -231,36 +231,36 @@ class Geometry(object):
 
             if comp == 'via':
                 via = mn.via.Via(lbl.text,
-                            lbl.position,
-                            atom=self.pcd.atoms['vias'])
+                                 lbl.position,
+                                 atom=self.pcd.atoms['vias'])
 
                 self.labels.append(via)
 
             if comp == 'jj':
                 jj = mn.junction.Junction(lbl.text,
-                                lbl.position,
-                                atom=self.pcd.atoms['jjs'])
+                                          lbl.position,
+                                          atom=self.pcd.atoms['jjs'])
 
                 self.labels.append(jj)
 
             if comp == 'ntron':
                 ntron = mn.ntron.Ntron(lbl.text,
-                                lbl.position,
-                                atom=self.pcd.atoms['ntrons'])
+                                       lbl.position,
+                                       atom=self.pcd.atoms['ntrons'])
 
                 self.labels.append(ntron)
 
             if comp == 'shunt':
                 shunt = mn.junction.Shunt(lbl.text,
-                                lbl.position,
-                                atom=self.pcd.atoms['jjs'])
+                                          lbl.position,
+                                          atom=self.pcd.atoms['jjs'])
 
                 self.labels.append(shunt)
 
             if comp == 'ground':
                 ground = mn.junction.Ground(lbl.text,
-                                lbl.position,
-                                atom=self.pcd.atoms['jjs'])
+                                            lbl.position,
+                                            atom=self.pcd.atoms['jjs'])
 
                 self.labels.append(ground)
 

@@ -70,7 +70,8 @@ def _get_files(basedir, testname, pdkname):
     return gds_file, pdk_file
 
 
-def grand_summon(testname, cell_name, pdk_name, basedir=None, log=None, model=False, debug=None):
+def grand_summon(testname, cell_name, pdk_name, basedir=None,
+                 log=None, model=False, debug=None):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to

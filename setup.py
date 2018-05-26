@@ -18,7 +18,10 @@ setup(
     license="MIT",
     keywords="yuna",
     url="https://github.com/rubenvanstaden/yuna",
-    packages=['yuna', 'model', 'lvs', 'devices', 'labels'],
+    # packages=['yuna', 'lvs', 'model', 'devices', 'labels'],
+    packages=['yuna', 'yuna.lvs', 'yuna.model', 'yuna.devices', 
+              'yuna.labels', 'yuna.masks', 'yuna.masternodes'],
+    # packages=['yuna'],
     package_dir={'yuna': 'yuna'},
     install_requires=[
         'gdspy',

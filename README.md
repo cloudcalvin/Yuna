@@ -18,10 +18,9 @@ Setup for the normal user.
 Make sure Python is installed on your system:
 
 ```
-sudo dnf install python2-devel
 sudo dnf install python3-devel
+sudo dnf install python3-tkinter
 sudo dnf install gcc-c++
-sudo dnf install tkinter
 ```
 
 ### Installing

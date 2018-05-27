@@ -1,1 +1,13 @@
-[]
+[
+  "tests/circuit_0/test_jtl.py::test_user_labels",
+  "tests/circuit_0/test_jtl.py::test_cell_labels",
+  "tests/circuit_0/test_jtl.py::test_M2_polygons",
+  "tests/circuit_0/test_jtl.py::test_RES_polygons",
+  "tests/circuit_0/test_jtl.py::test_MN1_polygons",
+  "tests/circuit_0/test_jtl.py::test_masks",
+  "tests/circuit_1/test_unit_v11.py::test_user_labels",
+  "tests/circuit_1/test_unit_v11.py::test_cell_labels",
+  "tests/circuit_1/test_unit_v11.py::test_NbN_polygons",
+  "tests/circuit_1/test_unit_v11.py::test_Al_polygons",
+  "tests/circuit_1/test_unit_v11.py::test_masks"
+]

@@ -1,8 +1,6 @@
 import numpy as np
-import networkx as nx
 import itertools
 import gdspy
-import pyclipper
 
 from yuna import utils
 

@@ -19,7 +19,6 @@ class Terminal(gdspy.Label):
                  **datafield.pcd.layers['term'],
                  **datafield.pcd.layers['res']}
         for gds, metal in wires.items():
-
             if self.text[0] == 'P':
                 label = self.text.split(' ')
 
@@ -28,4 +27,5 @@ class Terminal(gdspy.Label):
                     self.data.metals.append(gds)
 
     def get_label(self):
-        return gdspy.Label(self.text, self.position, rotation=0, layer=64)
+        return gdspy.Label(self.text, self.position, 
+                           rotation=0, layer=64)

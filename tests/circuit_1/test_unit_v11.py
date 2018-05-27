@@ -81,7 +81,7 @@ def test_NbN_polygons(geometry):
                 num_nbn_ntron += 1
 
     # TODO: This should be 4, change the layout.
-    assert num_nbn_path == 5
+    assert num_nbn_path == 4
     assert num_nbn_ntron == 2
 
 

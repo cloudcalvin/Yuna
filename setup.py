@@ -1,7 +1,8 @@
-from __future__ import print_function
-from __future__ import absolute_import
+#!/usr/bin/python3.6
 
-from termcolor import colored
+# from __future__ import print_function
+# from __future__ import absolute_import
+
 from pprint import pprint
 from setuptools import setup, find_packages
 
@@ -18,21 +19,23 @@ setup(
     license="MIT",
     keywords="yuna",
     url="https://github.com/rubenvanstaden/yuna",
-    # packages=['yuna', 'lvs', 'model', 'devices', 'labels'],
-    packages=['yuna', 'yuna.lvs', 'yuna.model', 'yuna.devices', 
-              'yuna.labels', 'yuna.masks', 'yuna.masternodes'],
-    # packages=['yuna'],
+    packages=['yuna', 
+              'yuna.lvs', 
+              'yuna.model', 
+              'yuna.labels', 
+              'yuna.masks', 
+              'yuna.masternodes'],
     package_dir={'yuna': 'yuna'},
     install_requires=[
         'gdspy',
         'shapely',
+        'pygmsh',
         'pyclipper',
         'setuptools',
         'numpy',
         'matplotlib',
         'docopt',
         'future',
-        'termcolor',
         'pytest'
     ],
     entry_points={

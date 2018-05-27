@@ -1,8 +1,7 @@
-setuputils
 numpy
 matplotlib
 gdspy
 pyclipper
-docopt
-termcolor
 shapely
+pygmsh
+pytest

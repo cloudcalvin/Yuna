@@ -1,7 +1,3 @@
-from __future__ import print_function # lace this in setup.
-from termcolor import colored
-from collections import defaultdict
-
 import os
 import sys
 import json
@@ -11,6 +7,7 @@ import numpy as np
 import logging
 
 from yuna import process
+from collections import defaultdict
 
 
 um = 10e-6
@@ -40,7 +37,6 @@ def midpoint(x1, y1, x2, y2):
 
 
 def parameter_print(arguments):
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print ('Parameters:')
     for key, value in arguments.items():
         print('      ' + str(key) + ' : ' + str(value))
@@ -48,13 +44,11 @@ def parameter_print(arguments):
 
 def red_print(header):
     """ Main program header (Red) """
-    print ('\n' + '[' + colored('*', 'red', attrs=['bold']) + '] ', end='')
     print(header)
 
 
 def magenta_print(header):
     """ Python package header (Purple) """
-    print ('\n\n' + '--- ' + colored(header, 'red', attrs=['bold']) + ' ', end='')
     print ('----------')
     print('')
 
@@ -65,13 +59,11 @@ def end_print():
 
 def green_print(header):
     """ Function header (Green) """
-    print ('\n' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print(header)
 
 
 def cyan_print(header):
     """ Function header (Green) """
-    print ('\n\n[' + colored('+++', 'cyan', attrs=['bold']) + '] ', end='')
     print(header)
 
 
@@ -81,9 +73,8 @@ def list_layout_cells(gds):
     gdsii = gdspy.GdsLibrary()
     gdsii.read_gds(gds, unit=1.0e-12)
 
-    print ('\n  ' + '[' + colored('*', 'green', attrs=['bold']) + '] ', end='')
     print('Cell List:')
-    for key, value in gdsii.cell_dict.items():
+    for key in gdsii.cell_dict.keys():
         print('      -> ' + key)
     print('')
 
@@ -166,16 +157,15 @@ def angusj_offset(layer, size):
     Either blow up polygons or blow it down.
     """
 
-    for poly in layer:
-        pco = pyclipper.PyclipperOffset()
-        pco.AddPath(layer, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
+    pco = pyclipper.PyclipperOffset()
+    pco.AddPath(layer, pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
 
-        if size == 'down':
-            return pco.Execute(-10000)[0]
-        elif size == 'up':
-            return pco.Execute(10.0)
-        else:
-            raise ValueError('please select the Offset function to use')
+    if size == 'down':
+        return pco.Execute(-10000)[0]
+    elif size == 'up':
+        return pco.Execute(10.0)
+    else:
+        raise ValueError('please select the Offset function to use')
 
 
 def is_nested_polygons(hole, poly):

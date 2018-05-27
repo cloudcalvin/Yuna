@@ -1,6 +1,4 @@
 import os
-import meshio
-import pygmsh
 import gdspy
 import pyclipper
 
@@ -14,11 +12,6 @@ import yuna.lvs as lvs
 import yuna.labels as labels
 import yuna.masks as devices
 import yuna.masternodes as mn
-
-from yuna.masks.paths import Path
-from yuna.masks.vias import Via
-from yuna.masks.junctions import Junction
-from yuna.masks.ntrons import Ntron
 
 from yuna.lvs.geometry import Geometry
 
@@ -108,15 +101,16 @@ def grand_summon(testname, cell_name, pdk_name, basedir=None,
     gds_file, pdk_file = _get_files(basedir, testname, pdk_name)
 
     if model is True:
-        # cell = read_cell(gds_file, cellname)
+        cell = _read_cell(gds_file, cell_name)
         # model.mask.geometry(cell, datafield)
+        geom = Geometry(cell_name, pdk_file)
 
         utils.magenta_print('3D Model')
 
         pygmsh_geom = _init_geom()
 
-        model.mask._metals(pygmsh_geom, datafield)
-        model.mask.terminals(pygmsh_geom, cell, datafield)
+        model.mask._metals(pygmsh_geom, geom)
+        model.mask.terminals(pygmsh_geom, cell, geom)
 
         meshdata = pygmsh.generate_mesh(pygmsh_geom,
                                         verbose=False,
@@ -137,6 +131,11 @@ def grand_summon(testname, cell_name, pdk_name, basedir=None,
         geom.label_flatten(cell)
 
         geom.deposition(cell)
+
+        from yuna.masks.paths import Path
+        from yuna.masks.vias import Via
+        from yuna.masks.junctions import Junction
+        from yuna.masks.ntrons import Ntron
 
         if geom.has_device(mn.via.Via):
             geom.patterning(masktype=Path, devtype=Via)

@@ -1,12 +1,8 @@
-import networkx as nx
 import itertools
 import json
 import gdspy
 
 from yuna import utils
-
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 
 import collections as cl
 

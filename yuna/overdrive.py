@@ -16,17 +16,6 @@ import yuna.masternodes as mn
 from yuna.lvs.geometry import Geometry
 
 
-def _read_cell(gds_file, cell_name):
-    gdsii = gdspy.GdsLibrary()
-
-    gdsii.read_gds(gds_file, unit=1.0e-12)
-
-    for key, value in gdsii.cell_dict.items():
-        print(key)
-
-    return gdsii.extract(cell_name)
-
-
 def _init_geom():
     geom = pygmsh.opencascade.Geometry(
         characteristic_length_min=0.1,
@@ -41,29 +30,31 @@ def _init_geom():
 
 def _viewing(geom):
     geom.parse_gdspy(gdspy.Cell('yuna_geom'))
-    directory = os.getcwd() + '/debug/'
-    layout_file = directory + 'yuna.gds'
+    layout_file = os.getcwd() + '/debug/' + 'yuna_geom.gds'
     gdspy.write_gds(layout_file, unit=1.0e-6, precision=1.0e-6)
-    gdspy.LayoutViewer()
+    gdspy.LayoutViewer(cells='yuna_geom')
 
 
-def _get_files(basedir, testname, pdkname):
-    gds_file, config_file = '', None
+def _pattern(geom):
+    from yuna.masks.paths import Path
+    from yuna.masks.vias import Via
+    from yuna.masks.junctions import Junction
+    from yuna.masks.ntrons import Ntron
 
-    # for file in os.listdir(basedir):
-    #     if file.endswith('.gds'):
-    #         gds_file = basedir + '/' + file
-    #     elif file.endswith('.json'):
-    #         if file == name:
-    #             config_file = basedir + '/' + file
+    if geom.has_device(mn.via.Via):
+        geom.patterning(masktype=Path, devtype=Via)
+    if geom.has_device(mn.ntron.Ntron):
+        geom.patterning(masktype=Path, devtype=Ntron)
+    if geom.has_device(mn.junction.Junction):
+        geom.patterning(masktype=Path, devtype=Junction)
 
-    gds_file = basedir + '/' + testname + '.gds'
-    pdk_file = basedir + '/' + pdkname + '.json'
+    if geom.has_device(mn.ntron.Ntron):
+        geom.patterning(masktype=Via, devtype=Ntron)
+    if geom.has_device(mn.junction.Junction):
+        geom.patterning(masktype=Via, devtype=Junction)
 
-    return gds_file, pdk_file
 
-
-def grand_summon(testname, cell_name, pdk_name, basedir=None,
+def grand_summon(cell, pdk_file, basedir=None,
                  log=None, model=False, debug=None):
     """
     Read in the layers from the GDS file,
@@ -80,8 +71,8 @@ def grand_summon(testname, cell_name, pdk_name, basedir=None,
     Arguments
     ---------
     cell : string
-        Name of the cell inside the top-level gds layout that has
-        to be executed.
+        Name of the cell inside the top-level gds layout 
+        that has to be executed.
     config_name : string
         Name of the process configuration file.
     model : bool
@@ -94,11 +85,6 @@ def grand_summon(testname, cell_name, pdk_name, basedir=None,
         logging.basicConfig(level=logging.DEBUG)
     elif log == 'info':
         logging.basicConfig(level=logging.INFO)
-
-    if not cell_name:
-        raise ValueError('please specify a valid cell name')
-
-    gds_file, pdk_file = _get_files(basedir, testname, pdk_name)
 
     if model is True:
         cell = _read_cell(gds_file, cell_name)
@@ -120,9 +106,7 @@ def grand_summon(testname, cell_name, pdk_name, basedir=None,
 
         utils.end_print()
     else:
-        cell = _read_cell(gds_file, cell_name)
-
-        geom = Geometry(cell_name, pdk_file)
+        geom = Geometry(cell.name, pdk_file)
 
         geom.user_label_term(cell)
         geom.user_label_cap(cell)
@@ -132,22 +116,7 @@ def grand_summon(testname, cell_name, pdk_name, basedir=None,
 
         geom.deposition(cell)
 
-        from yuna.masks.paths import Path
-        from yuna.masks.vias import Via
-        from yuna.masks.junctions import Junction
-        from yuna.masks.ntrons import Ntron
-
-        if geom.has_device(mn.via.Via):
-            geom.patterning(masktype=Path, devtype=Via)
-        if geom.has_device(mn.ntron.Ntron):
-            geom.patterning(masktype=Path, devtype=Ntron)
-        if geom.has_device(mn.junction.Junction):
-            geom.patterning(masktype=Path, devtype=Junction)
-
-        if geom.has_device(mn.ntron.Ntron):
-            geom.patterning(masktype=Via, devtype=Ntron)
-        if geom.has_device(mn.junction.Junction):
-            geom.patterning(masktype=Via, devtype=Junction)
+        _pattern(geom)
 
         geom.update_polygons()
 
@@ -155,5 +124,8 @@ def grand_summon(testname, cell_name, pdk_name, basedir=None,
         _viewing(geom)
 
     utils.cyan_print('Yuna. Done.\n')
+
+    if geom is None:
+        raise ValueError('datafield cannot be None')
 
     return geom

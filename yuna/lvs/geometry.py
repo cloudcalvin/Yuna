@@ -22,11 +22,21 @@ logger = logging.getLogger(__name__)
 
 class Geometry(object):
 
-    def __init__(self, name, pcf):
-        self.name = name
+    def __init__(self, cell, pcf):
+        self.name = cell.name
 
         if pcf is not None:
             self.pcd = self.read_config(pcf)
+
+        self.original_labels = cell.labels
+        self.original_terms = cell.get_polygons(True)[(63, 0)]
+        
+        # def _terminal_polygons(cell):
+        #     polygons = cell.get_polygons(True)
+        #     print(polygons[(63, 0)])
+        #     print('.')
+
+        # self.original_terminals = _terminal_polygons(cell)
 
         self.labels = list()
         self.maskset = cl.defaultdict(list)
@@ -325,7 +335,7 @@ class Geometry(object):
 
         return metals
 
-    def parse_gdspy(self, cell):
+    def gds_auron(self, cell):
         from yuna.masks.paths import Path
         from yuna.masks.vias import Via
         from yuna.masks.junctions import Junction
@@ -350,3 +360,32 @@ class Geometry(object):
         for label in self.labels:
             lbl = label.get_label()
             cell.add(lbl)
+
+    def gds_inductex(self, cell):
+        from yuna.masks.paths import Path
+        from yuna.masks.vias import Via
+        from yuna.masks.junctions import Junction
+        from yuna.masks.ntrons import Ntron
+
+        for poly in self.original_terms:
+            polygon = gdspy.Polygon(poly, 63, 0)
+            cell.add(polygon)
+
+        def _update_cell(mask):
+            for pp in mask.polygons:
+                polygon = gdspy.Polygon(*pp.get_variables())
+                cell.add(polygon)
+
+        for gds, mask_list in self.maskset.items():
+            for mask in mask_list:
+                if isinstance(mask, Path):
+                    _update_cell(mask)
+                elif isinstance(mask, Via):
+                    _update_cell(mask)
+                elif isinstance(mask, Junction):
+                    _update_cell(mask)
+                elif isinstance(mask, Ntron):
+                    _update_cell(mask)
+
+        for label in self.original_labels:
+            cell.add(label)

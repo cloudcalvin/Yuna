@@ -30,30 +30,37 @@ def _init_geom():
     return geom
 
 
-def _viewing(gdsii, geom):
-    geom.parse_gdspy(gdspy.Cell('yuna_geom'))
+def _write_gds(gdsii, geom, viewer):
+    auron_cell = gdspy.Cell('geom_for_auron')
+    ix_cell = gdspy.Cell('geom_for_inductex')
+
+    geom.gds_auron(auron_cell)
+    geom.gds_inductex(ix_cell)
 
     debug_dir = os.getcwd() + '/debug/'
     pathlib.Path(debug_dir).mkdir(parents=True, exist_ok=True)
 
-    layout_file = debug_dir + 'yuna_geometry.gds'
+    gdspy.GdsLibrary(name='auron_geom')
+    gdspy.write_gds(debug_dir + 'auron.gds',
+                    [auron_cell],
+                    name='auron_geom',
+                    unit=1.0e-12)
 
-    # gdspy.GdsLibrary(name='simplified_geometry')
-    # # usercell = gdspy.Cell('yuna_geom')
-    # usercell = gdsii.extract('yuna_geom')
-    # 
-    # 
-    # cells = [usercell]
-    # for cell in usercell.get_dependencies(True):
-    #     cells.append(cell)
+    gdspy.GdsLibrary(name='ix_geom')
+    gdspy.write_gds(debug_dir + 'ix.gds',
+                    [ix_cell],
+                    name='ix_geom',
+                    unit=1.0e-12)
 
-    # gdspy.write_gds(debug_dir + usercell.name + 'awe.gds',
-    #                 cells,
-    #                 name='simplified_geometry',
-    #                 unit=1.0e-12)
+    gdspy.write_gds(debug_dir + 'all_cells.gds', 
+                    unit=1.0e-12)
 
-    gdspy.write_gds(layout_file, unit=1.0e-6, precision=1.0e-6)
-    gdspy.LayoutViewer(cells='yuna_geom')
+    if viewer == 'ix':
+        gdspy.LayoutViewer(cells='geom_for_inductex')
+    elif viewer == 'auron':
+        gdspy.LayoutViewer(cells='geom_for_auron')
+    elif viewer == 'all':
+        gdspy.LayoutViewer()
 
 
 def _pattern(geom):
@@ -76,7 +83,7 @@ def _pattern(geom):
 
 
 def grand_summon(gdsii, cell, pdk_file, basedir=None,
-                 log=None, model=False, debug=None):
+                 log=None, model=False, viewer=None):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -127,7 +134,7 @@ def grand_summon(gdsii, cell, pdk_file, basedir=None,
 
         utils.end_print()
     else:
-        geom = Geometry(cell.name, pdk_file)
+        geom = Geometry(cell, pdk_file)
 
         geom.user_label_term(cell)
         geom.user_label_cap(cell)
@@ -141,12 +148,11 @@ def grand_summon(gdsii, cell, pdk_file, basedir=None,
 
         geom.update_polygons()
 
-    if debug == 'view':
-        _viewing(gdsii, geom)
-
-    utils.cyan_print('Yuna. Done.\n')
+    _write_gds(gdsii, geom, viewer)
 
     if geom is None:
         raise ValueError('datafield cannot be None')
+
+    utils.cyan_print('Yuna. Done.\n')
 
     return geom

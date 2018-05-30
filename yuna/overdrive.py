@@ -15,6 +15,8 @@ import yuna.masternodes as mn
 
 from yuna.lvs.geometry import Geometry
 
+import pathlib
+
 
 def _init_geom():
     geom = pygmsh.opencascade.Geometry(
@@ -28,9 +30,28 @@ def _init_geom():
     return geom
 
 
-def _viewing(geom):
+def _viewing(gdsii, geom):
     geom.parse_gdspy(gdspy.Cell('yuna_geom'))
-    layout_file = os.getcwd() + '/debug/' + 'yuna_geom.gds'
+
+    debug_dir = os.getcwd() + '/debug/'
+    pathlib.Path(debug_dir).mkdir(parents=True, exist_ok=True)
+
+    layout_file = debug_dir + 'yuna_geometry.gds'
+
+    # gdspy.GdsLibrary(name='simplified_geometry')
+    # # usercell = gdspy.Cell('yuna_geom')
+    # usercell = gdsii.extract('yuna_geom')
+    # 
+    # 
+    # cells = [usercell]
+    # for cell in usercell.get_dependencies(True):
+    #     cells.append(cell)
+
+    # gdspy.write_gds(debug_dir + usercell.name + 'awe.gds',
+    #                 cells,
+    #                 name='simplified_geometry',
+    #                 unit=1.0e-12)
+
     gdspy.write_gds(layout_file, unit=1.0e-6, precision=1.0e-6)
     gdspy.LayoutViewer(cells='yuna_geom')
 
@@ -54,7 +75,7 @@ def _pattern(geom):
         geom.patterning(masktype=Via, devtype=Junction)
 
 
-def grand_summon(cell, pdk_file, basedir=None,
+def grand_summon(gdsii, cell, pdk_file, basedir=None,
                  log=None, model=False, debug=None):
     """
     Read in the layers from the GDS file,
@@ -121,7 +142,7 @@ def grand_summon(cell, pdk_file, basedir=None,
         geom.update_polygons()
 
     if debug == 'view':
-        _viewing(geom)
+        _viewing(gdsii, geom)
 
     utils.cyan_print('Yuna. Done.\n')
 

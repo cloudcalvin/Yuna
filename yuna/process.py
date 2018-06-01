@@ -40,17 +40,49 @@ class ProcessConfigData(object):
         self.atoms = atoms
 
     def add_layer(self, mtype, gds, value):
-        layer = Layer(value)
+        """
 
-        if 'position' in value.keys():
-            layer.set_position(value['position'])
-        if 'width' in value.keys():
-            layer.set_width(value['width'])
-        if 'metals' in value.keys():
-            layer.add_contact_layer(value['metals'])
+        """
 
-        if mtype not in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron', 'cap']:
-            raise TypeError("mtype `type` is not supported")
+        from yuna.pdk.inductor import Inductor
+        from yuna.pdk.via import Via
+
+        if mtype == 'ix':
+            layer = Inductor(value)
+
+            if 'position' in value.keys():
+                layer.set_position(value['position'])
+            if 'width' in value.keys():
+                layer.set_width(value['width'])
+            if 'stack' in value.keys():
+                layer.set_stack(value['stack'])
+            if 'metals' in value.keys():
+                layer.add_contact_layer(value['metals'])
+        elif mtype == 'via':
+            layer = Via(value)
+
+            if 'position' in value.keys():
+                layer.set_position(value['position'])
+            if 'width' in value.keys():
+                layer.set_width(value['width'])
+            if 'stack' in value.keys():
+                layer.set_stack(value['stack'])
+            if 'metals' in value.keys():
+                layer.add_contact_layer(value['metals'])
+        else:
+            layer = Layer(value)
+
+            if 'position' in value.keys():
+                layer.set_position(value['position'])
+            if 'width' in value.keys():
+                layer.set_width(value['width'])
+            if 'stack' in value.keys():
+                layer.set_stack(value['stack'])
+            if 'metals' in value.keys():
+                layer.add_contact_layer(value['metals'])
+
+        # if mtype not in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron', 'cap']:
+        #     raise TypeError("mtype `type` is not supported")
 
         assert isinstance(gds, int)
 
@@ -61,7 +93,6 @@ class Layer(object):
 
     def __init__(self, data):
 
-        self.type = ltype
         self.name = data['name']
 
         if 'ETL' in data:
@@ -72,7 +103,12 @@ class Layer(object):
         self.color = data['color']
         self.position = None
         self.width = None
-        self.metals = list()
+        self.rank = None
+        self.stack = []
+        self.metals = []
+
+    def set_stack(self, stack):
+        self.stack = stack
 
     def set_position(self, num):
         self.position = float(num)

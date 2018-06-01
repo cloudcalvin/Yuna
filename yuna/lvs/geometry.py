@@ -23,24 +23,24 @@ logger = logging.getLogger(__name__)
 class Geometry(object):
     """
     Contains all geometric information of the circuit layout.
-    The gds file are parsed and linked with the PDK. 
+    The gds file are parsed and linked with the PDK.
 
     name : string
         The name of the Cell extracted.
     original_labels : list
         List of the labels added by the user in the gds file.
     original_terms : list
-        List containing the polygons of the terminal layers 
+        List containing the polygons of the terminal layers
         added by the user in the gds file.
     labels : list
-        All the labels that was detected and created. These 
-        include the device detection labels and that manually 
-        set by the user. 
+        All the labels that was detected and created. These
+        include the device detection labels and that manually
+        set by the user.
     masks : dict
-        Contains the gdsnumber as the key with a list of all 
+        Contains the gdsnumber as the key with a list of all
         the mMsk objects of that specific layer type.
     polygons : [gds][datatype]
-        The polygons of Mask objects presented in a dictionary 
+        The polygons of Mask objects presented in a dictionary
         format.
     """
 
@@ -52,7 +52,7 @@ class Geometry(object):
 
         self.original_labels = cell.labels
         self.original_terms = cell.get_polygons(True)[(63, 0)]
-        
+
         self.labels = list()
         self.maskset = cl.defaultdict(list)
         self.polygons = cl.defaultdict(dict)

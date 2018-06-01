@@ -10,8 +10,8 @@ from shapely.geometry import Polygon
 
 class MaskBase(object):
     """
-    The base class for creating polygons from the 
-    gds file. These polygons are merged and smoothed 
+    The base class for creating polygons from the
+    gds file. These polygons are merged and smoothed
     for meshing.
 
     Parameters
@@ -23,16 +23,16 @@ class MaskBase(object):
     raw_points : array-like
         The original polygon points as read-in by the gdspy library.
     points : array-like
-        The raw_points with the smoothing algorithm applied. 
+        The raw_points with the smoothing algorithm applied.
     polygons : list
-        List of PolyBase polygons that contains the polygons 
+        List of PolyBase polygons that contains the polygons
         points and the PDK data connected to that specific polygon.
 
     Notes
     -----
-    The simplified and merging operations are applied on 
-    objecct creation. This can be updated to use Python's 
-    magix functions. 
+    The simplified and merging operations are applied on
+    objecct creation. This can be updated to use Python's
+    magix functions.
     """
 
     _PP = 10

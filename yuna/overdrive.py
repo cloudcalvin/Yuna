@@ -7,7 +7,6 @@ from yuna import utils
 
 from .utils import logging
 
-import yuna.model as model
 import yuna.lvs as lvs
 import yuna.labels as labels
 import yuna.masks as devices
@@ -16,18 +15,6 @@ import yuna.masternodes as mn
 from yuna.lvs.geometry import Geometry
 
 import pathlib
-
-
-def _init_geom():
-    geom = pygmsh.opencascade.Geometry(
-        characteristic_length_min=0.1,
-        characteristic_length_max=0.1,
-    )
-
-    geom.add_raw_code('Mesh.Algorithm = 100;')
-    geom.add_raw_code('Coherence Mesh;')
-
-    return geom
 
 
 def _write_gds(gdsii, geom, viewer):
@@ -52,7 +39,7 @@ def _write_gds(gdsii, geom, viewer):
                     name='ix_geom',
                     unit=1.0e-12)
 
-    gdspy.write_gds(debug_dir + 'all_cells.gds', 
+    gdspy.write_gds(debug_dir + 'all_cells.gds',
                     unit=1.0e-12)
 
     if viewer == 'ix':
@@ -81,9 +68,11 @@ def _pattern(geom):
     if geom.has_device(mn.junction.Junction):
         geom.patterning(masktype=Via, devtype=Junction)
 
+    geom.update()
+    geom.mask_polygons()
 
-def grand_summon(gdsii, cell, pdk_file, basedir=None,
-                 log=None, model=False, viewer=None):
+
+def grand_summon(gdsii, cell, pdk_file, log=None, viewer=None):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -99,7 +88,7 @@ def grand_summon(gdsii, cell, pdk_file, basedir=None,
     Arguments
     ---------
     cell : string
-        Name of the cell inside the top-level gds layout 
+        Name of the cell inside the top-level gds layout
         that has to be executed.
     config_name : string
         Name of the process configuration file.
@@ -107,46 +96,24 @@ def grand_summon(gdsii, cell, pdk_file, basedir=None,
         If True then a 3D model of the cell must be created.
     """
 
-    utils.cyan_print('Summoning Yuna...')
+    print('----- Yuna -----\n')
 
     if log == 'debug':
         logging.basicConfig(level=logging.DEBUG)
     elif log == 'info':
         logging.basicConfig(level=logging.INFO)
 
-    if model is True:
-        cell = _read_cell(gds_file, cell_name)
-        # model.mask.geometry(cell, datafield)
-        geom = Geometry(cell_name, pdk_file)
+    geom = Geometry(cell, pdk_file)
 
-        utils.magenta_print('3D Model')
+    geom.user_label_term(cell)
+    geom.user_label_cap(cell)
 
-        pygmsh_geom = _init_geom()
+    geom.label_cells(cell)
+    geom.label_flatten(cell)
 
-        model.mask._metals(pygmsh_geom, geom)
-        model.mask.terminals(pygmsh_geom, cell, geom)
+    geom.deposition(cell)
 
-        meshdata = pygmsh.generate_mesh(pygmsh_geom,
-                                        verbose=False,
-                                        geo_filename=modelname + '.geo')
-
-        meshio.write(modelname + '.vtu', *meshdata)
-
-        utils.end_print()
-    else:
-        geom = Geometry(cell, pdk_file)
-
-        geom.user_label_term(cell)
-        geom.user_label_cap(cell)
-
-        geom.label_cells(cell)
-        geom.label_flatten(cell)
-
-        geom.deposition(cell)
-
-        _pattern(geom)
-
-        geom.update_polygons()
+    _pattern(geom)
 
     _write_gds(gdsii, geom, viewer)
 

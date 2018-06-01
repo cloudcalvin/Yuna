@@ -21,7 +21,6 @@ setup(
     url="https://github.com/rubenvanstaden/yuna",
     packages=['yuna', 
               'yuna.lvs', 
-              'yuna.model', 
               'yuna.labels', 
               'yuna.masks', 
               'yuna.masternodes'],

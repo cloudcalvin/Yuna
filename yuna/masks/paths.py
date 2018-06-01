@@ -31,6 +31,9 @@ class Path(MaskBase):
         # if self.data is None:
         #     raise ValueError('Polygon data cannot be None.')
 
+    def __str__(self):
+        pass
+
     def union(self):
         cc_poly = list()
 

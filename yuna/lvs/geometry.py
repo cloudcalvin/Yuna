@@ -21,6 +21,28 @@ logger = logging.getLogger(__name__)
 
 
 class Geometry(object):
+    """
+    Contains all geometric information of the circuit layout.
+    The gds file are parsed and linked with the PDK. 
+
+    name : string
+        The name of the Cell extracted.
+    original_labels : list
+        List of the labels added by the user in the gds file.
+    original_terms : list
+        List containing the polygons of the terminal layers 
+        added by the user in the gds file.
+    labels : list
+        All the labels that was detected and created. These 
+        include the device detection labels and that manually 
+        set by the user. 
+    masks : dict
+        Contains the gdsnumber as the key with a list of all 
+        the mMsk objects of that specific layer type.
+    polygons : [gds][datatype]
+        The polygons of Mask objects presented in a dictionary 
+        format.
+    """
 
     def __init__(self, cell, pcf):
         self.name = cell.name
@@ -31,13 +53,6 @@ class Geometry(object):
         self.original_labels = cell.labels
         self.original_terms = cell.get_polygons(True)[(63, 0)]
         
-        # def _terminal_polygons(cell):
-        #     polygons = cell.get_polygons(True)
-        #     print(polygons[(63, 0)])
-        #     print('.')
-
-        # self.original_terminals = _terminal_polygons(cell)
-
         self.labels = list()
         self.maskset = cl.defaultdict(list)
         self.polygons = cl.defaultdict(dict)
@@ -165,26 +180,35 @@ class Geometry(object):
             for element in elements:
                 submask.add(element)
 
-    def update_polygons(self, devtype=None):
+    def update(self, devtype=None):
+        """
+        Update the polygons of all the mask.
+        This has to be done in the end depositioning
+        to overcome dynamic polygon changes. 
+        """
 
-        def _save_polygons():
-            for gds, mask_list in self.maskset.items():
-                for mask in mask_list:
-                    for pp in mask.polygons:
-                        if mask.datatype in self.polygons[gds]:
-                            self.polygons[gds][mask.datatype].append(pp)
-                        else:
-                            self.polygons[gds][mask.datatype] = [pp]
+        for gds, mask_list in self.maskset.items():
+            print('... updating mask of type: {}'.format(gds))
+            for mask in mask_list:
+                if devtype is not None:
+                    if isinstance(mask, devtype):
+                       mask.update_mask(self)
+                else:
+                    mask.update_mask(self)
+
+    def mask_polygons(self, devtype=None):
+        """
+        Save the polygon coordinates of all the mask
+        objects into a dict datatype.
+        """
 
         for gds, mask_list in self.maskset.items():
             for mask in mask_list:
-                if devtype is None:
-                    mask.update_mask(self)
-                else:
-                    if isinstance(mask, devtype):
-                       mask.update_mask(self)
-
-        _save_polygons()
+                for pp in mask.polygons:
+                    if mask.datatype in self.polygons[gds]:
+                        self.polygons[gds][mask.datatype].append(pp)
+                    else:
+                        self.polygons[gds][mask.datatype] = [pp]
 
     def label_cells(self, cell):
         """

@@ -22,6 +22,7 @@ class PolyBase(gdspy.Polygon):
     def __init__(self, key, points, pdk, holes=None):
         super(PolyBase, self).__init__(points, *key, verbose=False)
 
+        self.pdk = pdk
         self.holes = holes
 
         if key[1] == 1:
@@ -43,11 +44,24 @@ class PolyBase(gdspy.Polygon):
 
         PolyBase._ID += 1
 
+    def __str__(self):
+        prop = '(key-{}, name-{}, width-{}, metals-{})'.format(
+            self.key, self.properties.name, self.properties.width, 
+            self.properties.metals)
+
+        return 'Layer Properties {}'.format(prop)
+
     def get_holes(self, z):
-        return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
+        if self.holes is not None:
+            return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
+        return None
 
     def get_points(self, z):
         return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
 
     def get_variables(self):
         return (self.points, self.layer, self.datatype)
+
+    def get_var1(self):
+        key = (self.layer, self.datatype)
+        return (key, self.points, self.pdk)

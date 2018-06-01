@@ -61,6 +61,7 @@ class Layer(object):
 
     def __init__(self, data):
 
+        self.type = ltype
         self.name = data['name']
 
         if 'ETL' in data:

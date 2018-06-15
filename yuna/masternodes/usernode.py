@@ -1,24 +1,23 @@
 import gdspy
 
+from yuna.pdk.properties import LabelProperties
 
-class UserNode(gdspy.Label):
+
+class UserNode(LabelProperties):
+    """
+
+    """
+
     _ID = 0
 
-    def __init__(self, text, position, rotation=0, layer=0, atom=None, id0=None):
-        super(UserNode, self).__init__(text, position, rotation=rotation, layer=layer)
+    def __init__(self, position, params, id0=None):
+        super(UserNode, self).__init__(position, **params)
 
         if id0 is None:
             self.id = 'usernode_{}'.format(UserNode._ID)
+            UserNode._ID += 1
         else:
             self.id = 'poly {}'.format(id0)
-
-        UserNode._ID += 1
-
-        if atom is not None:
-            self.data = atom[text]
-        else:
-            self.data = {}
-            self.data['color'] = '#76D7C4'
 
         self.master = True
 

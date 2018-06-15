@@ -1,21 +1,17 @@
+from yuna.pdk.layers.layer_base import LayerBase
 
 
-
-class Ntron(object):
+class NtronProperties(LayerBase):
 
     def __init__(self, data):
-
-        self.name = data['name']
+        super(NtronProperties, self).__init__(data)
 
         if 'ETL' in data:
             self.etl = data['ETL']
         else:
             self.etl = None
 
-        self.color = data['color']
         self.position = None
-        self.width = None
-        self.rank = None
         self.stack = []
         self.metals = []
 

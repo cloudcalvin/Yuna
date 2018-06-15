@@ -1,19 +1,20 @@
 import gdspy
 
+from yuna.pdk.properties import LabelProperties
 
-class Inductor(gdspy.Label):
+
+class Inductor(LabelProperties):
+    """
+
+    """
+
     _ID = 0
 
-    def __init__(self, text, position, layer=0, id0=None):
-        super(Inductor, self).__init__(text, position, layer=layer)
+    def __init__(self, position, params, id0=None):
+        super(Inductor, self).__init__(position, **params)
 
         if id0 is None:
             self.id = 'L{}'.format(Inductor._ID)
+            Inductor._ID += 1
         else:
             self.id = 'poly {}'.format(id0)
-
-        Inductor._ID += 1
-
-        self.data = {}
-        self.data['color'] = '#66FFB2'
-        self.master = False

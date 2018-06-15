@@ -1,21 +1,19 @@
+from yuna.pdk.layers.layer_base import LayerBase
 
 
+class ResistorProperties(LayerBase):
 
-class Junction(object):
+    def __init__(self, gds, data):
+        super(ResistorProperties, self).__init__(data)
 
-    def __init__(self, data):
-
-        self.name = data['name']
+        self.gds = gds
 
         if 'ETL' in data:
             self.etl = data['ETL']
         else:
             self.etl = None
 
-        self.color = data['color']
         self.position = None
-        self.width = None
-        self.rank = None
         self.stack = []
         self.metals = []
 

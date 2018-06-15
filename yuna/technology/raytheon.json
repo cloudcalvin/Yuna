@@ -1,0 +1,267 @@
+
+{
+    "Params":
+    {
+        "USER": {
+            "layer": 65,
+            "color": "#CC99FF"
+        },
+
+        "LAYER": {
+            "layer": 65,
+            "color": "#66FFB2"
+        },
+
+        "GROUND": {
+            "layer": 65,
+            "color": "#FF6666"
+        },
+
+        "VIA": {
+            "layer": 65,
+            "color": "#A0A0A0"
+        },
+
+        "JJ": {
+            "layer": 65,
+            "color": "#FFB266"
+        },
+
+        "SERIES_NODES": {
+            "layer": 65,
+            "color": "#66B2FF"
+        },
+
+        "RES": {
+            "layer": 65,
+            "color": "#FF66B2"
+        },
+
+        "NTRON": {
+            "layer": 65,
+            "color": "#FF6666"
+        }
+    },
+
+    "Layers":
+    {
+        "units": 10e-9,
+
+        "ix":
+        [
+            {
+                "layer": 1,
+                "datatype": 0,
+                "name": "Channel",
+                "rank": 0,
+                "stack": [],
+                "width": 6,
+                "color": "#B266FF"
+            },
+
+            {
+                "layer": 2,
+                "datatype": 0,
+                "name": "Pillar",
+                "rank": 1,
+                "stack": [1],
+                "width": 10,
+                "color": "#FF66FF"
+            },
+
+            {
+                "layer": 3,
+                "datatype": 0,
+                "name": "Pt",
+                "ETL": 5,
+                "rank": 0,
+                "stack": [1, 2],
+                "width": 100,
+                "color": "#A0A0A0"
+            },
+
+            {
+                "layer": 4,
+                "datatype": 0,
+                "name": "NbNebeam",
+                "ETL": 5,
+                "rank": 4,
+                "stack": [],
+                "units": "nm",
+                "width": 30,
+                "color": "#FF66B2"
+            },
+
+            {
+                "layer": 5,
+                "datatype": 0,
+                "name": "NbNphoto",
+                "rank": 4,
+                "stack": [],
+                "units": "nm",
+                "width": 30,
+                "color": "#FF66B2"
+            },
+
+            {
+                "layer": 7,
+                "datatype": 0,
+                "name": "Al",
+                "rank": 7,
+                "stack": [5, 8, 6],
+                "width": 100,
+                "color": "#FF66B2"
+            },
+
+            {
+                "layer": 8,
+                "datatype": 0,
+                "name": "Al",
+                "rank": 5,
+                "stack": [],
+                "width": 8,
+                "color": "#FF66B2"
+            }
+        ],
+
+        "via":
+        [
+            {
+                "layer": 6,
+                "datatype": 0,
+                "name": "Alvia",
+                "rank": 6,
+                "stack": [4, 5],
+                "width": 100,
+                "color": "#A0A0A0"
+            }
+        ],
+
+        "res":
+        [
+            {
+                "layer": 9,
+                "datatype": 0,
+                "name": "R2",
+                "rank": 0,
+                "color": "#00CCCC",
+                "width": "40"
+            },
+
+            {
+                "layer": 11,
+                "datatype": 0,
+                "name": "R3",
+                "rank": 0,
+                "color": "#FFB266",
+                "width": "350"
+            }
+        ],
+
+        "jj":
+        [
+            {
+                "layer": 21,
+                "datatype": 0,
+                "name": "J2",
+                "rank": 0,
+                "position": "1265",
+                "width": "50",
+                "color": "#00CCCC"
+            }
+        ]
+    },
+
+    "Structure":
+    {
+        "UserNode": {
+            "name": "usernode",
+            "layer": 0,
+            "color": "#CC99FF"
+        },
+
+        "Hole":
+        {
+            "30": {
+                "name": "M0",
+                "rank": 0,
+                "color": "#CC99FF"
+            }
+        },
+
+        "Ntron":
+        {
+            "5": {
+                "name": "NTRON",
+                "metals": [4, 5],
+                "color": "#FFCC99"
+            }
+        },
+
+        "Capacitor":
+        {
+            "name": "CAP",
+            "metals": [5, 7],
+            "color": "#F069B4"
+        },
+
+        "Terminal":
+        {
+            "63": {
+                "name": "TERM",
+                "color": "#888000"
+            },
+
+            "64": {
+                "name": "TEXT",
+                "color": "#808080"
+            }
+        }
+    },
+
+    "Cells":
+    {
+        "Vias":
+        {
+            "color": "#A0A0A0",
+
+            "via_NbNphoto_Al": {
+                "stack": [6],
+                "metals": [7, 5],
+                "color": "#A0A0A0"
+            }
+        },
+
+        "Ntrons":
+        {
+            "color": "#FF5555",
+
+            "ntron_0": {
+                "metals": [5],
+                "color": "#FF5555"
+            },
+
+            "ntron_CSHEpad": {
+                "metals": [5],
+                "color": "#FF5555"
+            },
+
+            "ntron_small": {
+                "metals": [5],
+                "color": "#FF5555"
+            },
+
+            "ntron_CSHE": {
+                "compress": 5,
+                "metals": [5],
+                "color": "#FF5555"
+            }
+        }
+    }
+}
+
+
+
+
+
+

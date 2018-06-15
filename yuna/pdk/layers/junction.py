@@ -1,20 +1,17 @@
+from yuna.pdk.layers.layer_base import LayerBase
 
 
-class Inductor(object):
+class JunctionProperties(LayerBase):
 
     def __init__(self, data):
-
-        self.name = data['name']
+        super(JunctionProperties, self).__init__(data)
 
         if 'ETL' in data:
             self.etl = data['ETL']
         else:
             self.etl = None
 
-        self.color = data['color']
         self.position = None
-        self.width = None
-        self.rank = None
         self.stack = []
         self.metals = []
 

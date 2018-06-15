@@ -1,3 +1,3 @@
-__all__ = ['poly_base', 'geometry']
+__all__ = ['poly_base', 'geometry', 'structure']
 
 from . import *

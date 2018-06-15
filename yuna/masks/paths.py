@@ -21,38 +21,31 @@ class Path(MaskBase):
 
     def __init__(self, gds, poly):
         super(Path, self).__init__((gds, 0), poly, 100.0)
-
         self.datatype = 0
-
-        # self.data = fabdata[gds]
-        #
-        # assert isinstance(self.data.name, str)
-        #
-        # if self.data is None:
-        #     raise ValueError('Polygon data cannot be None.')
+        self.polygons = []
 
     def __str__(self):
         pass
 
-    def union(self):
-        cc_poly = list()
+    # def union(self):
+    #     cc_poly = list()
+    #
+    #     for poly in self.raw_points:
+    #         if pyclipper.Orientation(poly) is False:
+    #             reverse_poly = pyclipper.ReversePath(poly)
+    #             cc_poly.append(reverse_poly)
+    #         else:
+    #             cc_poly.append(poly)
+    #
+    #     union = utils.angusj(subj=cc_poly, method='union')
+    #     points = pyclipper.CleanPolygons(union)
+    #
+    #     if not isinstance(points[0][0], list):
+    #         raise TypeError("poly must be a 3D list")
+    #
+    #     return points
 
-        for poly in self.raw_points:
-            if pyclipper.Orientation(poly) is False:
-                reverse_poly = pyclipper.ReversePath(poly)
-                cc_poly.append(reverse_poly)
-            else:
-                cc_poly.append(poly)
-
-        union = utils.angusj(subj=cc_poly, method='union')
-        points = pyclipper.CleanPolygons(union)
-
-        if not isinstance(points[0][0], list):
-            raise TypeError("poly must be a 3D list")
-
-        return points
-
-    def create_mask(self, datafield, myCell):
+    def create_mask(self, geom, myCell):
 
         named_layers = defaultdict(dict)
 
@@ -80,17 +73,31 @@ class Path(MaskBase):
                 if abs(hole.area) < abs(poly.area):
 
                     if utils.is_nested_polygons(hole, poly):
-                        datafield.add(poly.points, self.key, holes=hole.points, model='model')
+                        geom.add(poly.points, self.key, holes=hole.points, model='model')
                         myCell.add(gdspy.Polygon(hole.points, layer=81))
                         add_to_mask = False
                     else:
-                        datafield.add(poly.points, self.key, model='model')
+                        geom.add(poly.points, self.key, model='model')
                         add_to_mask = False
 
             if add_to_mask:
-                datafield.add(poly.points, self.key, model='model')
+                geom.add(poly.points, self.key, model='model')
 
             myCell.add(gdspy.Polygon(poly.points, self.key[0], verbose=False))
 
-    def add(self, mask):
+    def diff(self, mask):
         self.points = utils.angusj(self.points, mask.points, 'difference')
+
+    def add_polygon(self, geom):
+        for pp in self.points:
+            assert isinstance(pp[0], list)
+
+            data = geom.raw_pdk_data['Layers']
+
+            layers = [*data['ix']]
+
+            for params in layers:
+                if params['layer'] == self.key[0]:
+                    params['datatype'] = self.key[1]
+                    polygon = PolyBase(pp, params)
+                    self.polygons.append(polygon)

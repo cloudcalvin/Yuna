@@ -2,8 +2,7 @@ from yuna import utils
 from yuna import grid
 
 import numpy as np
-
-from yuna.lvs.poly_base import PolyBase
+import pyclipper
 
 from shapely.geometry import Polygon
 
@@ -50,12 +49,11 @@ class MaskBase(object):
         if not isinstance(self.raw_points[0][0], np.ndarray):
             raise TypeError("raw_points must be a 3D list")
 
-        self.points = self.simple()
-        self.polygons = []
+        self.points = self.simplify()
 
-    def simple(self):
+    def simplify(self):
         points = list()
-        for pp in self.union():
+        for pp in self._union():
             if len(pp) > MaskBase._PP:
                 factor = (len(pp)/self.smoothness) * MaskBase._FACTOR
                 sp = Polygon(pp).simplify(factor)
@@ -65,17 +63,28 @@ class MaskBase(object):
                 points.append(list(pp))
         return grid.snap_points(points)
 
-    def union(self):
-        points = utils.angusj(subj=self.raw_points, method='union')
+    def _union(self):
+        cc_poly = list()
+
+        for poly in self.raw_points:
+            if pyclipper.Orientation(poly) is False:
+                reverse_poly = pyclipper.ReversePath(poly)
+                cc_poly.append(reverse_poly)
+            else:
+                cc_poly.append(poly)
+
+        union = utils.angusj(subj=cc_poly, method='union')
+        points = pyclipper.CleanPolygons(union)
 
         if not isinstance(points[0][0], list):
             raise TypeError("poly must be a 3D list")
 
         return points
 
-    def update_mask(self, datafield):
-        for pp in self.points:
-            assert isinstance(pp[0], list)
-
-            polygon = PolyBase(self.key, pp, datafield.pcd)
-            self.polygons.append(polygon)
+    # def union(self):
+    #     points = utils.angusj(subj=self.raw_points, method='union')
+    #
+    #     if not isinstance(points[0][0], list):
+    #         raise TypeError("poly must be a 3D list")
+    #
+    #     return points

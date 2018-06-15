@@ -24,100 +24,57 @@ union result and the moat layer.
 """
 
 
-class ProcessConfigData(object):
+class ProcessDesignKit(object):
 
     def __init__(self):
-        self.params = None
-        self.atoms = None
+        self.layers = None
+        self.cells = None
 
-        self.layers = cl.defaultdict(dict)
-        self.components = []
-
-    def add_parameters(self, params):
-        self.params = params
-
-    def add_atoms(self, atoms):
-        self.atoms = atoms
-
-    def add_layer(self, mtype, gds, value):
-        """
-
-        """
-
-        from yuna.pdk.inductor import Inductor
-        from yuna.pdk.via import Via
-
-        if mtype == 'ix':
-            layer = Inductor(value)
-
-            if 'position' in value.keys():
-                layer.set_position(value['position'])
-            if 'width' in value.keys():
-                layer.set_width(value['width'])
-            if 'stack' in value.keys():
-                layer.set_stack(value['stack'])
-            if 'metals' in value.keys():
-                layer.add_contact_layer(value['metals'])
-        elif mtype == 'via':
-            layer = Via(value)
-
-            if 'position' in value.keys():
-                layer.set_position(value['position'])
-            if 'width' in value.keys():
-                layer.set_width(value['width'])
-            if 'stack' in value.keys():
-                layer.set_stack(value['stack'])
-            if 'metals' in value.keys():
-                layer.add_contact_layer(value['metals'])
-        else:
-            layer = Layer(value)
-
-            if 'position' in value.keys():
-                layer.set_position(value['position'])
-            if 'width' in value.keys():
-                layer.set_width(value['width'])
-            if 'stack' in value.keys():
-                layer.set_stack(value['stack'])
-            if 'metals' in value.keys():
-                layer.add_contact_layer(value['metals'])
-
-        # if mtype not in ['ix', 'hole', 'res', 'via', 'jj', 'term', 'ntron', 'cap']:
-        #     raise TypeError("mtype `type` is not supported")
-
-        assert isinstance(gds, int)
-
-        self.layers[mtype][gds] = layer
+    def __add__(self):
+        pass
 
 
-class Layer(object):
+class CellProperties(list):
+    """
 
-    def __init__(self, data):
+    """
 
-        self.name = data['name']
+    def __init__(self):
+        pass
 
-        if 'ETL' in data:
-            self.etl = data['ETL']
-        else:
-            self.etl = None
+    def __getitem__(self, name):
+        print('\nRetrieve CellProperties:')
+        for i in self:
+            if i.name == name:
+                print('  {}'.format(i))
 
-        self.color = data['color']
-        self.position = None
-        self.width = None
-        self.rank = None
-        self.stack = []
-        self.metals = []
+    def __setitem__(self, key, value):
+        print('Updating CellProperties', (key, value))
+        self.append(value)
 
-    def set_stack(self, stack):
-        self.stack = stack
+    def __contains__(self, atom):
+        if issubclass(atom, AtomBase):
+            pass
 
-    def set_position(self, num):
-        self.position = float(num)
 
-    def set_width(self, num):
-        self.width = float(num)
+class LayerProperties(list):
+    """
 
-    def add_contact_layer(self, gds):
-        if isinstance(gds, list):
-            self.metals = gds
-        else:
-            self.metals.append(gds)
+    """
+
+    def __init__(self):
+        pass
+
+    def __getitem__(self, gds):
+        print('\nRetrieve LayerProperties:')
+        for i in self:
+            if i.gds == gds:
+                print('  {}'.format(i))
+
+    def __setitem__(self, key, value):
+        print('Updating LayerProperties', (key, value))
+        self.append(value)
+
+    def __contains__(self, atom):
+        if issubclass(atom, LayerBase):
+            pass

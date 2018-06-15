@@ -22,6 +22,8 @@ setup(
     packages=['yuna', 
               'yuna.lvs', 
               'yuna.labels', 
+              'yuna.pdk', 
+              'yuna.technology', 
               'yuna.masks', 
               'yuna.masternodes'],
     package_dir={'yuna': 'yuna'},

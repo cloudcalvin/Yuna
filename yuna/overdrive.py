@@ -17,6 +17,9 @@ from yuna.lvs.geometry import Geometry
 import pathlib
 
 
+logger = logging.getLogger(__name__)
+
+
 def _write_gds(gdsii, geom, viewer):
     auron_cell = gdspy.Cell('geom_for_auron')
     ix_cell = gdspy.Cell('geom_for_inductex')
@@ -50,26 +53,87 @@ def _write_gds(gdsii, geom, viewer):
         gdspy.LayoutViewer()
 
 
-def _pattern(geom):
+def _pattern_polygons(geom):
     from yuna.masks.paths import Path
     from yuna.masks.vias import Via
     from yuna.masks.junctions import Junction
     from yuna.masks.ntrons import Ntron
 
-    if geom.has_device(mn.via.Via):
+    from yuna.masternode import MasterNode
+
+    MasterVia = MasterNode.registry['Via']
+    MasterNtron = MasterNode.registry['Ntron']
+            
+    if geom.has_device(MasterVia):
         geom.patterning(masktype=Path, devtype=Via)
-    if geom.has_device(mn.ntron.Ntron):
+    if geom.has_device(MasterNtron):
         geom.patterning(masktype=Path, devtype=Ntron)
     if geom.has_device(mn.junction.Junction):
         geom.patterning(masktype=Path, devtype=Junction)
 
-    if geom.has_device(mn.ntron.Ntron):
+    if geom.has_device(MasterNtron):
         geom.patterning(masktype=Via, devtype=Ntron)
     if geom.has_device(mn.junction.Junction):
         geom.patterning(masktype=Via, devtype=Junction)
 
     geom.update()
     geom.mask_polygons()
+
+
+def _constuct_polygons(geom, cell):
+    import collections as cl
+
+    cell_layout = cell.copy('Polygon Flatten',
+                            exclude_from_current=True,
+                            deep_copy=True)
+    cell_layout.flatten()
+
+    data = geom.raw_pdk_data['Layers']
+    params = [*data['ix'], *data['res']]
+
+    def _etl_polygons(params, cell):
+        """
+        Reads throught the PDF file and converts the corresponding
+        conducting layers to the same type. An example of this is
+        layer NbN_1 and NbN_2 that should be the same.
+
+        Output : dict()
+            Updated `poly` version that has converted the ETL polygons.
+        """
+
+        logger.info('ETL Polygons')
+
+        pp = cell.get_polygons(True)
+
+        ply = cl.defaultdict(list)
+
+        for ll in params:
+            if 'ETL' in ll:
+                p = {(ll['ETL'], k[1]): v for k, v in pp.items() if ll['layer'] == k[0]}
+            else:
+                p = {k: v for k, v in pp.items() if ll['layer'] == k[0]}
+
+            for k, v in p.items():
+                ply[k].extend(v)
+        return ply
+
+    mask_poly = _etl_polygons(params, cell_layout)
+
+    geom.deposition(mask_poly, params=params)
+
+
+def _labels_flat(geom, cell):
+    cl = cell.copy('Label Flatten',
+                   exclude_from_current=True,
+                   deep_copy=True)
+
+    cell_labels = cl.flatten().get_labels(0)
+
+    if len(cell_labels) > 0:
+        for label in cell_labels:
+            logging.info(label.text)
+
+    geom.label_flatten(cell_labels)
 
 
 def grand_summon(gdsii, cell, pdk_file, log=None, viewer=None):
@@ -109,17 +173,18 @@ def grand_summon(gdsii, cell, pdk_file, log=None, viewer=None):
     geom.user_label_cap(cell)
 
     geom.label_cells(cell)
-    geom.label_flatten(cell)
 
-    geom.deposition(cell)
+    _labels_flat(geom, cell)
 
-    _pattern(geom)
+    _constuct_polygons(geom, cell)
+
+    _pattern_polygons(geom)
 
     _write_gds(gdsii, geom, viewer)
 
     if geom is None:
         raise ValueError('datafield cannot be None')
 
-    utils.cyan_print('Yuna. Done.\n')
+    utils.cyan_print('\n----- Yuna. Done. -----\n')
 
     return geom

@@ -23,6 +23,36 @@ datatype = {'path': 0,
             'ntron': 7}
 
 
+def calculate_ports(label, raw_pdk_data):
+    from collections import namedtuple
+
+    assert len(label) == 3 or len(label) == 2
+
+    plates = {}
+
+    Plates = namedtuple('Plates', ['term', 'label'])
+
+    gds1 = string_to_gds(label[1], raw_pdk_data)
+    plates[gds1] = Plates(term='+', label=label[1])
+
+    if len(label) == 3:
+        gds2 = string_to_gds(label[2], raw_pdk_data)
+        plates[gds2] = Plates(term='+', label=label[2])
+
+    return plates
+
+
+def string_to_gds(name, raw_pdk_data, ltype=['ix']):
+    for lt in ltype:
+        for data in raw_pdk_data['Layers'][lt]:
+            if data['name'] == name:
+                if 'ETL' in data:
+                    return data['ETL']
+                else:
+                    return data['layer']
+    return None
+
+
 def print_cellrefs(cell):
     print('')
     magenta_print('CellReferences')

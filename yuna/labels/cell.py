@@ -18,8 +18,8 @@ def add_label(cell, element, name, datafield):
 # def intersect(pair):
 #     """ return the intersection of two lists """
 #     return list(set(pair[0]) & set(pair[1]))
-#
-#
+
+
 # def difference(a, b):
 #     """ return the union of two lists """
 #     return list(set(a) - set(b))
@@ -49,16 +49,16 @@ def junctions(cell, datafield):
                     poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
 
                 add_label(cell, poly, cell.name, datafield)
-        elif isinstance(element, gdspy.Polygon):
-            if element.layers == jjs[cell.name]['gds']:
-                jj_poly = utils.angusj(element.polygons, element.polygons, 'union')
+        # elif isinstance(element, gdspy.Polygon):
+        #     if element.layers == jjs[cell.name]['gds']:
+        #         jj_poly = utils.angusj(element.polygons, element.polygons, 'union')
 
-                if isinstance(jj_poly[0][0], list):
-                    poly = gdspy.Polygon(jj_poly[0], element.layers[0], verbose=False)
-                else:
-                    poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
+        #         if isinstance(jj_poly[0][0], list):
+        #             poly = gdspy.Polygon(jj_poly[0], element.layers[0], verbose=False)
+        #         else:
+        #             poly = gdspy.Polygon(jj_poly, element.layers[0], verbose=False)
 
-                add_label(cell, poly, cell.name, datafield)
+        #         add_label(cell, poly, cell.name, datafield)
 
     jjs = datafield.pcd.atoms['jjs']
 
@@ -105,10 +105,10 @@ def get_ground_connection(cell, jj_atom, datafield):
         add_label(cell, poly, 'ground', datafield)
 
 
-def ntrons(cell, datafield):
+def ntrons(cell, geom):
     print('--- flattening ' + cell.name)
-    data = datafield.pcd.atoms['ntrons'][cell.name]
+    data = geom.raw_pdk_data['Cells']['Ntrons'][cell.name]
 
     cell.flatten(single_layer=data['metals'][0], single_datatype=7)
 
-    add_label(cell, cell, cell.name, datafield)
+    add_label(cell, cell, cell.name, geom)

@@ -1,6 +1,5 @@
 import numpy as np
 import itertools
-import gdspy
 
 from yuna import utils
 
@@ -8,10 +7,13 @@ from yuna.utils import logging
 from yuna.utils import datatype
 from yuna.utils import nm
 
+from yuna.pdk.properties import PolygonProperties
+
+
 logger = logging.getLogger(__name__)
 
 
-class PolyBase(gdspy.Polygon):
+class PolyBase(PolygonProperties):
     """
     Holes can only be a list of points, since it is only a hole
     and has no other properties.
@@ -19,42 +21,38 @@ class PolyBase(gdspy.Polygon):
 
     _ID = 0
 
-    def __init__(self, key, points, pdk, holes=None):
-        super(PolyBase, self).__init__(points, *key, verbose=False)
+    def __init__(self, points, params, id0=None):
+        super(PolyBase, self).__init__(points, **params)
 
-        self.pdk = pdk
-        self.holes = holes
+        # TODO: Implement the hole detection.
+        self.holes = None
 
-        if key[1] == 1:
-            self.id = 'v{}'.format(PolyBase._ID)
-        elif key[1] == 3:
-            self.id = 'j{}'.format(PolyBase._ID)
-        elif key[1] == 7:
-            self.id = 'n{}'.format(PolyBase._ID)
+        if id0 is None:
+            self.id = 'polybase_{}'.format(PolyBase._ID)
+            PolyBase._ID += 1
         else:
-            self.id = 'i{}'.format(PolyBase._ID)
+            self.id = id0
 
-        process = {**pdk.layers['ix'],
-                   **pdk.layers['res'],
-                   **pdk.layers['ntron'],
-                   **pdk.layers['jj'],
-                   **pdk.layers['via']}
+    # def __str__(self):
+    #     prop = '(gds-{}, datatype-{}, name-{}, width-{}, metals-{})'.format(
+    #         self.layer, self.datatype, self.name, self.width, self.metals)
 
-        self.properties = process[key[0]]
+    #     return 'Layer Properties {}'.format(prop)
 
-        PolyBase._ID += 1
-
-    def __str__(self):
-        prop = '(key-{}, name-{}, width-{}, metals-{})'.format(
-            self.key, self.properties.name, self.properties.width, 
-            self.properties.metals)
-
-        return 'Layer Properties {}'.format(prop)
+    def __properties__(self):
+        return ['name', 'rank', 'stack', 'width', 'color']
 
     def get_holes(self, z):
         if self.holes is not None:
             return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.holes]
         return None
+
+    # def __getattr__(self, name):
+    #     if name == 'points':
+    #         print('ewfbewuifbewjewfbejwfwefjbefkjwebfjkwebfjkwebfkwjefbwefjkbwefkb')
+    #         # return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
+    #     else:
+    #         raise AttributeError("No such attribute: " + name)
 
     def get_points(self, z):
         return [[float(p[0]*nm), float(p[1]*nm), z] for p in self.points]
@@ -62,6 +60,6 @@ class PolyBase(gdspy.Polygon):
     def get_variables(self):
         return (self.points, self.layer, self.datatype)
 
-    def get_var1(self):
-        key = (self.layer, self.datatype)
-        return (key, self.points, self.pdk)
+    # def get_var1(self):
+    # #     key = (self.layer, self.datatype)
+    #     return (self.points, self.layer, self.datatype, self.kwargs)

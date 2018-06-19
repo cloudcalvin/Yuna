@@ -1,5 +1,6 @@
 import gdspy
 import collections
+from yuna import utils
 
 
 class MetaLabel(type):
@@ -11,7 +12,7 @@ class MetaLabel(type):
         return collections.OrderedDict()
 
     def __new__(cls, name, bases, attrs):
-        # print('MetaLabel.__new__')
+        print('MetaLabel.__new__')
         cls = super().__new__(cls, name, bases, dict(attrs))
 
         if not hasattr(cls, 'registry'):
@@ -53,9 +54,13 @@ class MasterNode(gdspy.Label, metaclass=MetaLabel):
 
     def __init__(self, text, position, id0=None, **kwargs):
         print('MasterNode.__init__')
-        super().__init__(text, position, anchor='o',
-                         rotation=None, magnification=None,
-                         x_reflection=False, layer=0, texttype=0)
+        super().__init__(text, position, 
+                         anchor='o',
+                         rotation=None, 
+                         magnification=None,
+                         x_reflection=False, 
+                         layer=kwargs['params']['layer'], 
+                         texttype=0)
 
         if id0 is None:
             self.id = 'via_{}'.format(MasterNode._ID)

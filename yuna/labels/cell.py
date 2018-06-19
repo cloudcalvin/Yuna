@@ -7,6 +7,7 @@ from yuna import process
 
 def add_label(cell, element, name, datafield):
     print('--- Adding label: ' + name)
+
     bb = element.get_bounding_box()
     cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 10.0 #TODO: Watchout for this caveat
     cy = ( (bb[0][1] + bb[1][1]) / 2.0 )

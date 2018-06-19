@@ -175,108 +175,108 @@ class Geometry(object):
                     else:
                         self.polygons[gds][mask.datatype] = [pp]
 
-    def label_cells(self, cell):
-        """
-        Label each individual cell before flattening them
-        to the top-level cell.
+    # def label_cells(self, cell):
+    #     """
+    #     Label each individual cell before flattening them
+    #     to the top-level cell.
 
-        Vias are primary components and are detected first.
-        JJs and nTrons are defined as secondary components.
+    #     Vias are primary components and are detected first.
+    #     JJs and nTrons are defined as secondary components.
 
-        Returns
-        -------
-        out : gdspy Cell
-            The flattened version of original cell with labeled components
-        """
+    #     Returns
+    #     -------
+    #     out : gdspy Cell
+    #         The flattened version of original cell with labeled components
+    #     """
 
-        if len(cell.elements) == 0:
-            utils.print_cellrefs(cell)
+    #     if len(cell.elements) == 0:
+    #         utils.print_cellrefs(cell)
 
-        for subcell in cell.get_dependencies(True):
-            if subcell.name.split('_')[0] == 'via':
-                labels.cell.vias(subcell, self)
+    #     for subcell in cell.get_dependencies(True):
+    #         if subcell.name.split('_')[0] == 'via':
+    #             labels.cell.vias(subcell, self)
 
-        for subcell in cell.get_dependencies(True):
-            if subcell.name.split('_')[0] == 'jj':
-                labels.cell.junctions(subcell, self)
+    #     for subcell in cell.get_dependencies(True):
+    #         if subcell.name.split('_')[0] == 'jj':
+    #             labels.cell.junctions(subcell, self)
 
-        for subcell in cell.get_dependencies(True):
-            if subcell.name.split('_')[0] == 'ntron':
-                labels.cell.ntrons(subcell, self)
+    #     for subcell in cell.get_dependencies(True):
+    #         if subcell.name.split('_')[0] == 'ntron':
+    #             labels.cell.ntrons(subcell, self)
 
-    def label_flatten(self, cell_labels):
-        """
-        Place the labels to their corresponding positions
-        after flattening the top-level cell. Update the
-        datafield object to include all labels in the layout.
-        """
+    # def label_flatten(self, cell_labels):
+    #     """
+    #     Place the labels to their corresponding positions
+    #     after flattening the top-level cell. Update the
+    #     datafield object to include all labels in the layout.
+    #     """
 
-        import yuna.masternodes as mn
+    #     import yuna.masternodes as mn
 
-        utils.green_print('Place labels in flattened layout')
+    #     utils.green_print('Place labels in flattened layout')
 
-        def _add_meta_class(self, lbl, key, layer, name):
-            params = {}
-            params['params'] = layer
+    #     def _add_meta_class(self, lbl, key, layer, name):
+    #         params = {}
+    #         params['params'] = layer
 
-            MyNode = type(name, (MasterNode,), params)
+    #         MyNode = type(name, (MasterNode,), params)
 
-            mm = MyNode(text=key, position=lbl.position)
+    #         mm = MyNode(text=key, position=lbl.position)
 
-            self.labels.append(mm)
+    #         self.labels.append(mm)
 
-        for lbl in cell_labels:
-            comp = lbl.text.split('_')[0]
+    #     for lbl in cell_labels:
+    #         comp = lbl.text.split('_')[0]
 
-            if comp == 'via':
+    #         if comp == 'via':
 
-                print('Flatterning Via labels...')
+    #             print('Flatterning Via labels...')
 
-                for key, layer in self.raw_pdk_data['Cells']['Vias'].items():
-                    if key != 'color' and key == lbl.text:
-                        _add_meta_class(self, lbl, key, layer, 'Via')
+    #             for key, layer in self.raw_pdk_data['Cells']['Vias'].items():
+    #                 if key != 'color' and key == lbl.text:
+    #                     _add_meta_class(self, lbl, key, layer, 'Via')
 
-                # params = self.raw_pdk_data['Cells']['Vias'][lbl.text]
-                # params['text'] = lbl.text
-                # params['layer'] = 63
+    #             # params = self.raw_pdk_data['Cells']['Vias'][lbl.text]
+    #             # params['text'] = lbl.text
+    #             # params['layer'] = 63
 
-                # via = mn.via.Via(lbl.position, params)
-                # self.labels.append(via)
+    #             # via = mn.via.Via(lbl.position, params)
+    #             # self.labels.append(via)
 
-            if comp == 'ntron':
-                print('Flatterning Via labels...')
+    #         if comp == 'ntron':
+    #             print('Flatterning Via labels...')
 
-                for key, layer in self.raw_pdk_data['Cells']['Ntrons'].items():
-                    if key != 'color' and key == lbl.text:
-                        _add_meta_class(self, lbl, key, layer, 'Ntron')
+    #             for key, layer in self.raw_pdk_data['Cells']['Ntrons'].items():
+    #                 if key != 'color' and key == lbl.text:
+    #                     _add_meta_class(self, lbl, key, layer, 'Ntron')
 
-                # params = self.raw_pdk_data['Cells']['Ntrons'][lbl.text]
-                # params['text'] = lbl.text
-                # params['layer'] = 63
+    #             # params = self.raw_pdk_data['Cells']['Ntrons'][lbl.text]
+    #             # params['text'] = lbl.text
+    #             # params['layer'] = 63
 
-                # ntron = mn.ntron.Ntron(lbl.position, params)
-                # self.labels.append(ntron)
+    #             # ntron = mn.ntron.Ntron(lbl.position, params)
+    #             # self.labels.append(ntron)
 
-            # if comp == 'jj':
-            #     params = self.raw_pdk_data['Cells']['Junctions']
-            #     params['text'] = lbl.text
-            #
-            #     jj = mn.junction.Junction(lbl.position, params)
-            #     self.labels.append(jj)
-            #
-            # if comp == 'shunt':
-            #     params = self.raw_pdk_data['Cells']['Ntrons']
-            #     params['text'] = lbl.text
-            #
-            #     shunt = mn.junction.Shunt(lbl.position, params)
-            #     self.labels.append(shunt)
-            #
-            # if comp == 'ground':
-            #     params = self.raw_pdk_data['Cells']['Ntrons']
-            #     params['text'] = lbl.text
-            #
-            #     ground = mn.junction.Ground(lbl.position, params)
-            #     self.labels.append(ground)
+    #         # if comp == 'jj':
+    #         #     params = self.raw_pdk_data['Cells']['Junctions']
+    #         #     params['text'] = lbl.text
+    #         #
+    #         #     jj = mn.junction.Junction(lbl.position, params)
+    #         #     self.labels.append(jj)
+    #         #
+    #         # if comp == 'shunt':
+    #         #     params = self.raw_pdk_data['Cells']['Ntrons']
+    #         #     params['text'] = lbl.text
+    #         #
+    #         #     shunt = mn.junction.Shunt(lbl.position, params)
+    #         #     self.labels.append(shunt)
+    #         #
+    #         # if comp == 'ground':
+    #         #     params = self.raw_pdk_data['Cells']['Ntrons']
+    #         #     params['text'] = lbl.text
+    #         #
+    #         #     ground = mn.junction.Ground(lbl.position, params)
+    #         #     self.labels.append(ground)
 
     def user_label_cap(self, cell):
         from yuna.masternodes.capacitor import Capacitor

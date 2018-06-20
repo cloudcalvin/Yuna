@@ -10,11 +10,15 @@ class MetaLabel(type):
     def __new__(cls, name, bases, attrs):
         cls = super().__new__(cls, name, bases, dict(attrs))
 
+        if not hasattr(cls, 'class_label'):
+            cls.class_label = {}
+        if 'text' in attrs:
+            cls.class_label[attrs['text']] = cls
+
         if not hasattr(cls, 'registry'):
             cls.registry = {}
-
         cls.registry[name] = cls
-
+           
         return cls
 
     def __init__(cls, name, bases, attrs):
@@ -30,9 +34,10 @@ class Label(gdspy.Label, metaclass=MetaLabel):
 
     """
 
-    def __init__(self, text, position, **kwargs):
+    def __init__(self, position, **kwargs):
 
         if kwargs:
+            text = kwargs['text']
             anchor = kwargs['anchor']
             rotation = kwargs['rotation']
             magnification = kwargs['magnification']
@@ -40,6 +45,7 @@ class Label(gdspy.Label, metaclass=MetaLabel):
             layer = kwargs['layer']
             texttype = kwargs['texttype']
         else:
+            text = 'noname'
             anchor = 'o'
             rotation = None
             magnification = None

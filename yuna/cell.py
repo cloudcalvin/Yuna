@@ -7,6 +7,7 @@ import copy as libCopy
 from yuna.polygon import Polygon
 from yuna.sref import SRef
 from yuna.label import Label
+from yuna.label import MetaLabel
 from yuna.elements import ElementList
 
 
@@ -43,6 +44,8 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
 
         if cell is not None:
             self.import_cell(name, cell)
+        
+        self._labels = ElementList()
 
         if elements is not None:
             assert isinstance(elements, list)
@@ -55,22 +58,35 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
                 self.name, len(self._elements), len(self.labels))
 
     def __add__(self, other):
-        # if isinstance(other, SRef):
-        #     print('\nAdding cell {} to cell {}'.format(other.ref_cell.name, self.name))
-        #     element = other.get_cellref()
-        # elif isinstance(other, Polygon):
-        #     print('\nAdding polygon to cell {}'.format(self.name))
-        #     element = other.get_polygon()
-        # elif isinstance(other, Label):
-        #     print('\nAdding label to cell {}'.format(self.name))
-        #     element = other.get_label()
+        if isinstance(other, SRef):
+            element = other.get()
+            self.add(element)
+        elif isinstance(other, Polygon):
+            element = other.get()
+            self.add(element)
+        elif isinstance(other, Label):
+            element = other.get()
+            self.add(element)
         # else:
         #     raise ValueError('Implement element support')
 
-        element = other.get()
-        self.add(element)
+        # element = other.get()
+        # self.add(element)
 
-        self._elements += other
+        # if issubclass(type(other), MetaLabel):
+        #     print('issubclass')
+        #     print(other)
+        # else:
+        #     print('not issubclass')
+        #     print(other)
+        # print('')
+
+        if isinstance(other, Label):
+            self._labels += other
+        # elif issubclass(type(other), MetaLabel):
+        #     self._labels += other
+        else:
+            self._elements += other
 
         return self
 
@@ -105,8 +121,50 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
     def get_cell(self):
         cell = gdspy.Cell(self.name, exclude_from_current=True)
         cell.elements = self.elements
-        cell.labels = self.labels
+        cell.labels = self.get_labels()
         return cell
+
+    def update_labels(self, oktypes=[]):
+
+        self._labels = ElementList()
+        labels = self.labels
+        self.labels = []
+
+        for label in labels:
+            LabelClass = Label.class_label[label.text]
+
+            params = {}
+            params['text'] = label.text
+            params['layer'] = 64
+            params['anchor'] = 'o'
+            params['rotation'] = None
+            params['magnification'] = None
+            params['x_reflection'] = False
+            params['texttype'] = 0
+
+            print(LabelClass)
+            print(label.text)
+
+            lbl = LabelClass(label.position, **params)
+
+            print(type(lbl))
+            print(Label.registry['Ntron'])
+
+            if isinstance(lbl, Label.registry['Ntron']):
+            # if isinstance(lbl, Label.class_label[label.text]):
+                print(lbl)
+            #     self += lbl
+
+            print('')
+
+            # for ok in oktypes:
+            #     if isinstance(lbl, Label.registry[ok]):
+            #         self += lbl
+
+        # for label in self._labels:
+        #     elem = label.get()
+        #     self.add(elem)
+
 
     # def update(self):
     #     depend = self.parse_to_gdspy()

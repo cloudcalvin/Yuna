@@ -121,7 +121,8 @@ def user_label_cap(cell):
     for lbl in cell.labels:
         if lbl.text[0] == 'C':
             params = pdk['Structure']['Capacitor']
-            # params['text'] = lbl.text
+
+            params['text'] = lbl.text
             params['layer'] = lbl.layer
             params['anchor'] = lbl.anchor
             params['rotation'] = lbl.rotation
@@ -131,7 +132,7 @@ def user_label_cap(cell):
             params['ports'] = utils.calculate_ports(lbl.text.split(' '), pdk)
 
             Capacitor = type('Capacitor', (Label,), params)
-            cap = Capacitor(lbl.text, lbl.position, **params)
+            cap = Capacitor(lbl.position, **params)
 
             caps.append(cap)
 
@@ -146,7 +147,8 @@ def user_label_term(cell):
     for lbl in cell.labels:
         if lbl.text[0] == 'P':
             params = pdk['Structure']['Terminal']['63']
-            # params['text'] = lbl.text
+
+            params['text'] = lbl.text
             params['layer'] = lbl.layer
             params['anchor'] = lbl.anchor
             params['rotation'] = lbl.rotation
@@ -157,7 +159,7 @@ def user_label_term(cell):
             params['ports'] = utils.calculate_ports(lbl.text.split(' '), pdk)
 
             Terminal = type('Terminal', (Label,), params)
-            term = Terminal(lbl.text, lbl.position, **params)
+            term = Terminal(lbl.position, **params)
 
             terms.append(term)
 
@@ -235,6 +237,7 @@ def grand_summon(topcell, pdk_file):
                     params = {}
                     params = layer
 
+                    params['text'] = name
                     params['layer'] = 64
                     params['anchor'] = 'o'
                     params['rotation'] = None
@@ -245,22 +248,21 @@ def grand_summon(topcell, pdk_file):
                     position = element_center(ccell)
 
                     MLabel = type('Via', (Label,), params)
-                    cap_label = MLabel(name, position, **params)
+                    cap_label = MLabel(position, **params)
 
                     ccell += cap_label
 
-                    geom += cap_label
-            
         elif name.startswith('ntron'):
             MyNode = type('Ntron', (Cell,), {})
             ccell = MyNode(name, cell=cell)
             ccell.flatten(single_datatype=7)
 
-            for key, layer in pdk['Cells']['Vias'].items():
+            for key, layer in pdk['Cells']['Ntrons'].items():
                 if key != 'color' and key == name:
                     params = {}
                     params = layer
 
+                    params['text'] = name
                     params['layer'] = 64
                     params['anchor'] = 'o'
                     params['rotation'] = None
@@ -270,16 +272,16 @@ def grand_summon(topcell, pdk_file):
 
                     position = element_center(ccell)
 
-                    MLabel = type('Via', (Label,), params)
-                    cap_label = MLabel(name, position, **params)
+                    MLabel = type('Ntron', (Label,), params)
+                    cap_label = MLabel(position, **params)
 
                     ccell += cap_label
-
-                    geom += cap_label
 
         else:
             MyNode = type('Normal', (Cell,), {})
             ccell = MyNode(name, cell=cell)
+
+        # library += ccell
 
         cell_list[name] = ccell
 
@@ -307,6 +309,26 @@ def grand_summon(topcell, pdk_file):
         geom += cap
     for term in terms:
         geom += term
+
+    geom.flatten()
+
+    # for label in geom.labels:
+    #     print(label)
+
+    # from yuna.elements import ElementList
+    # geom._labels = ElementList()
+    # for label in geom.labels:
+    #     print(Label.class_label[label.text])
+    #     geom += Label.class_label[label.text]
+
+    geom.update_labels(oktypes=['Via', 'Ntron'])
+
+    # print('')
+    # for label in geom._labels:
+    #     print(label)
+    # print('')
+
+    # geom.only_keep('Ntron')
 
     library += geom
 

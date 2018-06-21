@@ -1,5 +1,7 @@
 import os
+import json
 import gdspy
+import pathlib
 import pyclipper
 
 from yuna import process
@@ -15,41 +17,16 @@ import yuna.masternodes as mn
 
 from yuna.lvs.geometry import Geometry
 
-import pathlib
-
-
-logger = logging.getLogger(__name__)
-
-
-# def _get_dependencies(elements, recursive=False):
-#     dependencies = {}
-#     print(dependencies)
-
-#     for element in elements:
-#         if isinstance(element, gdspy.CellReference) or isinstance(
-#                 element, gdspy.CellArray):
-            
-#             ref_cell = element.ref_cell
-
-#             if recursive:
-#                 dependencies.update(ref_cell.get_dependencies(elements, True))
-
-#             if element.ref_cell in dependencies:
-#                 dependencies[ref_cell].append(element.origin)
-#             else:
-#                 dependencies[ref_cell] = [element.origin]
-
-#     return dependencies
-
-
 from yuna.cell import Cell
 from yuna.sref import SRef
 from yuna.label import Label
 
 from yuna.library import Library
 from yuna.polygon import Polygon
+from yuna.mask_polygon import MaskPolygon
 
-import json
+
+logger = logging.getLogger(__name__)
 
 
 def _define_capacitor(library, topcell, cell_list):
@@ -173,9 +150,6 @@ def element_center(element):
 
     return (cx, cy)
 
-    # lbl = gdspy.Label(name, (cx, cy), 0, layer=64)
-    # cell.add(lbl)
-
 
 def get_pdk():
     pdk = os.getcwd() + '/technology/' + 'raytheon.json'
@@ -184,6 +158,54 @@ def get_pdk():
     with open(pdk) as data_file:
         data = json.load(data_file)
     return data
+    
+
+from shapely.geometry import Polygon as ShapelyPolygon
+from yuna import grid
+def simplify(pp):
+    if len(pp) > 10:
+        factor = (len(pp)/100) * 1e5
+        sp = ShapelyPolygon(pp).simplify(factor)
+        plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+
+        return plist[:-1]
+    else:
+        return pp
+    # points = list()
+    # for pp in self._union():
+    #     if len(pp) > MaskBase._PP:
+    #         factor = (len(pp)/self.smoothness) * MaskBase._FACTOR
+    #         sp = Polygon(pp).simplify(factor)
+    #         plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+    #         points.append(plist[:-1])
+    #     else:
+    #         points.append(list(pp))
+    # return grid.snap_points(points)
+
+
+def create_mask(polygons):
+
+    poly_list = []
+    for poly in polygons:
+        if pyclipper.Orientation(poly) is False:
+            reverse_poly = pyclipper.ReversePath(poly)
+            solution = pyclipper.SimplifyPolygon(reverse_poly)
+        else:
+            solution = pyclipper.SimplifyPolygon(poly)
+
+        pp = Polygon(points=solution)
+        poly_list.append(pp)
+
+    p1 = poly_list[0]
+    for i in range(1, len(poly_list)):
+        p1 = p1 & poly_list[i]
+
+    mask = []
+    for points in p1.points:
+        simple_points = simplify(points)
+        mask.append(simple_points)
+
+    return mask
 
 
 def grand_summon(topcell, pdk_file):
@@ -223,7 +245,10 @@ def grand_summon(topcell, pdk_file):
 
     pdk = get_pdk()
 
+    print('-------------------- ** LABELS ** --------------------\n')
+
     cell_list = {}
+
     for cell in topcell.get_dependencies(True):
         name = cell.name
 
@@ -312,28 +337,61 @@ def grand_summon(topcell, pdk_file):
 
     geom.flatten()
 
-    # for label in geom.labels:
-    #     print(label)
-
-    # from yuna.elements import ElementList
-    # geom._labels = ElementList()
-    # for label in geom.labels:
-    #     print(Label.class_label[label.text])
-    #     geom += Label.class_label[label.text]
+    # Convert doublicate layers to the same type.
+    for element in geom.elements:
+        if isinstance(element, gdspy.PolygonSet):
+            for i in range(len(element.layers)):
+                if element.layers[i] == 4:
+                    element.layers[i] = 5
 
     geom.update_labels(oktypes=['Via', 'Ntron'])
 
-    # print('')
-    # for label in geom._labels:
-    #     print(label)
-    # print('')
+    print('-------------------- ** POLYGONS ** --------------------\n')
 
-    # geom.only_keep('Ntron')
+    # struct = Cell('Polygons')
+    path_mask = Cell('Path')
+    via_mask = Cell('Via')
+    ntron_mask = Cell('Ntron')
+
+    geom2 = Cell('Patterning')
+
+    def register_layers(struct, key, elem_datatype, value, Layers):
+        for layer in Layers:
+            # if layer['layer'] == key[0] and layer['datatype'] == key[1]:
+            if layer['layer'] == key[0] and key[1] == elem_datatype:
+                params = layer
+                params['datatype'] = elem_datatype
+
+                polygons = create_mask(value)
+
+                MaskClass = type(params['name'], (MaskPolygon,), params)
+                mask = MaskClass(polygons, **params)
+
+                struct += mask
+
+    # for key, value in topcell.get_polygons(True).items():
+    for key, value in geom.get_polygons(True).items():
+        register_layers(path_mask, key, 0, value, pdk['Layers']['ix'])
+
+        register_layers(via_mask, key, 1, value, pdk['Layers']['ix'])
+        register_layers(via_mask, key, 1, value, pdk['Layers']['via'])
+
+        register_layers(ntron_mask, key, 7, value, pdk['Layers']['ix'])
+
+    path_mask - via_mask
+    path_mask - ntron_mask
+    via_mask - ntron_mask
+
+    print('-------------------- ** FINAL ** --------------------\n')
 
     library += geom
+    # library += geom2
+
+    library += path_mask
+    library += via_mask
+    library += ntron_mask
 
     geom.view(library)
-
 
     # ------------------------- Old Yuna ---------------------------- #
 

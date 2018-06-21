@@ -1,5 +1,22 @@
 import gdspy
 import collections
+import utils
+
+
+# class MetaBase(type):
+#     @classmethod
+#     def __prepare__(cls, name, bases, **kwds):
+#         return collections.OrderedDict()
+
+#     def __new__(cls, name, bases, attrs):
+#         cls = super().__new__(cls, name, bases, dict(attrs))
+
+#         if not hasattr(cls, 'class_label'):
+#             cls.class_label = {}
+#         if 'text' in attrs:
+#             cls.class_label[attrs['text']] = cls
+
+#         return cls
 
 
 class MetaLabel(type):
@@ -10,15 +27,23 @@ class MetaLabel(type):
     def __new__(cls, name, bases, attrs):
         cls = super().__new__(cls, name, bases, dict(attrs))
 
-        if not hasattr(cls, 'class_label'):
-            cls.class_label = {}
-        if 'text' in attrs:
-            cls.class_label[attrs['text']] = cls
+        # if 'text' in attrs:
+        #     utils.llabels[attrs['text']] = cls
+
+        # if not hasattr(cls, 'class_label'):
+        #     cls.class_label = {}
+        # if 'text' in attrs:
+        #     cls.class_label[attrs['text']] = cls
+
+        # if not hasattr(cls, 'class_label'):
+        #     cls.class_label = list()
+        # if 'text' in attrs:
+        #     cls.class_label.append(cls)
 
         if not hasattr(cls, 'registry'):
             cls.registry = {}
         cls.registry[name] = cls
-           
+
         return cls
 
     def __init__(cls, name, bases, attrs):
@@ -26,6 +51,13 @@ class MetaLabel(type):
 
     def __call__(cls, *args, **kwargs):
         cls = super().__call__(*args, **kwargs)
+
+        utils.llabels[kwargs['text']] = cls
+
+        # cls = utils.llabels[kwargs['text']]
+
+        # print(cls.__dict__)
+
         return cls
 
 
@@ -62,7 +94,7 @@ class Label(gdspy.Label, metaclass=MetaLabel):
                         texttype=texttype)
 
     def __str__(self):
-        return ("Label (\"{0}\", at ({1[0]}, {1[1]}), rotation {2}, "
+        return ("Yuna -> Label (\"{0}\", at ({1[0]}, {1[1]}), rotation {2}, "
             "magnification {3}, reflection {4}, layer {5}, texttype {6})")\
             .format(self.text, self.position, self.rotation,
                 self.magnification, self.x_reflection, self.layer,
@@ -77,3 +109,7 @@ class Label(gdspy.Label, metaclass=MetaLabel):
                            self.x_reflection,
                            self.layer,
                            self.texttype)
+
+
+class MyLabel(Label):
+    pass

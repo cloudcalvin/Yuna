@@ -73,7 +73,6 @@
                 "layer": 3,
                 "datatype": 0,
                 "name": "Pt",
-                "ETL": 5,
                 "rank": 0,
                 "stack": [1, 2],
                 "width": 100,
@@ -128,7 +127,7 @@
         [
             {
                 "layer": 6,
-                "datatype": 0,
+                "datatype": 1,
                 "name": "Alvia",
                 "rank": 6,
                 "stack": [4, 5],

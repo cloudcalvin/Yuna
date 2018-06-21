@@ -1,14 +1,53 @@
 import os
+import utils
 import gdspy
 import pathlib
 import collections
+import pyclipper
 import copy as libCopy
 
 from yuna.polygon import Polygon
 from yuna.sref import SRef
 from yuna.label import Label
 from yuna.label import MetaLabel
+from yuna.label import MyLabel
 from yuna.elements import ElementList
+from yuna.mask_polygon import MaskPolygon
+
+
+def bool_operation(subj, clip=None, method=None, closed=True):
+    """ Angusj clipping library """
+
+    pc = pyclipper.Pyclipper()
+
+    setattr(pc, 'StrictlySimple', True)
+
+    if clip is not None:
+        pc.AddPaths(clip, pyclipper.PT_CLIP, True)
+
+    pc.AddPaths(subj, pyclipper.PT_SUBJECT, closed)
+
+    subj = None
+    if method == 'difference':
+        subj = pc.Execute(pyclipper.CT_DIFFERENCE,
+                          pyclipper.PFT_EVENODD,
+                          pyclipper.PFT_EVENODD)
+    elif method == 'union':
+        subj = pc.Execute(pyclipper.CT_UNION,
+                          pyclipper.PFT_NONZERO,
+                          pyclipper.PFT_NONZERO)
+    elif method == 'intersection':
+        subj = pc.Execute(pyclipper.CT_INTERSECTION,
+                          pyclipper.PFT_NONZERO,
+                          pyclipper.PFT_NONZERO)
+    elif method == 'exclusive':
+        subj = pc.Execute(pyclipper.CT_XOR,
+                          pyclipper.PFT_NONZERO,
+                          pyclipper.PFT_NONZERO)
+    else:
+        raise ValueError('please specify a clipping method')
+
+    return subj
 
 
 class MetaCell(type):
@@ -57,6 +96,37 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         return "Yuna -> Cell (\"{}\", {} elements, {} labels)".format(
                 self.name, len(self._elements), len(self.labels))
 
+    def __sub__(self, other):
+
+        # for i in range(len(self.elements)):
+            # e1 = self.elements[i]
+        for e1 in self.elements:
+            for e2 in other.elements:
+                if e1.layers[0] == e2.layers[0]:
+                    # self.elements[i].polygons = bool_operation(subj=e1.polygons, 
+                    e1.polygons = bool_operation(subj=e1.polygons, 
+                                            clip=e2.polygons, 
+                                            method='difference')
+
+                    # poly = gdspy.PolygonSet(points, 
+                    #                         layer=e1.layers[0], 
+                    #                         datatype=e1.datatypes[0])
+                    # self.add(poly)
+                # else:
+                #     poly = gdspy.PolygonSet(e1.polygons, 
+                #                             layer=e1.layers[0], 
+                #                             datatype=e1.datatypes[0])
+                #     self.add(poly)
+
+        # for k1, v1 in self.get_polygons(True).items():
+        #     for k2, v2 in other.get_polygons(True).items():
+        #         if k1[0] == k2[0]:
+        #             poly = bool_operation(subj=v1, 
+        #                                   clip=v2, 
+        #                                   method='difference')
+        #             return poly
+        # return self.get_polygons()
+
     def __add__(self, other):
         if isinstance(other, SRef):
             element = other.get()
@@ -64,29 +134,25 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         elif isinstance(other, Polygon):
             element = other.get()
             self.add(element)
+        elif isinstance(other, MaskPolygon):
+            element = other.get()
+            print(element)
+            self.add(element)
         elif isinstance(other, Label):
             element = other.get()
             self.add(element)
-        # else:
-        #     raise ValueError('Implement element support')
+
+        # print(other)
 
         # element = other.get()
         # self.add(element)
 
-        # if issubclass(type(other), MetaLabel):
-        #     print('issubclass')
-        #     print(other)
-        # else:
-        #     print('not issubclass')
-        #     print(other)
-        # print('')
-
-        if isinstance(other, Label):
-            self._labels += other
-        # elif issubclass(type(other), MetaLabel):
+        # if isinstance(other, Label):
         #     self._labels += other
-        else:
-            self._elements += other
+        # # elif issubclass(type(other), MetaLabel):
+        # #     self._labels += other
+        # else:
+        #     self._elements += other
 
         return self
 
@@ -130,32 +196,56 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         labels = self.labels
         self.labels = []
 
+        # print(labels)
+
         for label in labels:
-            LabelClass = Label.class_label[label.text]
+            # LabelClass = Label.class_label[label.text]
 
             params = {}
             params['text'] = label.text
-            params['layer'] = 64
+            params['layer'] = label.layer
             params['anchor'] = 'o'
-            params['rotation'] = None
-            params['magnification'] = None
-            params['x_reflection'] = False
-            params['texttype'] = 0
+            params['rotation'] = label.rotation
+            params['magnification'] = label.magnification
+            params['x_reflection'] = label.x_reflection
+            params['texttype'] = label.texttype
 
-            print(LabelClass)
-            print(label.text)
+            if label.text.startswith('ntron'):
+                MLabel = type('Ntron', (Label,), params)
+            elif label.text.startswith('via'):
+                MLabel = type('Via', (Label,), params)
+            else:
+                MLabel = type('Megh', (Label,), params)
 
-            lbl = LabelClass(label.position, **params)
+            lbl = MLabel(label.position, **params)
 
-            print(type(lbl))
-            print(Label.registry['Ntron'])
+            if isinstance(lbl, Label.registry['Via']):
+                self += lbl
+            elif isinstance(lbl, Label.registry['Ntron']):
+                self += lbl
 
-            if isinstance(lbl, Label.registry['Ntron']):
-            # if isinstance(lbl, Label.class_label[label.text]):
-                print(lbl)
-            #     self += lbl
+            # for key, lbl in utils.llabels.items():
+            #     if key == label.text:
+            #         # print(type(lbl))
+            #         if isinstance(lbl, Label.registry['Ntron']):
+            #             print(lbl)
+            #             self += lbl
 
-            print('')
+            # for lbl in Label.class_label:
+            #     print(lbl.__dict__)
+
+            # # lbl = LabelClass(label.position, **params)
+            # # lbl = utils.llabels[params['text']]
+
+            # print(lbl)
+            # print(Label.registry['Ntron'])
+
+            # if lbl is Label.registry['Ntron']:
+            # # # if isinstance(lbl, Label.class_label[label.text]):
+            #     print(lbl)
+            # # #     self += lbl
+
+            # print('')
 
             # for ok in oktypes:
             #     if isinstance(lbl, Label.registry[ok]):
@@ -164,38 +254,4 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         # for label in self._labels:
         #     elem = label.get()
         #     self.add(elem)
-
-
-    # def update(self):
-    #     depend = self.parse_to_gdspy()
-
-    #     for cell in depend:
-    #         # print(cell)
-    #         for element in cell._elements:
-    #             # print(' - ' + str(element))
-    #             elem = element.get()
-    #             cell.add(elem)
-    #         # print('')
-
-    #     # print(self)
-    #     for element in self._elements:
-    #         # print(' - ' + str(element))
-    #         elem = element.get()
-    #         self.add(elem)
-    #     # print('')
-
-    # def flat_copy(self):
-    #     # self.update()
-
-    #     # g_cell = self.get_cell()
-
-    #     self.flatten()
-
-    #     for element in self.elements:
-    #         print(element)
-    #     print('')
-
-    #     return self
-
-
 

@@ -1,11 +1,11 @@
 import os
-import utils
 import gdspy
 import pathlib
 import collections
 import pyclipper
 import copy as libCopy
 
+from yuna import utils
 from yuna.polygon import Polygon
 from yuna.sref import SRef
 from yuna.label import Label

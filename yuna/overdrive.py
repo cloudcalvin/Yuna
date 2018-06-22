@@ -26,12 +26,13 @@ from yuna.polygon import Polygon
 
 from yuna.lvs_extract import *
 from yuna.read_pdk import *
+from yuna import settings
 
 
 logger = logging.getLogger(__name__)
 
 
-def grand_summon(topcell, pdk_file, json_devices=[]):
+def grand_summon(topcell, pdk_name=None, json_devices=[]):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -55,11 +56,16 @@ def grand_summon(topcell, pdk_file, json_devices=[]):
         If True then a 3D model of the cell must be created.
     """
 
-    print('---------- Yuna ----------\n')
+    print('----------------------- YUNA -----------------------\n')
 
     library = Library(name='Yuna Library')
 
     structure = Cell('Structure')
+
+    if pdk_name is None:
+        settings.init()
+    else:
+        settings.pdk_name = pdk_name
 
     pdk = get_pdk()
 
@@ -132,6 +138,6 @@ def grand_summon(topcell, pdk_file, json_devices=[]):
     if geom is None:
         raise ValueError('Geometry field cannot be None')
 
-    utils.cyan_print('\n----- Yuna. Done. -----\n')
+    utils.cyan_print('\n----------- Finished -----------\n')
 
     return geom

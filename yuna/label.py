@@ -1,6 +1,7 @@
 import gdspy
 import collections
-import utils
+
+from yuna import utils
 
 
 # class MetaBase(type):

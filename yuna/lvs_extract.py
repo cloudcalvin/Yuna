@@ -1,19 +1,12 @@
-import pyclipper
-import os
-import json
 import gdspy
 
 from yuna import grid
-from yuna.utils import *
-
-from yuna.polygon import Polygon
+from yuna.mask_ops import *
 from yuna.cell import Cell
 from yuna.label import Label
-from yuna.sref import SRef
-
-from shapely.geometry import Polygon as ShapelyPolygon
 
 
+from yuna.utils import *
 def user_label(class_name, prefix, cell, params):
 
     pdk = get_pdk()
@@ -42,6 +35,7 @@ def user_label(class_name, prefix, cell, params):
     return label_list
 
 
+from yuna.sref import SRef
 def convert_to_yuna_cells(library, topcell, cell_list):
     """
     Convert the gdspy cells to yuna cells, which contains 
@@ -85,6 +79,7 @@ def convert_to_yuna_cells(library, topcell, cell_list):
     return sref_list
 
 
+from yuna.read_pdk import *
 def create_device_cells(topcell, devices):
     """
     Reads all the cells from the TopLevel Cell and flattens them
@@ -155,50 +150,6 @@ def dynamic_cells(json_devices):
 from yuna.mask_polygon import MaskPolygon
 def mask_levels(key, device, value, Layers):
 
-    def create_mask(polygons):
-
-        def simplify(pp):
-            if len(pp) > 10:
-                factor = (len(pp)/100) * 1e5
-                sp = ShapelyPolygon(pp).simplify(factor)
-                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
-
-                return plist[:-1]
-            else:
-                return pp
-            # points = list()
-            # for pp in self._union():
-            #     if len(pp) > MaskBase._PP:
-            #         factor = (len(pp)/self.smoothness) * MaskBase._FACTOR
-            #         sp = Polygon(pp).simplify(factor)
-            #         plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
-            #         points.append(plist[:-1])
-            #     else:
-            #         points.append(list(pp))
-            # return grid.snap_points(points)
-
-        poly_list = []
-        for poly in polygons:
-            if pyclipper.Orientation(poly) is False:
-                reverse_poly = pyclipper.ReversePath(poly)
-                solution = pyclipper.SimplifyPolygon(reverse_poly)
-            else:
-                solution = pyclipper.SimplifyPolygon(poly)
-
-            pp = Polygon(points=solution)
-            poly_list.append(pp)
-
-        p1 = poly_list[0]
-        for i in range(1, len(poly_list)):
-            p1 = p1 & poly_list[i]
-
-        mask = []
-        for points in p1.points:
-            simple_points = simplify(points)
-            mask.append(simple_points)
-
-        return mask
-
     for layer in Layers:
         if layer['layer'] == key[0] and key[1] == device.single_datatype:
             params = layer
@@ -210,25 +161,6 @@ def mask_levels(key, device, value, Layers):
             mask = MaskClass(polygons, **params)
 
             device.cell += mask
-    
-
-def element_center(element):
-    bb = element.get_bounding_box()
-    cx = ( (bb[0][0] + bb[1][0]) / 2.0 ) + 10.0
-    cy = ( (bb[0][1] + bb[1][1]) / 2.0 )
-
-    return (cx, cy)
-
-
-def get_pdk():
-    pdk = os.getcwd() + '/technology/' + 'raytheon.json'
-
-    data = None
-    with open(pdk) as data_file:
-        data = json.load(data_file)
-    return data
-    
-
 
 
 

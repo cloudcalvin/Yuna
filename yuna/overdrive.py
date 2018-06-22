@@ -23,126 +23,12 @@ from yuna.label import Label
 
 from yuna.library import Library
 from yuna.polygon import Polygon
-# from yuna.mask_polygon import MaskPolygon
 
-from yuna.lvs_extraction import *
+from yuna.lvs_extract import *
+from yuna.read_pdk import *
 
 
 logger = logging.getLogger(__name__)
-
-
-# def _define_capacitor(library, topcell, cell_list):
-#     cap_cell = None
-#     for cell in topcell.get_dependencies(True):
-#         if cell.name == 'Capacitor':
-#             cap_cell = cell
-
-#     cap = Cell('Capacitor')
-
-#     for element in cap_cell.elements:
-#         if isinstance(element, gdspy.CellReference):
-#             name = element.ref_cell.name
-
-#             params = {}
-#             params['rotation'] = element.rotation
-#             params['magnification'] = element.magnification
-#             params['x_reflection'] = element.x_reflection
-
-#             cap += SRef(cell_list[name], element.origin, **params)
-#         elif isinstance(element, gdspy.Polygon):
-#             params = {}
-#             params['layer'] = element.layer
-#             params['datatype'] = element.datatype
-
-#             cap += Polygon(element.points, **params)
-#         elif isinstance(element, gdspy.PolygonSet):
-#             raise ValueError('Implement PolygonSet support')
-
-#     return cap
-
-
-# def _define_cshe(topcell, cell_list):
-#     cap_cell = None
-#     for cell in topcell.get_dependencies(True):
-#         if cell.name == 'CSHE':
-#             cap_cell = cell
-
-#     cap = Cell('CSHE')
-
-#     for element in cap_cell.elements:
-#         if isinstance(element, gdspy.CellReference):
-#             name = element.ref_cell.name
-
-#             params = {}
-#             params['rotation'] = element.rotation
-#             params['magnification'] = element.magnification
-#             params['x_reflection'] = element.x_reflection
-
-#             # if isinstance(cell_list[name], Cell.registry['Via']):
-#             cap += SRef(cell_list[name], element.origin, **params)
-#         elif isinstance(element, gdspy.Polygon):
-#             params = {}
-#             params['layer'] = element.layer
-#             params['datatype'] = element.datatype
-
-#             cap += Polygon(element.points, **params)
-#         elif isinstance(element, gdspy.PolygonSet):
-#             raise ValueError('Implement PolygonSet support')
-
-#     return cap
-
-
-# def user_label_cap(cell):
-#     caps = []
-
-#     pdk = get_pdk()
-
-#     for lbl in cell.labels:
-#         if lbl.text[0] == 'C':
-#             params = pdk['Structure']['Capacitor']
-
-#             params['text'] = lbl.text
-#             params['layer'] = lbl.layer
-#             params['anchor'] = lbl.anchor
-#             params['rotation'] = lbl.rotation
-#             params['magnification'] = lbl.magnification
-#             params['x_reflection'] = lbl.x_reflection
-#             params['texttype'] = lbl.texttype
-#             params['ports'] = utils.calculate_ports(lbl.text.split(' '), pdk)
-
-#             Capacitor = type('Capacitor', (Label,), params)
-#             cap = Capacitor(lbl.position, **params)
-
-#             caps.append(cap)
-
-#     return caps
-
-
-# def user_label_term(cell):
-#     terms = []
-
-#     pdk = get_pdk()
-
-#     for lbl in cell.labels:
-#         if lbl.text[0] == 'P':
-#             params = pdk['Structure']['Terminal']['63']
-
-#             params['text'] = lbl.text
-#             params['layer'] = lbl.layer
-#             params['anchor'] = lbl.anchor
-#             params['rotation'] = lbl.rotation
-#             params['magnification'] = lbl.magnification
-#             params['x_reflection'] = lbl.x_reflection
-#             params['texttype'] = lbl.texttype
-
-#             params['ports'] = utils.calculate_ports(lbl.text.split(' '), pdk)
-
-#             Terminal = type('Terminal', (Label,), params)
-#             term = Terminal(lbl.position, **params)
-
-#             terms.append(term)
-
-#     return terms
 
 
 def grand_summon(topcell, pdk_file, json_devices=[]):
@@ -171,20 +57,22 @@ def grand_summon(topcell, pdk_file, json_devices=[]):
 
     print('---------- Yuna ----------\n')
 
-    library = Library(name='yuna_library')
+    library = Library(name='Yuna Library')
 
-    geom = Cell('Geometry')
+    structure = Cell('Structure')
 
     pdk = get_pdk()
 
-    print('-------------------- ** LABELS ** --------------------\n')
+    print('-------------------- ** AUTO LABELS ** --------------------\n')
 
     cell_list = create_device_cells(topcell, json_devices)
 
     sref_list = convert_to_yuna_cells(library, topcell, cell_list)
 
     for sref in sref_list:
-        geom += sref
+        structure += sref
+
+    print('-------------------- ** USER LABELS ** --------------------\n')
 
     class_name = 'Capacitor'
     params = pdk['Structure'][class_name]
@@ -195,24 +83,22 @@ def grand_summon(topcell, pdk_file, json_devices=[]):
     terms = user_label(class_name, 'P', topcell, params)
 
     for cap in caps:
-        geom += cap
+        structure += cap
     for term in terms:
-        geom += term
+        structure += term
 
-    geom.flat_copy(duplicate_layer={4: 5})
+    structure.flat_copy(duplicate_layer={4: 5})
 
     # TODO: Update this functions.
-    geom.update_labels(oktypes=['Via', 'Ntron'])
+    structure.update_labels(oktypes=['Via', 'Ntron'])
 
     print('-------------------- ** POLYGONS ** --------------------\n')
 
     pdk_layers = [*pdk['Layers']['ix'], *pdk['Layers']['via']]
 
-    pattern = Cell('Patterning')
-
     devices = dynamic_cells(json_devices)
 
-    for key, value in geom.get_polygons(True).items():
+    for key, value in structure.get_polygons(True).items():
         for name, device in devices.items():
             mask_levels(key, device, value, pdk_layers)
 
@@ -220,40 +106,28 @@ def grand_summon(topcell, pdk_file, json_devices=[]):
     devices['Path'].cell - devices['Ntron'].cell
     devices['Via'].cell - devices['Ntron'].cell
 
-    pattern += SRef(devices['Path'].cell, (0, 0))
-    pattern += SRef(devices['Via'].cell, (0, 0))
-    pattern += SRef(devices['Ntron'].cell, (0, 0))
+    geom = Cell('Geometry')
 
-    pattern.flat_copy()
+    geom += SRef(devices['Path'].cell, (0, 0))
+    geom += SRef(devices['Via'].cell, (0, 0))
+    geom += SRef(devices['Ntron'].cell, (0, 0))
+
+    geom.flat_copy()
 
     print('-------------------- ** FINAL ** --------------------\n')
 
+    library += structure
     library += geom
-    library += pattern
-
-    print(devices)
 
     for name, device in devices.items():
         library += device.cell
 
     geom.view(library)
 
-    # ------------------------- Old Yuna ---------------------------- #
-
-    # geom = Geometry(cell, pdk_file)
-
-    # ----- LABELS ----- #
-    # geom.user_label_term(cell)
-    # geom.user_label_cap(cel)
-    # # _labels_flat(geom, cell)
-    # _add_labels(geom, cell)
-
-    # ----- POLYGONS ----- #
-    # _constuct_polygons(geom, cell)
-    # _pattern_polygons(geom)
-    # _write_gds(gdsii, geom, viewer)
-
     # --------------------------- END ------------------------------ #
+
+    # library.view()
+    # library.write()
 
     if geom is None:
         raise ValueError('Geometry field cannot be None')
@@ -261,37 +135,3 @@ def grand_summon(topcell, pdk_file, json_devices=[]):
     utils.cyan_print('\n----- Yuna. Done. -----\n')
 
     return geom
-
-
-# def _write_gds(gdsii, geom, viewer):
-#     auron_cell = gdspy.Cell('geom_for_auron')
-#     ix_cell = gdspy.Cell('geom_for_inductex')
-
-#     geom.gds_auron(auron_cell)
-#     geom.gds_inductex(ix_cell)
-
-#     debug_dir = os.getcwd() + '/debug/'
-#     pathlib.Path(debug_dir).mkdir(parents=True, exist_ok=True)
-
-#     gdspy.GdsLibrary(name='auron_geom')
-#     gdspy.write_gds(debug_dir + 'auron.gds',
-#                     [auron_cell],
-#                     name='auron_geom',
-#                     unit=1.0e-12)
-
-#     gdspy.GdsLibrary(name='ix_geom')
-#     gdspy.write_gds(debug_dir + 'ix.gds',
-#                     [ix_cell],
-#                     name='ix_geom',
-#                     unit=1.0e-12)
-
-#     gdspy.write_gds(debug_dir + 'all_cells.gds',
-#                     unit=1.0e-12)
-
-#     if viewer == 'ix':
-#         gdspy.LayoutViewer(cells='geom_for_inductex')
-#     elif viewer == 'auron':
-#         gdspy.LayoutViewer(cells='geom_for_auron')
-#     elif viewer == 'all':
-#         gdspy.LayoutViewer()
-#     print('----- Yuna -----\n')

@@ -4,7 +4,7 @@ import itertools
 from yuna import utils
 
 from yuna.utils import logging
-from yuna.utils import datatype
+# from yuna.utils import datatype
 from yuna.utils import nm
 
 from yuna.pdk.properties import PolygonProperties

@@ -17,11 +17,6 @@ pm = 10e-12
 unit = 1e-6
 grid = 5e-9
 
-datatype = {'path': 0,
-            'via': 1,
-            'jj': 3,
-            'ntron': 7}
-
 llabels = {}
 
 

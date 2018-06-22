@@ -14,40 +14,7 @@ from yuna.label import MyLabel
 from yuna.elements import ElementList
 from yuna.mask_polygon import MaskPolygon
 
-
-def bool_operation(subj, clip=None, method=None, closed=True):
-    """ Angusj clipping library """
-
-    pc = pyclipper.Pyclipper()
-
-    setattr(pc, 'StrictlySimple', True)
-
-    if clip is not None:
-        pc.AddPaths(clip, pyclipper.PT_CLIP, True)
-
-    pc.AddPaths(subj, pyclipper.PT_SUBJECT, closed)
-
-    subj = None
-    if method == 'difference':
-        subj = pc.Execute(pyclipper.CT_DIFFERENCE,
-                          pyclipper.PFT_EVENODD,
-                          pyclipper.PFT_EVENODD)
-    elif method == 'union':
-        subj = pc.Execute(pyclipper.CT_UNION,
-                          pyclipper.PFT_NONZERO,
-                          pyclipper.PFT_NONZERO)
-    elif method == 'intersection':
-        subj = pc.Execute(pyclipper.CT_INTERSECTION,
-                          pyclipper.PFT_NONZERO,
-                          pyclipper.PFT_NONZERO)
-    elif method == 'exclusive':
-        subj = pc.Execute(pyclipper.CT_XOR,
-                          pyclipper.PFT_NONZERO,
-                          pyclipper.PFT_NONZERO)
-    else:
-        raise ValueError('please specify a clipping method')
-
-    return subj
+from yuna.poly_ops import *
 
 
 class MetaCell(type):

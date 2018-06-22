@@ -15,8 +15,8 @@ cell = gdsii.extract(cell_name)
 
 pdk_file = os.getcwd() + '/technology/' + pdk_name + '.json'
 
-devices = {'via': 1, 'ntron': 7}
+json_devices = {'via': 1, 'ntron': 7}
 
-yuna_geom = grand_summon(cell, pdk_file, devices)
+yuna_geom = grand_summon(cell, pdk_file, json_devices)
 
 # gdspy.LayoutViewer()

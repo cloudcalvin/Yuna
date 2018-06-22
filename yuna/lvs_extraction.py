@@ -136,6 +136,81 @@ def create_device_cells(topcell, devices):
     return cell_list
 
 
+from types import SimpleNamespace
+def dynamic_cells(json_devices):
+    devices = {}
+
+    path = SimpleNamespace(single_datatype=0, cell=Cell('Path'))
+    devices['Path'] = path
+    
+    for key, single_datatype in json_devices.items():
+        name = key[0].upper() + key[1:]
+
+        device = SimpleNamespace(single_datatype=single_datatype, cell=Cell(name))
+        devices[name] = device
+    
+    return devices
+
+
+from yuna.mask_polygon import MaskPolygon
+def mask_levels(key, device, value, Layers):
+
+    def create_mask(polygons):
+
+        def simplify(pp):
+            if len(pp) > 10:
+                factor = (len(pp)/100) * 1e5
+                sp = ShapelyPolygon(pp).simplify(factor)
+                plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+
+                return plist[:-1]
+            else:
+                return pp
+            # points = list()
+            # for pp in self._union():
+            #     if len(pp) > MaskBase._PP:
+            #         factor = (len(pp)/self.smoothness) * MaskBase._FACTOR
+            #         sp = Polygon(pp).simplify(factor)
+            #         plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
+            #         points.append(plist[:-1])
+            #     else:
+            #         points.append(list(pp))
+            # return grid.snap_points(points)
+
+        poly_list = []
+        for poly in polygons:
+            if pyclipper.Orientation(poly) is False:
+                reverse_poly = pyclipper.ReversePath(poly)
+                solution = pyclipper.SimplifyPolygon(reverse_poly)
+            else:
+                solution = pyclipper.SimplifyPolygon(poly)
+
+            pp = Polygon(points=solution)
+            poly_list.append(pp)
+
+        p1 = poly_list[0]
+        for i in range(1, len(poly_list)):
+            p1 = p1 & poly_list[i]
+
+        mask = []
+        for points in p1.points:
+            simple_points = simplify(points)
+            mask.append(simple_points)
+
+        return mask
+
+    for layer in Layers:
+        if layer['layer'] == key[0] and key[1] == device.single_datatype:
+            params = layer
+            params['datatype'] = device.single_datatype
+
+            polygons = create_mask(value)
+
+            MaskClass = type(params['name'], (MaskPolygon,), params)
+            mask = MaskClass(polygons, **params)
+
+            device.cell += mask
+    
 
 def element_center(element):
     bb = element.get_bounding_box()
@@ -154,47 +229,6 @@ def get_pdk():
     return data
     
 
-def simplify(pp):
-    if len(pp) > 10:
-        factor = (len(pp)/100) * 1e5
-        sp = ShapelyPolygon(pp).simplify(factor)
-        plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
-
-        return plist[:-1]
-    else:
-        return pp
-    # points = list()
-    # for pp in self._union():
-    #     if len(pp) > MaskBase._PP:
-    #         factor = (len(pp)/self.smoothness) * MaskBase._FACTOR
-    #         sp = Polygon(pp).simplify(factor)
-    #         plist = [[int(p[0]), int(p[1])] for p in sp.exterior.coords]
-    #         points.append(plist[:-1])
-    #     else:
-    #         points.append(list(pp))
-    # return grid.snap_points(points)
 
 
-def create_mask(polygons):
 
-    poly_list = []
-    for poly in polygons:
-        if pyclipper.Orientation(poly) is False:
-            reverse_poly = pyclipper.ReversePath(poly)
-            solution = pyclipper.SimplifyPolygon(reverse_poly)
-        else:
-            solution = pyclipper.SimplifyPolygon(poly)
-
-        pp = Polygon(points=solution)
-        poly_list.append(pp)
-
-    p1 = poly_list[0]
-    for i in range(1, len(poly_list)):
-        p1 = p1 & poly_list[i]
-
-    mask = []
-    for points in p1.points:
-        simple_points = simplify(points)
-        mask.append(simple_points)
-
-    return mask

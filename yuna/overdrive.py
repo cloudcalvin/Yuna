@@ -23,7 +23,7 @@ from yuna.label import Label
 
 from yuna.library import Library
 from yuna.polygon import Polygon
-from yuna.mask_polygon import MaskPolygon
+# from yuna.mask_polygon import MaskPolygon
 
 from yuna.lvs_extraction import *
 
@@ -145,7 +145,7 @@ logger = logging.getLogger(__name__)
 #     return terms
 
 
-def grand_summon(topcell, pdk_file, devices=[]):
+def grand_summon(topcell, pdk_file, json_devices=[]):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -179,7 +179,7 @@ def grand_summon(topcell, pdk_file, devices=[]):
 
     print('-------------------- ** LABELS ** --------------------\n')
 
-    cell_list = create_device_cells(topcell, devices)
+    cell_list = create_device_cells(topcell, json_devices)
 
     sref_list = convert_to_yuna_cells(library, topcell, cell_list)
 
@@ -206,42 +206,23 @@ def grand_summon(topcell, pdk_file, devices=[]):
 
     print('-------------------- ** POLYGONS ** --------------------\n')
 
-    def register_layers(struct, key, elem_datatype, value, Layers):
-        for layer in Layers:
-            if layer['layer'] == key[0] and key[1] == elem_datatype:
-                params = layer
-                params['datatype'] = elem_datatype
-
-                polygons = create_mask(value)
-
-                MaskClass = type(params['name'], (MaskPolygon,), params)
-                mask = MaskClass(polygons, **params)
-
-                struct += mask
-
     pdk_layers = [*pdk['Layers']['ix'], *pdk['Layers']['via']]
-
-    device_cells = {}
-
-    for device, single_datatype in devices.items():
-        name = device[0].upper() + device[1:]
-        device_cells[name] = (single_datatype, Cell(name))
-
-    device_cells['Path'] = (0, Cell('Path'))
 
     pattern = Cell('Patterning')
 
+    devices = dynamic_cells(json_devices)
+
     for key, value in geom.get_polygons(True).items():
-        for name, cell in device_cells.items():
-            register_layers(cell[1], key, cell[0], value, pdk_layers)
+        for name, device in devices.items():
+            mask_levels(key, device, value, pdk_layers)
 
-    device_cells['Path'][1] - device_cells['Via'][1]
-    device_cells['Path'][1] - device_cells['Ntron'][1]
-    device_cells['Via'][1] - device_cells['Ntron'][1]
+    devices['Path'].cell - devices['Via'].cell
+    devices['Path'].cell - devices['Ntron'].cell
+    devices['Via'].cell - devices['Ntron'].cell
 
-    pattern += SRef(device_cells['Path'][1], (0, 0))
-    pattern += SRef(device_cells['Via'][1], (0, 0))
-    pattern += SRef(device_cells['Ntron'][1], (0, 0))
+    pattern += SRef(devices['Path'].cell, (0, 0))
+    pattern += SRef(devices['Via'].cell, (0, 0))
+    pattern += SRef(devices['Ntron'].cell, (0, 0))
 
     pattern.flat_copy()
 
@@ -250,8 +231,10 @@ def grand_summon(topcell, pdk_file, devices=[]):
     library += geom
     library += pattern
 
-    for name, cell in device_cells.items():
-        library += cell[1]
+    print(devices)
+
+    for name, device in devices.items():
+        library += device.cell
 
     geom.view(library)
 

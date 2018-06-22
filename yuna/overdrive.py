@@ -128,7 +128,7 @@ def grand_summon(topcell, pdk_name=None, json_devices=[]):
     for name, device in devices.items():
         library += device.cell
 
-    geom.view(library)
+    # geom.view(library)
 
     # --------------------------- END ------------------------------ #
 

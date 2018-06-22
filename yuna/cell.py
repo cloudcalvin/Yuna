@@ -89,12 +89,10 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         # element = other.get()
         # self.add(element)
 
-        # if isinstance(other, Label):
-        #     self._labels += other
-        # # elif issubclass(type(other), MetaLabel):
-        # #     self._labels += other
-        # else:
-        #     self._elements += other
+        if isinstance(other, Label):
+            self._labels += other
+        else:
+            self._elements += other
 
         return self
 

@@ -22,7 +22,6 @@ datatype = {'path': 0,
             'jj': 3,
             'ntron': 7}
 
-
 llabels = {}
 
 

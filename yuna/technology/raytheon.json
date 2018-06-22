@@ -220,7 +220,7 @@
 
     "Cells":
     {
-        "Vias":
+        "Via":
         {
             "color": "#A0A0A0",
 
@@ -231,7 +231,7 @@
             }
         },
 
-        "Ntrons":
+        "Ntron":
         {
             "color": "#FF5555",
 

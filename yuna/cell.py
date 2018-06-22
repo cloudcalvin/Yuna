@@ -78,8 +78,8 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
 
     """
 
-    def __init__(self, name, cell=None, elements=None, exclude_from_current=True, **kwargs):
-        super().__init__(name, exclude_from_current=exclude_from_current)
+    def __init__(self, name, cell=None, elements=None, **kwargs):
+        super().__init__(name, exclude_from_current=True)
 
         if cell is not None:
             self.import_cell(name, cell)
@@ -97,35 +97,12 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
                 self.name, len(self._elements), len(self.labels))
 
     def __sub__(self, other):
-
-        # for i in range(len(self.elements)):
-            # e1 = self.elements[i]
         for e1 in self.elements:
             for e2 in other.elements:
                 if e1.layers[0] == e2.layers[0]:
-                    # self.elements[i].polygons = bool_operation(subj=e1.polygons, 
                     e1.polygons = bool_operation(subj=e1.polygons, 
-                                            clip=e2.polygons, 
-                                            method='difference')
-
-                    # poly = gdspy.PolygonSet(points, 
-                    #                         layer=e1.layers[0], 
-                    #                         datatype=e1.datatypes[0])
-                    # self.add(poly)
-                # else:
-                #     poly = gdspy.PolygonSet(e1.polygons, 
-                #                             layer=e1.layers[0], 
-                #                             datatype=e1.datatypes[0])
-                #     self.add(poly)
-
-        # for k1, v1 in self.get_polygons(True).items():
-        #     for k2, v2 in other.get_polygons(True).items():
-        #         if k1[0] == k2[0]:
-        #             poly = bool_operation(subj=v1, 
-        #                                   clip=v2, 
-        #                                   method='difference')
-        #             return poly
-        # return self.get_polygons()
+                                                 clip=e2.polygons, 
+                                                 method='difference')
 
     def __add__(self, other):
         if isinstance(other, SRef):
@@ -142,8 +119,6 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
             element = other.get()
             self.add(element)
 
-        # print(other)
-
         # element = other.get()
         # self.add(element)
 
@@ -156,13 +131,16 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
 
         return self
 
-    # def parse_to_gdspy(self):
-    #     depend = set()
-    #     for elem in self._elements:
-    #         if isinstance(elem, SRef):
-    #             depend.update(elem.ref_struct.parse_to_gdspy())
-    #             depend.add(elem.ref_struct)
-    #     return depend
+    def flat_copy(self, duplicate_layer={}):
+        self.flatten()
+
+        # Convert doublicate layers to the same type.
+        for l1, l2 in duplicate_layer.items():
+            for element in self.elements:
+                if isinstance(element, gdspy.PolygonSet):
+                    for i in range(len(element.layers)):
+                        if element.layers[i] == l1:
+                            element.layers[i] = l2
 
     def view(self, library):
         debug_dir = os.getcwd() + '/debug/'
@@ -196,11 +174,7 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         labels = self.labels
         self.labels = []
 
-        # print(labels)
-
         for label in labels:
-            # LabelClass = Label.class_label[label.text]
-
             params = {}
             params['text'] = label.text
             params['layer'] = label.layer
@@ -223,6 +197,8 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
                 self += lbl
             elif isinstance(lbl, Label.registry['Ntron']):
                 self += lbl
+            else:
+                self += lbl
 
             # for key, lbl in utils.llabels.items():
             #     if key == label.text:
@@ -237,15 +213,10 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
             # # lbl = LabelClass(label.position, **params)
             # # lbl = utils.llabels[params['text']]
 
-            # print(lbl)
-            # print(Label.registry['Ntron'])
-
             # if lbl is Label.registry['Ntron']:
             # # # if isinstance(lbl, Label.class_label[label.text]):
             #     print(lbl)
             # # #     self += lbl
-
-            # print('')
 
             # for ok in oktypes:
             #     if isinstance(lbl, Label.registry[ok]):

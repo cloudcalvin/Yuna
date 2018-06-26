@@ -47,7 +47,7 @@
     {
         "units": 10e-9,
 
-        "ix":
+        "Ix":
         [
             {
                 "layer": 1,
@@ -73,7 +73,7 @@
                 "layer": 3,
                 "datatype": 0,
                 "name": "Pt",
-                "rank": 0,
+                "rank": 2,
                 "stack": [1, 2],
                 "width": 100,
                 "color": "#A0A0A0"
@@ -84,7 +84,8 @@
                 "datatype": 0,
                 "name": "NbNebeam",
                 "ETL": 5,
-                "rank": 4,
+                "rank": 3,
+                "start": 70,
                 "stack": [],
                 "units": "nm",
                 "width": 30,
@@ -95,7 +96,8 @@
                 "layer": 5,
                 "datatype": 0,
                 "name": "NbNphoto",
-                "rank": 4,
+                "rank": 3,
+                "start": 70,
                 "stack": [],
                 "units": "nm",
                 "width": 30,
@@ -106,7 +108,7 @@
                 "layer": 7,
                 "datatype": 0,
                 "name": "Al",
-                "rank": 7,
+                "rank": 6,
                 "stack": [5, 8, 6],
                 "width": 100,
                 "color": "#FF66B2"
@@ -115,10 +117,10 @@
             {
                 "layer": 8,
                 "datatype": 0,
-                "name": "Al",
-                "rank": 5,
+                "name": "Al_etchstop",
+                "rank": 4,
                 "stack": [],
-                "width": 8,
+                "width": 40,
                 "color": "#FF66B2"
             }
         ],
@@ -129,44 +131,10 @@
                 "layer": 6,
                 "datatype": 1,
                 "name": "Alvia",
-                "rank": 6,
+                "rank": 5,
                 "stack": [4, 5],
                 "width": 100,
                 "color": "#A0A0A0"
-            }
-        ],
-
-        "res":
-        [
-            {
-                "layer": 9,
-                "datatype": 0,
-                "name": "R2",
-                "rank": 0,
-                "color": "#00CCCC",
-                "width": "40"
-            },
-
-            {
-                "layer": 11,
-                "datatype": 0,
-                "name": "R3",
-                "rank": 0,
-                "color": "#FFB266",
-                "width": "350"
-            }
-        ],
-
-        "jj":
-        [
-            {
-                "layer": 21,
-                "datatype": 0,
-                "name": "J2",
-                "rank": 0,
-                "position": "1265",
-                "width": "50",
-                "color": "#00CCCC"
             }
         ]
     },
@@ -258,9 +226,3 @@
         }
     }
 }
-
-
-
-
-
-

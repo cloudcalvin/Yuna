@@ -50,7 +50,7 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
 
         if cell is not None:
             self.import_cell(name, cell)
-        
+
         self._labels = ElementList()
 
         if elements is not None:
@@ -67,12 +67,15 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         for e1 in self.elements:
             for e2 in other.elements:
                 if e1.layers[0] == e2.layers[0]:
-                    e1.polygons = bool_operation(subj=e1.polygons, 
-                                                 clip=e2.polygons, 
+                    e1.polygons = bool_operation(subj=e1.polygons,
+                                                 clip=e2.polygons,
                                                  method='difference')
 
     def __add__(self, other):
         if isinstance(other, SRef):
+            for label in other.ref_struct._labels:
+                label = label.translate(*other.origin)
+                self._labels += label
             element = other.get()
             self.add(element)
         elif isinstance(other, Polygon):
@@ -80,21 +83,43 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
             self.add(element)
         elif isinstance(other, MaskPolygon):
             element = other.get()
-            print(element)
             self.add(element)
-        elif isinstance(other, Label):
+
+        if type(other) in Label.registry.values():
+            self._labels += other
             element = other.get()
             self.add(element)
-
-        # element = other.get()
-        # self.add(element)
-
-        if isinstance(other, Label):
-            self._labels += other
         else:
             self._elements += other
 
         return self
+
+    # def flat_labels(self, level=-1):
+    #     if level == 0:
+    #         return self._labels
+    #     el = self._labels.flat_copy(level-1)
+    #     return el
+
+    # import copy as libCopy
+    # def flat_labels(self, depth=None):
+    #     """
+    #     Returns a list with a copy of the labels in this cell.
+    #     Parameters
+    #     ----------
+    #     depth : integer or ``None``
+    #         If not ``None``, defines from how many reference levels to retrieve
+    #         labels from.
+    #     Returns
+    #     -------
+    #     out : list of ``Label``
+    #         List containing the labels in this cell and its references.
+    #     """
+    #     labels = libCopy.deepcopy(self._labels)
+    #     if depth is None or depth >= 0:
+    #         for element in self._elements:
+    #             if isinstance(element, SRef):
+    #                 labels.extend(element.flat_labels(None if depth is None else depth - 1))
+    #     return labels
 
     def flat_copy(self, duplicate_layer={}):
         self.flatten()
@@ -114,7 +139,7 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         name = debug_dir + self.name + '.gds'
 
         gdspy.write_gds(name,
-                        name='yuna_library', 
+                        name='yuna_library',
                         unit=1.0e-12)
 
         gdspy.LayoutViewer(library=library)
@@ -132,62 +157,3 @@ class Cell(gdspy.Cell, metaclass=MetaCell):
         cell.elements = self.elements
         cell.labels = self.get_labels()
         return cell
-
-    def update_labels(self, oktypes=[]):
-
-        self._labels = ElementList()
-        labels = self.labels
-        self.labels = []
-
-        for label in labels:
-            params = {}
-            params['text'] = label.text
-            params['layer'] = label.layer
-            params['anchor'] = 'o'
-            params['rotation'] = label.rotation
-            params['magnification'] = label.magnification
-            params['x_reflection'] = label.x_reflection
-            params['texttype'] = label.texttype
-
-            if label.text.startswith('ntron'):
-                MLabel = type('Ntron', (Label,), params)
-            elif label.text.startswith('via'):
-                MLabel = type('Via', (Label,), params)
-            else:
-                MLabel = type('Megh', (Label,), params)
-
-            lbl = MLabel(label.position, **params)
-
-            if isinstance(lbl, Label.registry['Via']):
-                self += lbl
-            elif isinstance(lbl, Label.registry['Ntron']):
-                self += lbl
-            else:
-                self += lbl
-
-            # for key, lbl in utils.llabels.items():
-            #     if key == label.text:
-            #         # print(type(lbl))
-            #         if isinstance(lbl, Label.registry['Ntron']):
-            #             print(lbl)
-            #             self += lbl
-
-            # for lbl in Label.class_label:
-            #     print(lbl.__dict__)
-
-            # # lbl = LabelClass(label.position, **params)
-            # # lbl = utils.llabels[params['text']]
-
-            # if lbl is Label.registry['Ntron']:
-            # # # if isinstance(lbl, Label.class_label[label.text]):
-            #     print(lbl)
-            # # #     self += lbl
-
-            # for ok in oktypes:
-            #     if isinstance(lbl, Label.registry[ok]):
-            #         self += lbl
-
-        # for label in self._labels:
-        #     elem = label.get()
-        #     self.add(elem)
-

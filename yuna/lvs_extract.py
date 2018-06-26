@@ -38,7 +38,7 @@ def user_label(class_name, prefix, cell, params):
 from yuna.sref import SRef
 def convert_to_yuna_cells(library, topcell, cell_list):
     """
-    Convert the gdspy cells to yuna cells, which contains 
+    Convert the gdspy cells to yuna cells, which contains
     metaclass operations and extra functions.
     """
 
@@ -95,7 +95,6 @@ def create_device_cells(topcell, devices):
 
         for key, layer in pdk['Cells'][device].items():
             if key != 'color' and key == name:
-                params = {}
                 params = layer
 
                 params['text'] = name
@@ -121,11 +120,12 @@ def create_device_cells(topcell, devices):
         MyNode = type('Normal', (Cell,), {})
         ccell = MyNode(name, cell=cell)
 
-        for key, single_datatype in devices.items():
-            pdk_name = key[0].upper() + key[1:]
+        for single_datatype, dname in devices.items():
+            pdk_name = dname[0].upper() + dname[1:]
 
-            if name.startswith(key):
-                ccell = _define_cell(name, cell, single_datatype, pdk_name)
+            if pdk_name != 'Ix':
+                if name.startswith(dname):
+                    ccell = _define_cell(name, cell, single_datatype, pdk_name)
 
         cell_list[name] = ccell
     return cell_list
@@ -137,13 +137,14 @@ def dynamic_cells(json_devices):
 
     path = SimpleNamespace(single_datatype=0, cell=Cell('Path'))
     devices['Path'] = path
-    
-    for key, single_datatype in json_devices.items():
-        name = key[0].upper() + key[1:]
 
-        device = SimpleNamespace(single_datatype=single_datatype, cell=Cell(name))
-        devices[name] = device
-    
+    for single_datatype, dname in json_devices.items():
+        name = dname[0].upper() + dname[1:]
+
+        if name != 'Ix':
+            device = SimpleNamespace(single_datatype=single_datatype, cell=Cell(name))
+            devices[name] = device
+
     return devices
 
 
@@ -161,6 +162,3 @@ def mask_levels(key, device, value, Layers):
             mask = MaskClass(polygons, **params)
 
             device.cell += mask
-
-
-

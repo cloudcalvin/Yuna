@@ -35,13 +35,13 @@ class TypedList(collections.MutableSequence):
             self.append(other)
         return self
 
-    def __len__(self): 
+    def __len__(self):
         return len(self._list)
 
-    def __getitem__(self, i): 
+    def __getitem__(self, i):
         return self._list[i]
 
-    def __delitem__(self, i): 
+    def __delitem__(self, i):
         del self._list[i]
 
     def __setitem__(self, i, v):
@@ -61,6 +61,12 @@ class ElementList(TypedList):
 
     def __init__(self, oktypes=tuple(), items=list()):
         super().__init__(oktypes, items)
+
+    def flat_copy(self, level=-1):
+        el = ElementList()
+        for e in self:
+            el += e.flat_copy(level)
+        return el
 
 #     def __add__(self, other):
 #         if isinstance(other, list):

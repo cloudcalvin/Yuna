@@ -32,7 +32,7 @@ from yuna import settings
 logger = logging.getLogger(__name__)
 
 
-def grand_summon(topcell, pdk_name=None, json_devices=[]):
+def grand_summon(topcell, pdk_name=None, json_devices=None):
     """
     Read in the layers from the GDS file,
     do clipping and send polygons to
@@ -62,16 +62,19 @@ def grand_summon(topcell, pdk_name=None, json_devices=[]):
 
     structure = Cell('Structure')
 
+    settings.init()
+
     if pdk_name is None:
         settings.init()
     else:
         settings.pdk_name = pdk_name
+        settings.json_devices = {0: 'ix', 1: 'via', 7: 'ntron'}
 
-    pdk = get_pdk()
+    pdk, material_stack = get_pdk()
 
     print('-------------------- ** AUTO LABELS ** --------------------\n')
 
-    cell_list = create_device_cells(topcell, json_devices)
+    cell_list = create_device_cells(topcell, settings.json_devices)
 
     sref_list = convert_to_yuna_cells(library, topcell, cell_list)
 
@@ -93,16 +96,13 @@ def grand_summon(topcell, pdk_name=None, json_devices=[]):
     for term in terms:
         structure += term
 
-    structure.flat_copy(duplicate_layer={4: 5})
-
-    # TODO: Update this functions.
-    structure.update_labels(oktypes=['Via', 'Ntron'])
+    structure.flat_copy(duplicate_layer={4: 5, 3: 5})
 
     print('-------------------- ** POLYGONS ** --------------------\n')
 
-    pdk_layers = [*pdk['Layers']['ix'], *pdk['Layers']['via']]
+    pdk_layers = [*pdk['Layers']['Ix'], *pdk['Layers']['via']]
 
-    devices = dynamic_cells(json_devices)
+    devices = dynamic_cells(settings.json_devices)
 
     for key, value in structure.get_polygons(True).items():
         for name, device in devices.items():
@@ -120,6 +120,11 @@ def grand_summon(topcell, pdk_name=None, json_devices=[]):
 
     geom.flat_copy()
 
+    # cc = structure.flat_labels()
+
+    for label in structure._labels:
+        geom += label
+
     print('-------------------- ** FINAL ** --------------------\n')
 
     library += structure
@@ -128,7 +133,7 @@ def grand_summon(topcell, pdk_name=None, json_devices=[]):
     for name, device in devices.items():
         library += device.cell
 
-    # geom.view(library)
+    geom.view(library)
 
     # --------------------------- END ------------------------------ #
 

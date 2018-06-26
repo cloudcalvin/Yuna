@@ -1,7 +1,7 @@
 import os
 import gdspy
 
-from yuna.overdrive import grand_summon
+from yuna.geom_3d import generate_3d_model
 
 gds_name = 'one_bit'
 cell_name = 'OneBit'
@@ -12,4 +12,4 @@ gdsii = gdspy.GdsLibrary()
 gdsii.read_gds(gds_file, unit=1.0e-12)
 cell = gdsii.extract(cell_name)
 
-yuna_geom = grand_summon(cell)
+rikku_geom = generate_3d_model(cell)

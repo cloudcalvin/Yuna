@@ -39,7 +39,7 @@ def calculate_ports(label, raw_pdk_data):
     return plates
 
 
-def string_to_gds(name, raw_pdk_data, ltype=['ix']):
+def string_to_gds(name, raw_pdk_data, ltype=['Ix']):
     for lt in ltype:
         for data in raw_pdk_data['Layers'][lt]:
             if data['name'] == name:

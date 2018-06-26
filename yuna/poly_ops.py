@@ -54,5 +54,5 @@ def offset_operation(layer, size):
 
 
 from yuna.utils import nm
-def convvert_nparray_to_list(points):
-    return [[float(p[0]*nm), float(p[1]*nm), 0.0] for p in points]
+def convert_nparray_to_list(points, start_height):
+    return [[float(p[0]*nm), float(p[1]*nm), start_height] for p in points]

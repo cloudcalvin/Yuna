@@ -1,5 +1,6 @@
 import gdspy
 import collections
+import pyclipper
 
 from yuna import utils
 
@@ -21,12 +22,21 @@ from yuna import utils
 
 
 class MetaLabel(type):
+
+    _ID = 0
+
     @classmethod
     def __prepare__(cls, name, bases, **kwds):
         return collections.OrderedDict()
 
     def __new__(cls, name, bases, attrs):
         cls = super().__new__(cls, name, bases, dict(attrs))
+
+        if 'id' in attrs:
+            cls.id = '{}_{}'.format('surface', attrs['id'])
+        else:
+            cls.id = '{}_{}'.format(name, MetaLabel._ID)
+            MetaLabel._ID += 1
 
         # if 'text' in attrs:
         #     utils.llabels[attrs['text']] = cls
@@ -43,7 +53,10 @@ class MetaLabel(type):
 
         if not hasattr(cls, 'registry'):
             cls.registry = {}
-        cls.registry[name] = cls
+
+        if 'text' in attrs.keys():
+            cls.registry[attrs['text']] = cls
+            # cls.registry[name] = cls
 
         return cls
 
@@ -55,10 +68,6 @@ class MetaLabel(type):
 
         utils.llabels[kwargs['text']] = cls
 
-        # cls = utils.llabels[kwargs['text']]
-
-        # print(cls.__dict__)
-
         return cls
 
 
@@ -69,21 +78,39 @@ class Label(gdspy.Label, metaclass=MetaLabel):
 
     def __init__(self, position, **kwargs):
 
-        if kwargs:
+        if 'text' in kwargs:
             text = kwargs['text']
-            anchor = kwargs['anchor']
-            rotation = kwargs['rotation']
-            magnification = kwargs['magnification']
-            x_reflection = kwargs['x_reflection']
-            layer = kwargs['layer']
-            texttype = kwargs['texttype']
         else:
             text = 'noname'
+
+        if 'anchor' in kwargs:
+            anchor = kwargs['anchor']
+        else:
             anchor = 'o'
+
+        if 'rotation' in kwargs:
+            rotation = kwargs['rotation']
+        else:
             rotation = None
+
+        if 'magnification' in kwargs:
+            magnification = kwargs['magnification']
+        else:
             magnification = None
+
+        if 'x_reflection' in kwargs:
+            x_reflection = kwargs['x_reflection']
+        else:
             x_reflection = False
+
+        if 'layer' in kwargs:
+            layer = kwargs['layer']
+        else:
             layer = 0
+
+        if 'texttype' in kwargs:
+            texttype = kwargs['texttype']
+        else:
             texttype = 0
 
         super().__init__(text, position,
@@ -110,6 +137,15 @@ class Label(gdspy.Label, metaclass=MetaLabel):
                            self.x_reflection,
                            self.layer,
                            self.texttype)
+
+    def point_inside(self, polygon):
+        if pyclipper.PointInPolygon(self.position, polygon) != 0:
+            return True
+        return False
+
+    def flat_copy(self, level=-1):
+        return self
+        # return self.__copy__()
 
 
 class MyLabel(Label):
